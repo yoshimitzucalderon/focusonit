@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, KeyboardEvent } from 'react'
+import { useState, KeyboardEvent, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Calendar } from 'lucide-react'
+import { Plus, Calendar, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 
 interface TaskInputProps {
   userId: string
@@ -19,7 +20,15 @@ export default function TaskInput({ userId }: TaskInputProps) {
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [loading, setLoading] = useState(false)
+  const [naturalDateSuggestion, setNaturalDateSuggestion] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  // Detectar fechas en lenguaje natural mientras escribe
+  useEffect(() => {
+    const naturalDateText = containsNaturalDate(title)
+    setNaturalDateSuggestion(naturalDateText)
+  }, [title])
 
   // Crear tarea rápida (solo título)
   const createQuickTask = async () => {
@@ -27,15 +36,27 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
     setLoading(true)
     try {
+      // Intentar parsear fecha natural del título
+      let parsedDate: Date | null = null
+      const naturalDateText = containsNaturalDate(title)
+      if (naturalDateText) {
+        parsedDate = parseNaturalDate(naturalDateText)
+      }
+
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
+        due_date: parsedDate ? parsedDate.toISOString() : null,
       })
 
       if (error) throw error
 
       setTitle('')
-      toast.success('Tarea creada')
+      setNaturalDateSuggestion(null)
+      toast.success(parsedDate ? `Tarea creada para ${format(parsedDate, 'dd/MM/yyyy')}` : 'Tarea creada')
+
+      // Mantener focus en el input
+      setTimeout(() => inputRef.current?.focus(), 100)
     } catch (error: any) {
       toast.error('Error al crear tarea')
       console.error(error)
@@ -63,7 +84,11 @@ export default function TaskInput({ userId }: TaskInputProps) {
       setDescription('')
       setDueDate(null)
       setShowModal(false)
+      setNaturalDateSuggestion(null)
       toast.success('Tarea creada')
+
+      // Mantener focus en el input
+      setTimeout(() => inputRef.current?.focus(), 100)
     } catch (error: any) {
       toast.error('Error al crear tarea')
       console.error(error)
@@ -73,11 +98,20 @@ export default function TaskInput({ userId }: TaskInputProps) {
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Enter: crear tarea rápida
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       e.preventDefault()
       createQuickTask()
-    } else if (e.key === 'Enter' && e.shiftKey) {
+    }
+    // Shift+Enter: abrir modal con detalles
+    else if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault()
+      setShowModal(true)
+    }
+    // Cmd/Ctrl+D: crear con fecha de hoy
+    else if (e.key === 'd' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      setDueDate(new Date())
       setShowModal(true)
     }
   }
@@ -86,24 +120,66 @@ export default function TaskInput({ userId }: TaskInputProps) {
     <>
       {/* Input Rápido */}
       <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-        <div className="max-w-4xl mx-auto flex gap-2">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="¿Qué necesitas hacer? (Enter para crear, Shift+Enter para detalles)"
-            disabled={loading}
-            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-slate-700 dark:text-white transition-all disabled:opacity-50"
-          />
-          <button
-            onClick={() => setShowModal(true)}
-            disabled={loading}
-            className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-all disabled:opacity-50"
-            title="Agregar con detalles"
-          >
-            <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </button>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-2 relative">
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="¿Qué necesitas hacer?"
+                disabled={loading}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-slate-700 dark:text-white transition-all disabled:opacity-50"
+              />
+              {/* Indicador de carga con skeleton */}
+              {loading && (
+                <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 backdrop-blur-[1px] rounded-lg flex items-center px-4">
+                  <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
+                    <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-medium">Creando...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setShowModal(true)}
+              disabled={loading}
+              className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-all disabled:opacity-50"
+              title="Agregar con detalles (Shift+Enter)"
+            >
+              <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
+          </div>
+
+          {/* Sugerencia de fecha natural */}
+          {naturalDateSuggestion && !loading && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400">
+              <Sparkles className="w-3 h-3" />
+              <span>
+                Se detectó &ldquo;{naturalDateSuggestion}&rdquo; - se asignará automáticamente al crear
+              </span>
+            </div>
+          )}
+
+          {/* Shortcuts visibles */}
+          <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded border border-gray-300 dark:border-gray-600">Enter</kbd>
+              crear
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded border border-gray-300 dark:border-gray-600">Shift+Enter</kbd>
+              detalles
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-slate-700 rounded border border-gray-300 dark:border-gray-600">Cmd+D</kbd>
+              fecha hoy
+            </span>
+            <span className="text-gray-400 dark:text-gray-500">|</span>
+            <span className="italic">Prueba: &ldquo;mañana&rdquo;, &ldquo;lunes&rdquo;, &ldquo;en 3 días&rdquo;</span>
+          </div>
         </div>
       </div>
 
