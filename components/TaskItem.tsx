@@ -5,9 +5,8 @@ import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { Check, Trash2, Calendar, MoreVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format, isPast, isToday, formatDistanceToNow } from 'date-fns'
+import { format, isPast, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz'
 
 interface TaskItemProps {
   task: Task
