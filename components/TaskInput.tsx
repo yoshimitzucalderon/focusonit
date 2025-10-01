@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Plus, Calendar } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 interface TaskInputProps {
   userId: string
@@ -14,7 +17,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
   const [title, setTitle] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [description, setDescription] = useState('')
-  const [dueDate, setDueDate] = useState('')
+  const [dueDate, setDueDate] = useState<Date | null>(null)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
@@ -51,14 +54,14 @@ export default function TaskInput({ userId }: TaskInputProps) {
         user_id: userId,
         title: title.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        due_date: dueDate ? dueDate.toISOString() : null,
       })
 
       if (error) throw error
 
       setTitle('')
       setDescription('')
-      setDueDate('')
+      setDueDate(null)
       setShowModal(false)
       toast.success('Tarea creada')
     } catch (error: any) {
@@ -144,12 +147,16 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Fecha
                 </label>
-                <input
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  min={format(new Date(), 'yyyy-MM-dd')}
+                <DatePicker
+                  selected={dueDate}
+                  onChange={(date) => setDueDate(date)}
+                  minDate={new Date()}
+                  dateFormat="dd/MM/yyyy"
+                  locale={es}
+                  placeholderText="Selecciona una fecha"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-white"
+                  calendarClassName="dark:bg-slate-800"
+                  wrapperClassName="w-full"
                 />
               </div>
             </div>
@@ -166,7 +173,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 onClick={() => {
                   setShowModal(false)
                   setDescription('')
-                  setDueDate('')
+                  setDueDate(null)
                 }}
                 disabled={loading}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
