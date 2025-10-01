@@ -5,8 +5,9 @@ import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { Check, Trash2, Calendar, MoreVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format, isPast, isToday } from 'date-fns'
+import { format, isPast, isToday, formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { zonedTimeToUtc, utcToZonedTime } from 'date-fns-tz'
 
 interface TaskItemProps {
   task: Task
@@ -159,7 +160,7 @@ export default function TaskItem({ task }: TaskItemProps) {
           <div className="flex items-center gap-1 mt-2">
             <Calendar className={`w-4 h-4 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`} />
             <span className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
-              {format(new Date(task.due_date), "d 'de' MMMM", { locale: es })}
+              {format(new Date(task.due_date), "d 'de' MMMM, yyyy", { locale: es })}
               {isOverdue && ' (Atrasada)'}
             </span>
           </div>
