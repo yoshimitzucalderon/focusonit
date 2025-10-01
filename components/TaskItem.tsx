@@ -133,19 +133,21 @@ export default function TaskItem({ task }: TaskItemProps) {
   return (
     <motion.div
       drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.1}
-      dragMomentum={false}
+      dragDirectionLock
+      dragConstraints={{ left: -250, right: 0 }}
+      dragElastic={0.05}
+      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
       onDragEnd={handleDragEnd}
-      whileDrag={{ cursor: 'grabbing' }}
+      whileDrag={{ cursor: 'grabbing', scale: 0.98 }}
       initial={{ opacity: 0, y: -10 }}
       animate={{
         opacity: isCompleting ? 0.3 : 1,
         y: 0,
-        scale: isCompleting ? 0.98 : 1
+        scale: isCompleting ? 0.98 : 1,
+        x: 0
       }}
       exit={{ opacity: 0, x: -300, transition: { duration: 0.3 } }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`task-item group relative flex items-start gap-3 p-4 rounded-lg border transition-all duration-200 ${
         task.completed
           ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
