@@ -108,8 +108,12 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   // Handler para swipe
   const handleDragEnd = (event: any, info: PanInfo) => {
-    // Swipe left más de 150px = eliminar
-    if (info.offset.x < -150) {
+    // Swipe left con velocidad o distancia suficiente = eliminar
+    const swipeVelocity = info.velocity.x
+    const swipeDistance = info.offset.x
+
+    // Si arrastró rápido hacia la izquierda O si arrastró más de 100px
+    if (swipeVelocity < -500 || swipeDistance < -100) {
       deleteTask(true)
     }
   }
@@ -129,17 +133,19 @@ export default function TaskItem({ task }: TaskItemProps) {
   return (
     <motion.div
       drag="x"
-      dragConstraints={{ left: -200, right: 0 }}
-      dragElastic={0.2}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.1}
+      dragMomentum={false}
       onDragEnd={handleDragEnd}
+      whileDrag={{ cursor: 'grabbing' }}
       initial={{ opacity: 0, y: -10 }}
       animate={{
         opacity: isCompleting ? 0.3 : 1,
         y: 0,
         scale: isCompleting ? 0.98 : 1
       }}
-      exit={{ opacity: 0, x: -100 }}
-      transition={{ duration: 0.2 }}
+      exit={{ opacity: 0, x: -300, transition: { duration: 0.3 } }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className={`task-item group relative flex items-start gap-3 p-4 rounded-lg border transition-all duration-200 ${
         task.completed
           ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
