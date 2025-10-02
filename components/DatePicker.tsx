@@ -88,7 +88,7 @@ export function DatePicker({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
 
@@ -98,7 +98,7 @@ export function DatePicker({
               position: 'fixed',
               top: buttonPosition.top,
               left: buttonPosition.left,
-              zIndex: 50
+              zIndex: 9999
             }}
             className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700"
           >

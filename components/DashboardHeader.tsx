@@ -236,20 +236,25 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
             <Plus size={20} />
           </button>
 
-          <div className="flex-1 md:flex-initial" />
+          <div className="flex-1" />
 
-          <div className="flex items-center gap-3">
+          {/* Email y Logout alineados a la derecha */}
+          <div className="flex items-center gap-3 pr-4 md:pr-6">
             {userEmail && (
-              <span className="text-sm text-gray-600 dark:text-gray-300 hidden lg:inline">
+              <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:inline font-medium">
                 {userEmail}
               </span>
             )}
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              aria-label="Logout"
+              className="group relative p-2.5 rounded-full transition-all duration-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:scale-110"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
             >
-              <LogOut size={20} className="text-gray-600 dark:text-gray-300" />
+              <LogOut
+                size={20}
+                className="text-rose-600 dark:text-rose-500 transition-all duration-300 group-hover:text-rose-700 dark:group-hover:text-rose-400 group-hover:rotate-12"
+              />
             </button>
           </div>
         </div>
