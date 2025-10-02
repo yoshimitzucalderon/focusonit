@@ -146,3 +146,59 @@ body {
   --rdp-accent-color: #3b82f6;
   --rdp-background-color: #1e293b;
 }
+
+/* Utilidades para descripciones de tareas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Scroll suave para descripciones largas */
+.description-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.description-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.description-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.description-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.description-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode para scroll */
+.dark .description-scroll {
+  scrollbar-color: #475569 #1e293b;
+}
+
+.dark .description-scroll::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .description-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .description-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
