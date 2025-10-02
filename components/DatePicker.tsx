@@ -91,29 +91,45 @@ export function DatePicker({
     setIsOpen(false)
   }
 
-  // Renderizar el popover usando Portal para evitar problemas de z-index
-  const renderPopover = () => {
-    if (!isOpen || !buttonPosition || !isMounted) return null
+  return (
+    <>
+      {/* Trigger Button */}
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+          value
+            ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+        } ${buttonClassName}`}
+      >
+        <CalendarIcon className="w-4 h-4" />
+        <span className="font-medium">
+          {value ? format(value, "d 'de' MMM", { locale: es }) : placeholder}
+        </span>
+      </button>
 
-    return createPortal(
-      <>
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 z-[9998]"
-          onClick={() => setIsOpen(false)}
-          style={{ backgroundColor: 'transparent' }}
-        />
+      {/* Popover con Portal */}
+      {isOpen && buttonPosition && isMounted && createPortal(
+        <div>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={() => setIsOpen(false)}
+            style={{ backgroundColor: 'transparent' }}
+          />
 
-        {/* Calendar Popover */}
-        <div
-          style={{
-            position: 'fixed',
-            top: `${buttonPosition.top}px`,
-            left: `${buttonPosition.left}px`,
-            zIndex: 9999
-          }}
-          className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 animate-fade-in"
-        >
+          {/* Calendar Popover */}
+          <div
+            style={{
+              position: 'fixed',
+              top: `${buttonPosition.top}px`,
+              left: `${buttonPosition.left}px`,
+              zIndex: 9999
+            }}
+            className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 animate-fade-in"
+          >
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
               <button
@@ -160,33 +176,9 @@ export function DatePicker({
               }}
             />
           </div>
-        </div>
-      </>,
-      document.body
-    )
-  }
-
-  return (
-    <>
-      {/* Trigger Button */}
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
-          value
-            ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
-            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
-        } ${buttonClassName}`}
-      >
-        <CalendarIcon className="w-4 h-4" />
-        <span className="font-medium">
-          {value ? format(value, "d 'de' MMM", { locale: es }) : placeholder}
-        </span>
-      </button>
-
-      {/* Popover renderizado en Portal */}
-      {renderPopover()}
+        </div>,
+        document.body
+      )}
     </>
   )
 }
