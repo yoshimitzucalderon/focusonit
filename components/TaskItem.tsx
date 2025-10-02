@@ -18,6 +18,7 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [title, setTitle] = useState(task.title)
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
+  const [dragX, setDragX] = useState(0)
   const editInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -106,15 +107,22 @@ export default function TaskItem({ task }: TaskItemProps) {
     }
   }
 
-  // Handler para swipe
+  // Handler para swipe (estilo iPhone)
+  const handleDrag = (event: any, info: PanInfo) => {
+    setDragX(info.offset.x)
+  }
+
   const handleDragEnd = (event: any, info: PanInfo) => {
-    // Swipe left con velocidad o distancia suficiente = eliminar
     const swipeVelocity = info.velocity.x
     const swipeDistance = info.offset.x
 
-    // Si arrastró rápido hacia la izquierda O si arrastró más de 100px
-    if (swipeVelocity < -500 || swipeDistance < -100) {
+    // Threshold más bajo y más sensible a velocidad (como iPhone)
+    if (swipeVelocity < -300 || swipeDistance < -80) {
+      // Eliminar con animación
       deleteTask(true)
+    } else {
+      // Volver a posición inicial
+      setDragX(0)
     }
   }
 
@@ -134,20 +142,25 @@ export default function TaskItem({ task }: TaskItemProps) {
     <motion.div
       drag="x"
       dragDirectionLock
-      dragConstraints={{ left: -250, right: 0 }}
-      dragElastic={0.05}
-      dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
+      dragConstraints={{ left: -100, right: 0 }}
+      dragElastic={0}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
-      whileDrag={{ cursor: 'grabbing', scale: 0.98 }}
+      whileDrag={{ cursor: 'grabbing' }}
       initial={{ opacity: 0, y: -10 }}
       animate={{
         opacity: isCompleting ? 0.3 : 1,
         y: 0,
         scale: isCompleting ? 0.98 : 1,
-        x: 0
+        x: dragX
       }}
-      exit={{ opacity: 0, x: -300, transition: { duration: 0.3 } }}
-      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      exit={{ opacity: 0, x: -400, transition: { duration: 0.25, ease: 'easeIn' } }}
+      transition={{
+        type: 'spring',
+        stiffness: 500,
+        damping: 35,
+        mass: 0.5
+      }}
       className={`task-item group relative flex items-start gap-3 p-4 rounded-lg border transition-all duration-200 ${
         task.completed
           ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
@@ -158,6 +171,16 @@ export default function TaskItem({ task }: TaskItemProps) {
           : 'border-gray-200 dark:border-gray-700 hover:border-l-primary-500'
       }`}
     >
+      {/* Botón de eliminar que aparece detrás */}
+      <div
+        className="absolute right-0 top-0 bottom-0 w-20 bg-red-500 flex items-center justify-end pr-4 rounded-r-lg"
+        style={{
+          opacity: Math.min(Math.abs(dragX) / 80, 1),
+          pointerEvents: 'none'
+        }}
+      >
+        <Trash2 className="w-5 h-5 text-white" />
+      </div>
       {/* Checkbox */}
       <button
         onClick={toggleComplete}
@@ -271,11 +294,6 @@ export default function TaskItem({ task }: TaskItemProps) {
           <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
         </button>
       </motion.div>
-
-      {/* Indicador de swipe */}
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-30 pointer-events-none">
-        <span className="text-xs text-gray-400">&larr; swipe</span>
-      </div>
 
       {/* Date Picker Modal */}
       {showDatePicker && (
