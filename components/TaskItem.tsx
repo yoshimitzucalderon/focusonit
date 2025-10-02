@@ -3,11 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Trash2, Edit3, Clock, FileText, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react'
+import { Check, Edit3, Clock, FileText, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format, isPast, isToday, differenceInDays } from 'date-fns'
-import { es } from 'date-fns/locale'
-import { motion, PanInfo, AnimatePresence, useMotionValue } from 'framer-motion'
+import { isPast, isToday, differenceInDays } from 'date-fns'
+import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 
 interface TaskItemProps {
@@ -21,19 +20,11 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState(task.description || '')
-  const [isSwipeOpen, setIsSwipeOpen] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const editInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
-
-  // Configuración del swipe
-  const x = useMotionValue(0)
-  const SNAP_CLOSED = 0
-  const SNAP_FULL = -160
-  const SWIPE_THRESHOLD = 20
 
   // Toggle completado con animación
   const toggleComplete = async () => {
@@ -126,63 +117,6 @@ export default function TaskItem({ task }: TaskItemProps) {
     setIsEditingDescription(false)
   }
 
-  // Eliminar tarea
-  const deleteTask = async () => {
-    try {
-      const { error } = await supabase.from('tasks').delete().eq('id', task.id)
-
-      if (error) throw error
-
-      toast.success('Tarea eliminada')
-      closeSwipe()
-    } catch (error: any) {
-      toast.error('Error al eliminar tarea')
-      console.error(error)
-    }
-  }
-
-  // Handler para swipe estilo iOS
-  const handleDragEnd = (event: any, info: PanInfo) => {
-    const offset = info.offset.x
-    const velocity = info.velocity.x
-
-    // Si el movimiento es muy pequeño, ignorar
-    if (Math.abs(offset) < SWIPE_THRESHOLD) {
-      x.set(SNAP_CLOSED)
-      setIsSwipeOpen(false)
-      return
-    }
-
-    // Determinar a qué snap point ir
-    if (velocity < -500 || offset < -80) {
-      // Swipe rápido o largo a la izquierda - abrir completamente
-      x.set(SNAP_FULL)
-      setIsSwipeOpen(true)
-    } else {
-      // Cerrar
-      x.set(SNAP_CLOSED)
-      setIsSwipeOpen(false)
-    }
-  }
-
-  const closeSwipe = () => {
-    x.set(SNAP_CLOSED)
-    setIsSwipeOpen(false)
-  }
-
-  const handleCompleteFromSwipe = () => {
-    toggleComplete()
-    closeSwipe()
-  }
-
-  const handleEditFromSwipe = () => {
-    setEditing(true)
-    closeSwipe()
-  }
-
-  const handleDeleteFromSwipe = () => {
-    setShowDeleteConfirm(true)
-  }
 
   // Focus en input al entrar en modo edición
   useEffect(() => {
@@ -201,59 +135,12 @@ export default function TaskItem({ task }: TaskItemProps) {
     : 0
 
   return (
-    <div className="relative overflow-hidden rounded-lg">
-      {/* Botones de acción (detrás del swipe) */}
-      <div className="absolute inset-y-0 right-0 flex">
-        {/* Botón Completar */}
-        <button
-          onClick={handleCompleteFromSwipe}
-          className="w-[53px] flex flex-col items-center justify-center bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors"
-        >
-          <CheckCircle className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-medium">
-            {task.completed ? 'Reabrir' : 'Hecho'}
-          </span>
-        </button>
-
-        {/* Botón Editar */}
-        <button
-          onClick={handleEditFromSwipe}
-          className="w-[53px] flex flex-col items-center justify-center bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 transition-colors"
-        >
-          <Edit3 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-medium">Editar</span>
-        </button>
-
-        {/* Botón Eliminar */}
-        <button
-          onClick={handleDeleteFromSwipe}
-          className="w-[53px] flex flex-col items-center justify-center bg-red-500 text-white hover:bg-red-600 active:bg-red-700 transition-colors"
-        >
-          <Trash2 className="w-5 h-5" />
-          <span className="text-[10px] mt-0.5 font-medium">Borrar</span>
-        </button>
-      </div>
-
-      {/* Contenido de la tarea (draggable) */}
-      <motion.div
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: SNAP_FULL, right: 0 }}
-        dragElastic={0.1}
-        dragMomentum={false}
-        style={{ x }}
-        onDragEnd={handleDragEnd}
-        animate={{
-          x: isSwipeOpen ? SNAP_FULL : SNAP_CLOSED
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 30
-        }}
-        initial={{ opacity: 0, y: -10 }}
-        whileDrag={{ cursor: 'grabbing' }}
-        className={`task-item group relative flex items-start gap-3 p-3 sm:p-4 rounded-lg border transition-colors duration-200 cursor-grab active:cursor-grabbing ${
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      transition={{ duration: 0.2 }}
+      className={`task-item group relative flex items-start gap-3 p-3 sm:p-4 rounded-lg border transition-colors duration-200 ${
           task.completed
             ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
             : 'bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-l-4'
@@ -262,7 +149,7 @@ export default function TaskItem({ task }: TaskItemProps) {
             ? 'border-red-300 dark:border-red-800 border-l-4 border-l-red-500'
             : 'border-gray-200 dark:border-gray-700 hover:border-l-primary-500'
         }`}
-      >
+    >
       {/* Checkbox */}
       <button
         onClick={toggleComplete}
@@ -444,49 +331,6 @@ export default function TaskItem({ task }: TaskItemProps) {
           />
         </div>
       </div>
-
-      </motion.div>
-
-      {/* Backdrop para cerrar swipe */}
-      {isSwipeOpen && (
-        <div
-          className="fixed inset-0 z-30"
-          onClick={closeSwipe}
-        />
-      )}
-
-      {/* Modal de confirmación para eliminar */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-sm w-full shadow-xl"
-          >
-            <h3 className="text-lg font-semibold mb-2 dark:text-white">¿Eliminar tarea?</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  deleteTask()
-                  setShowDeleteConfirm(false)
-                }}
-                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 font-medium transition-colors min-h-[44px]"
-              >
-                Eliminar
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-500 active:bg-gray-400 font-medium transition-colors min-h-[44px]"
-              >
-                Cancelar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </div>
+    </motion.div>
   )
 }
