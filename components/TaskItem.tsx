@@ -19,7 +19,9 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
   const [dragX, setDragX] = useState(0)
+  const [dateButtonPosition, setDateButtonPosition] = useState<{ top: number; right: number } | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
+  const dateButtonRef = useRef<HTMLButtonElement>(null)
   const supabase = createClient()
 
   // Toggle completado con animación
@@ -133,6 +135,17 @@ export default function TaskItem({ task }: TaskItemProps) {
       editInputRef.current.select()
     }
   }, [editing])
+
+  // Calcular posición del date picker
+  useEffect(() => {
+    if (showDatePicker && dateButtonRef.current) {
+      const rect = dateButtonRef.current.getBoundingClientRect()
+      setDateButtonPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      })
+    }
+  }, [showDatePicker])
 
   // Verificar si está atrasada y calcular días
   const isOverdue =
@@ -291,6 +304,7 @@ export default function TaskItem({ task }: TaskItemProps) {
 
         {/* Cambiar fecha */}
         <button
+          ref={dateButtonRef}
           onClick={() => setShowDatePicker(!showDatePicker)}
           className="p-2 hover:bg-gray-100 dark:hover:bg-slate-600 rounded-lg transition-all"
           title="Cambiar fecha"
@@ -308,27 +322,42 @@ export default function TaskItem({ task }: TaskItemProps) {
         </button>
       </motion.div>
 
-      {/* Date Picker Modal */}
-      {showDatePicker && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="absolute mt-8 right-4 bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 z-20"
-        >
-          <input
-            type="date"
-            defaultValue={task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd') : ''}
-            onChange={(e) => updateDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-600 dark:text-white"
+      {/* Date Picker Modal - Fixed position para evitar sobreposición */}
+      {showDatePicker && dateButtonPosition && (
+        <>
+          {/* Overlay para cerrar al hacer click afuera */}
+          <div
+            className="fixed inset-0 z-30"
+            onClick={() => setShowDatePicker(false)}
           />
-          <button
-            onClick={() => updateDate('')}
-            className="mt-2 w-full text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            style={{
+              position: 'fixed',
+              top: dateButtonPosition.top,
+              right: dateButtonPosition.right,
+              zIndex: 40
+            }}
+            className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl p-3"
           >
-            Quitar fecha
-          </button>
-        </motion.div>
+            <input
+              type="date"
+              defaultValue={task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd') : ''}
+              onChange={(e) => updateDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-600 dark:text-white"
+              autoFocus
+            />
+            <button
+              onClick={() => updateDate('')}
+              className="mt-2 w-full text-sm text-red-600 hover:text-red-700 dark:text-red-400 font-medium"
+            >
+              Quitar fecha
+            </button>
+          </motion.div>
+        </>
       )}
     </motion.div>
   )
