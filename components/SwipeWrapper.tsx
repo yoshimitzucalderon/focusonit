@@ -20,12 +20,11 @@ export default function SwipeWrapper({
   isCompleted = false,
 }: SwipeWrapperProps) {
   const [isSwipeOpen, setIsSwipeOpen] = useState(false)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const x = useMotionValue(0)
 
   // Snap points
   const SNAP_CLOSED = 0
-  const SNAP_FULL = -106 // 2 botones * 53px = 106px
+  const SNAP_FULL = -224 // 2 botones × 112px cada uno (w-28)
   const SWIPE_THRESHOLD = 20 // Mínimo 20px para activar
 
   // Handler para swipe estilo iOS
@@ -85,18 +84,9 @@ export default function SwipeWrapper({
     setIsSwipeOpen(false)
   }
 
-  const handleCompleteFromSwipe = () => {
-    onComplete?.()
-    closeSwipe()
-  }
-
-  const handleDeleteFromSwipe = () => {
-    setShowDeleteConfirm(true)
-  }
-
-  const confirmDelete = () => {
-    onDelete?.()
-    setShowDeleteConfirm(false)
+  const handleActionClick = (action: () => void) => {
+    console.log('=== BUTTON ACTION CLICKED ===')
+    action()
     closeSwipe()
   }
 
@@ -104,26 +94,44 @@ export default function SwipeWrapper({
     <>
       <div className="relative overflow-hidden">
         {/* Botones de acción (detrás del swipe) */}
-        <div className="absolute inset-y-0 right-0 flex">
-          {/* Botón Completar */}
+        <div className="absolute inset-y-0 right-0 flex z-10">
+          {/* Botón Completado - MÁS ANCHO */}
           <button
-            onClick={handleCompleteFromSwipe}
-            className="w-[53px] flex flex-col items-center justify-center bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors"
+            type="button"
+            onClick={(e) => {
+              console.log('BOTÓN COMPLETADO CLICKED!')
+              e.preventDefault()
+              e.stopPropagation()
+              if (onComplete) {
+                handleActionClick(onComplete)
+              }
+            }}
+            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
           >
-            <CheckCircle className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5 font-medium">
-              {isCompleted ? 'Reabrir' : 'Completado'}
+            <CheckCircle size={26} />
+            <span className="text-sm font-semibold mt-1">
+              {isCompleted ? 'Reabrir' : 'Hecho'}
             </span>
           </button>
 
-
-          {/* Botón Eliminar */}
+          {/* Botón Borrar - MÁS ANCHO */}
           <button
-            onClick={handleDeleteFromSwipe}
-            className="w-[53px] flex flex-col items-center justify-center bg-red-500 text-white hover:bg-red-600 active:bg-red-700 transition-colors"
+            type="button"
+            onClick={(e) => {
+              console.log('BOTÓN BORRAR CLICKED!')
+              e.preventDefault()
+              e.stopPropagation()
+              const confirmed = window.confirm('¿Eliminar esta tarea?')
+              if (confirmed && onDelete) {
+                handleActionClick(onDelete)
+              } else {
+                closeSwipe()
+              }
+            }}
+            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-red-500 text-white hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
           >
-            <Trash2 className="w-5 h-5" />
-            <span className="text-[10px] mt-0.5 font-medium">Borrar</span>
+            <Trash2 size={26} />
+            <span className="text-sm font-semibold mt-1">Borrar</span>
           </button>
         </div>
 
@@ -144,7 +152,7 @@ export default function SwipeWrapper({
             stiffness: 400,
             damping: 40,
           }}
-          className="relative bg-white dark:bg-slate-900 cursor-grab active:cursor-grabbing"
+          className="relative bg-white dark:bg-slate-900 cursor-grab active:cursor-grabbing z-20"
         >
           {children}
         </motion.div>
@@ -157,38 +165,6 @@ export default function SwipeWrapper({
           onClick={closeSwipe}
           onTouchEnd={closeSwipe}
         />
-      )}
-
-      {/* Modal de confirmación para eliminar */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-sm w-full shadow-xl"
-          >
-            <h3 className="text-lg font-semibold mb-2 dark:text-white">
-              ¿Eliminar tarea?
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 font-medium transition-colors min-h-[44px]"
-              >
-                Eliminar
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-slate-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-500 active:bg-gray-400 font-medium transition-colors min-h-[44px]"
-              >
-                Cancelar
-              </button>
-            </div>
-          </motion.div>
-        </div>
       )}
     </>
   )
