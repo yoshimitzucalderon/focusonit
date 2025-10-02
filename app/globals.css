@@ -202,3 +202,24 @@ body {
 .dark .description-scroll::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
+
+/* Safe area para dispositivos con notch/barra inferior */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Animación suave para el checkbox de selección */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.selection-checkbox {
+  animation: slideInLeft 0.2s ease-out;
+}

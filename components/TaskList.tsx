@@ -65,6 +65,7 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
         {tasks.map((task) => (
           <SwipeWrapper
             key={task.id}
+            taskId={task.id}
             onComplete={() => handleComplete(task)}
             onDelete={() => handleDelete(task.id)}
             isCompleted={task.completed}
