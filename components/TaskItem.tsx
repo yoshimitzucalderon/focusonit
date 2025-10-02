@@ -9,6 +9,7 @@ import { isPast, isToday, differenceInDays } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
+import { PomodoroTimer } from './PomodoroTimer'
 
 interface TaskItemProps {
   task: Task
@@ -297,13 +298,22 @@ export default function TaskItem({ task }: TaskItemProps) {
           </button>
         )}
 
-        {/* Fecha con DatePicker */}
-        <div className="mt-2">
+        {/* Fecha y Timer en la misma fila */}
+        <div className="mt-2 flex items-center gap-3 flex-wrap">
+          {/* Fecha con DatePicker */}
           <DatePicker
             value={task.due_date ? new Date(task.due_date) : null}
             onChange={updateDate}
             placeholder="Agregar fecha"
           />
+
+          {/* Pomodoro Timer - solo si la tarea no está completada */}
+          {!task.completed && (
+            <PomodoroTimer
+              taskId={task.id}
+              userId={task.user_id}
+            />
+          )}
         </div>
       </div>
     </motion.div>
