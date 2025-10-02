@@ -6,9 +6,8 @@ import { Plus, Calendar, Sparkles } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
+import { DatePicker } from './DatePicker'
 
 interface TaskInputProps {
   userId: string
@@ -224,15 +223,10 @@ export default function TaskInput({ userId }: TaskInputProps) {
                   Fecha
                 </label>
                 <DatePicker
-                  selected={dueDate}
+                  value={dueDate}
                   onChange={(date) => setDueDate(date)}
-                  minDate={new Date()}
-                  dateFormat="dd/MM/yyyy"
-                  locale={es}
-                  placeholderText="Selecciona una fecha"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-white"
-                  calendarClassName="dark:bg-slate-800"
-                  wrapperClassName="w-full"
+                  placeholder="Seleccionar fecha"
+                  buttonClassName="w-full justify-start border border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 px-4 py-2"
                 />
               </div>
             </div>

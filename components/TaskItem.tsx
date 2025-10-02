@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Trash2, Calendar, Edit3, Clock } from 'lucide-react'
+import { Check, Trash2, Edit3, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format, isPast, isToday, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { motion, PanInfo } from 'framer-motion'
+import { DatePicker } from './DatePicker'
 
 interface TaskItemProps {
   task: Task
@@ -16,12 +17,9 @@ interface TaskItemProps {
 export default function TaskItem({ task }: TaskItemProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(task.title)
-  const [showDatePicker, setShowDatePicker] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
   const [dragX, setDragX] = useState(0)
-  const [dateButtonPosition, setDateButtonPosition] = useState<{ top: number; right: number } | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
-  const dateButtonRef = useRef<HTMLButtonElement>(null)
   const supabase = createClient()
 
   // Toggle completado con animación
@@ -74,19 +72,18 @@ export default function TaskItem({ task }: TaskItemProps) {
   }
 
   // Cambiar fecha
-  const updateDate = async (newDate: string) => {
+  const updateDate = async (newDate: Date | null) => {
     try {
       const { error } = await supabase
         .from('tasks')
         .update({
-          due_date: newDate ? new Date(newDate).toISOString() : null,
+          due_date: newDate ? newDate.toISOString() : null,
         })
         .eq('id', task.id)
 
       if (error) throw error
 
-      setShowDatePicker(false)
-      toast.success('Fecha actualizada')
+      toast.success(newDate ? 'Fecha actualizada' : 'Fecha eliminada')
     } catch (error: any) {
       toast.error('Error al actualizar fecha')
       console.error(error)
@@ -135,17 +132,6 @@ export default function TaskItem({ task }: TaskItemProps) {
       editInputRef.current.select()
     }
   }, [editing])
-
-  // Calcular posición del date picker
-  useEffect(() => {
-    if (showDatePicker && dateButtonRef.current) {
-      const rect = dateButtonRef.current.getBoundingClientRect()
-      setDateButtonPosition({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right
-      })
-    }
-  }, [showDatePicker])
 
   // Verificar si está atrasada y calcular días
   const isOverdue =
@@ -273,16 +259,14 @@ export default function TaskItem({ task }: TaskItemProps) {
           </p>
         )}
 
-        {/* Fecha */}
-        {task.due_date && (
-          <div className="flex items-center gap-1 mt-2">
-            <Calendar className={`w-4 h-4 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`} />
-            <span className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
-              {format(new Date(task.due_date), "d 'de' MMMM, yyyy", { locale: es })}
-              {isOverdue && ' (Atrasada)'}
-            </span>
-          </div>
-        )}
+        {/* Fecha con DatePicker */}
+        <div className="mt-2">
+          <DatePicker
+            value={task.due_date ? new Date(task.due_date) : null}
+            onChange={updateDate}
+            placeholder="Agregar fecha"
+          />
+        </div>
       </div>
 
       {/* Acciones */}
@@ -302,16 +286,6 @@ export default function TaskItem({ task }: TaskItemProps) {
           </button>
         )}
 
-        {/* Cambiar fecha */}
-        <button
-          ref={dateButtonRef}
-          onClick={() => setShowDatePicker(!showDatePicker)}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-slate-600 rounded-lg transition-all"
-          title="Cambiar fecha"
-        >
-          <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        </button>
-
         {/* Eliminar */}
         <button
           onClick={() => deleteTask()}
@@ -321,44 +295,6 @@ export default function TaskItem({ task }: TaskItemProps) {
           <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
         </button>
       </motion.div>
-
-      {/* Date Picker Modal - Fixed position para evitar sobreposición */}
-      {showDatePicker && dateButtonPosition && (
-        <>
-          {/* Overlay para cerrar al hacer click afuera */}
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setShowDatePicker(false)}
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: 'fixed',
-              top: dateButtonPosition.top,
-              right: dateButtonPosition.right,
-              zIndex: 40
-            }}
-            className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl p-3"
-          >
-            <input
-              type="date"
-              defaultValue={task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd') : ''}
-              onChange={(e) => updateDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-slate-600 dark:text-white"
-              autoFocus
-            />
-            <button
-              onClick={() => updateDate('')}
-              className="mt-2 w-full text-sm text-red-600 hover:text-red-700 dark:text-red-400 font-medium"
-            >
-              Quitar fecha
-            </button>
-          </motion.div>
-        </>
-      )}
     </motion.div>
   )
 }

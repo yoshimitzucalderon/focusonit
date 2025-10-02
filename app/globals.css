@@ -50,3 +50,99 @@ body {
     @apply text-red-600 dark:text-red-400;
   }
 }
+
+/* Estilos personalizados para react-day-picker */
+.rdp-custom {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #2563eb;
+  --rdp-background-color: #eff6ff;
+  margin: 0;
+}
+
+.rdp-custom .rdp-months {
+  @apply text-gray-900 dark:text-white;
+}
+
+.rdp-custom .rdp-caption {
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+  @apply flex justify-center items-center;
+}
+
+.rdp-custom .rdp-caption_label {
+  @apply text-sm font-semibold text-gray-900 dark:text-white;
+}
+
+.rdp-custom .rdp-nav {
+  @apply flex gap-1;
+}
+
+.rdp-custom .rdp-nav_button {
+  @apply w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors;
+}
+
+.rdp-custom .rdp-nav_button svg {
+  @apply w-4 h-4 text-gray-600 dark:text-gray-400;
+}
+
+.rdp-custom .rdp-head_cell {
+  @apply text-gray-600 dark:text-gray-400 text-xs font-medium;
+  width: var(--rdp-cell-size);
+  padding: 0;
+}
+
+.rdp-custom .rdp-cell {
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  padding: 0;
+}
+
+.rdp-custom .rdp-day {
+  @apply rounded-md text-sm font-normal transition-colors;
+  width: var(--rdp-cell-size);
+  height: var(--rdp-cell-size);
+  @apply text-gray-900 dark:text-white;
+}
+
+.rdp-custom .rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled) {
+  @apply bg-gray-100 dark:bg-slate-700;
+}
+
+.rdp-custom .rdp-day_selected {
+  @apply bg-primary-600 dark:bg-primary-500 text-white font-semibold;
+}
+
+.rdp-custom .rdp-day_selected:hover {
+  @apply bg-primary-700 dark:bg-primary-600;
+}
+
+.rdp-custom .rdp-day_today:not(.rdp-day_selected) {
+  @apply font-bold text-primary-600 dark:text-primary-400;
+  position: relative;
+}
+
+.rdp-custom .rdp-day_today:not(.rdp-day_selected)::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  @apply bg-primary-600 dark:bg-primary-400;
+}
+
+.rdp-custom .rdp-day_disabled {
+  @apply text-gray-300 dark:text-gray-600 cursor-not-allowed;
+}
+
+.rdp-custom .rdp-day_outside {
+  @apply text-gray-400 dark:text-gray-600;
+}
+
+/* Dark mode específico para react-day-picker */
+.dark .rdp-custom {
+  --rdp-accent-color: #3b82f6;
+  --rdp-background-color: #1e293b;
+}
