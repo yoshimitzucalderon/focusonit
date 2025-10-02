@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2 } from 'lucide-react'
+import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { isPast, isToday, differenceInDays } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -19,7 +19,6 @@ export default function TaskItem({ task }: TaskItemProps) {
   const isSelected = selectedIds.has(task.id)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(task.title)
-  const [isCompleting, setIsCompleting] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState(task.description || '')
@@ -28,31 +27,6 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
-
-  // Toggle completado con animación
-  const toggleComplete = async () => {
-    setIsCompleting(true)
-
-    // Pequeño delay para mostrar animación antes de actualizar
-    setTimeout(async () => {
-      try {
-        const { error } = await supabase
-          .from('tasks')
-          .update({
-            completed: !task.completed,
-            completed_at: !task.completed ? new Date().toISOString() : null,
-          })
-          .eq('id', task.id)
-
-        if (error) throw error
-      } catch (error: any) {
-        toast.error('Error al actualizar tarea')
-        console.error(error)
-      } finally {
-        setIsCompleting(false)
-      }
-    }, 200)
-  }
 
   // Editar título
   const saveTitle = async () => {
@@ -155,7 +129,7 @@ export default function TaskItem({ task }: TaskItemProps) {
           isSelected ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''
         }`}
     >
-      {/* Checkbox de SELECCIÓN (círculo) - siempre visible */}
+      {/* Checkbox de SELECCIÓN (círculo) - único checkbox */}
       <button
         onClick={(e) => {
           e.stopPropagation()
@@ -168,26 +142,6 @@ export default function TaskItem({ task }: TaskItemProps) {
           <CheckCircle2 size={20} className="text-primary-600 dark:text-primary-400" />
         ) : (
           <Circle size={20} className="text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500" />
-        )}
-      </button>
-
-      {/* Checkbox de COMPLETAR (cuadrado) */}
-      <button
-        onClick={toggleComplete}
-        className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all mt-0.5 ${
-          task.completed
-            ? 'bg-green-500 border-green-500 scale-110'
-            : 'border-gray-300 dark:border-gray-600 hover:border-primary-500 hover:scale-110'
-        }`}
-      >
-        {task.completed && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-          >
-            <Check className="w-4 h-4 text-white" />
-          </motion.div>
         )}
       </button>
 
