@@ -22,7 +22,7 @@ export function BulkActionsBar({ onBulkComplete, onBulkDelete, completeButtonTex
   if (!hasSelection) return null
 
   return (
-    <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
+    <div className="fixed bottom-16 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40 md:bottom-0 md:left-64">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Contador + botón cerrar */}
         <div className="flex items-center gap-3">
