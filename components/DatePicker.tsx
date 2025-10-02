@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Calendar as CalendarIcon, X } from 'lucide-react'
 import { DayPicker } from 'react-day-picker'
 import { format, addDays, addWeeks, startOfWeek } from 'date-fns'
@@ -24,16 +25,42 @@ export function DatePicker({
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [buttonPosition, setButtonPosition] = useState<{ top: number; left: number } | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Calcular posición del popover
+  // Verificar que estamos en el cliente
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  // Calcular posición del popover y ajustar si está fuera de viewport
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
-      setButtonPosition({
-        top: rect.bottom + 8,
-        left: rect.left
-      })
+      const viewportHeight = window.innerHeight
+      const viewportWidth = window.innerWidth
+      const popoverHeight = 400 // Altura aproximada del calendario
+      const popoverWidth = 320 // Ancho aproximado del calendario
+
+      let top = rect.bottom + 8
+      let left = rect.left
+
+      // Si el popover se sale por abajo, mostrarlo arriba del botón
+      if (top + popoverHeight > viewportHeight) {
+        top = rect.top - popoverHeight - 8
+      }
+
+      // Si el popover se sale por la derecha, ajustar a la izquierda
+      if (left + popoverWidth > viewportWidth) {
+        left = viewportWidth - popoverWidth - 16
+      }
+
+      // Si se sale por la izquierda, ajustar al borde
+      if (left < 16) {
+        left = 16
+      }
+
+      setButtonPosition({ top, left })
     }
   }, [isOpen])
 
@@ -64,44 +91,29 @@ export function DatePicker({
     setIsOpen(false)
   }
 
-  return (
-    <div className="relative">
-      {/* Trigger Button */}
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
-          value
-            ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
-            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
-        } ${buttonClassName}`}
-      >
-        <CalendarIcon className="w-4 h-4" />
-        <span className="font-medium">
-          {value ? format(value, "d 'de' MMM", { locale: es }) : placeholder}
-        </span>
-      </button>
+  // Renderizar el popover usando Portal para evitar problemas de z-index
+  const renderPopover = () => {
+    if (!isOpen || !buttonPosition || !isMounted) return null
 
-      {/* Popover */}
-      {isOpen && buttonPosition && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-[9998]"
-            onClick={() => setIsOpen(false)}
-          />
+    return createPortal(
+      <>
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 z-[9998]"
+          onClick={() => setIsOpen(false)}
+          style={{ backgroundColor: 'transparent' }}
+        />
 
-          {/* Calendar Popover */}
-          <div
-            style={{
-              position: 'fixed',
-              top: buttonPosition.top,
-              left: buttonPosition.left,
-              zIndex: 9999
-            }}
-            className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700"
-          >
+        {/* Calendar Popover */}
+        <div
+          style={{
+            position: 'fixed',
+            top: `${buttonPosition.top}px`,
+            left: `${buttonPosition.left}px`,
+            zIndex: 9999
+          }}
+          className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 animate-fade-in"
+        >
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
               <button
@@ -148,8 +160,33 @@ export function DatePicker({
               }}
             />
           </div>
-        </>
-      )}
-    </div>
+        </div>
+      </>,
+      document.body
+    )
+  }
+
+  return (
+    <>
+      {/* Trigger Button */}
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+          value
+            ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+        } ${buttonClassName}`}
+      >
+        <CalendarIcon className="w-4 h-4" />
+        <span className="font-medium">
+          {value ? format(value, "d 'de' MMM", { locale: es }) : placeholder}
+        </span>
+      </button>
+
+      {/* Popover renderizado en Portal */}
+      {renderPopover()}
+    </>
   )
 }
