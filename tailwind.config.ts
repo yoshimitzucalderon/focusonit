@@ -23,6 +23,20 @@ const config: Config = {
           900: '#1e3a8a',
         },
       },
+      animation: {
+        'fade-in': 'fadeIn 0.3s ease-in-out',
+        'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(-4px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        bounceGentle: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      },
     },
   },
   plugins: [],

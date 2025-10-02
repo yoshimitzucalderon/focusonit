@@ -31,6 +31,11 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
   // State para mobile
   const [showMobileInput, setShowMobileInput] = useState(false)
 
+  // State para UX hints progresivos
+  const [showFirstTimeHint, setShowFirstTimeHint] = useState(false)
+  const [showContextualHint, setShowContextualHint] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
+
   // Obtener userId
   useEffect(() => {
     const getUser = async () => {
@@ -39,6 +44,31 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
     }
     getUser()
   }, [supabase])
+
+  // Nivel 1: First-time hint (solo primera vez)
+  useEffect(() => {
+    const hasSeenHint = localStorage.getItem('focusonit-shift-enter-hint-seen')
+    if (!hasSeenHint) {
+      const timer = setTimeout(() => {
+        setShowFirstTimeHint(true)
+      }, 1500) // Aparece después de 1.5s
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // Nivel 2: Contextual hint (primeras 5 veces que escribe)
+  useEffect(() => {
+    if (title.length > 0 && inputFocused) {
+      const hintCount = parseInt(localStorage.getItem('focusonit-hint-count') || '0')
+      if (hintCount < 5) {
+        setShowContextualHint(true)
+        const timer = setTimeout(() => {
+          setShowContextualHint(false)
+        }, 3000) // Desaparece después de 3s
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [title, inputFocused])
 
   // Detectar fechas en lenguaje natural mientras escribe
   useEffect(() => {
@@ -75,6 +105,13 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       setTitle('')
       setNaturalDateSuggestion(null)
       setShowMobileInput(false)
+
+      // Incrementar contador de hints contextuales
+      const hintCount = parseInt(localStorage.getItem('focusonit-hint-count') || '0')
+      if (hintCount < 5) {
+        localStorage.setItem('focusonit-hint-count', (hintCount + 1).toString())
+      }
+
       toast.success(parsedDate ? `Tarea creada para ${format(parsedDate, 'dd/MM/yyyy')}` : 'Tarea creada')
     } catch (error: any) {
       toast.error('Error al crear tarea')
@@ -82,6 +119,12 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Cerrar first-time hint
+  const dismissFirstTimeHint = () => {
+    setShowFirstTimeHint(false)
+    localStorage.setItem('focusonit-shift-enter-hint-seen', 'true')
   }
 
   // Crear tarea completa (con descripción y fecha)
@@ -140,28 +183,47 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
           {/* Desktop input */}
           <div className="hidden md:flex flex-1 max-w-md lg:max-w-2xl relative">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Que necesitas hacer?"
-              disabled={loading}
-              className="w-full px-4 py-2 text-sm bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white dark:focus:bg-slate-800 transition-colors disabled:opacity-50"
-            />
-            {naturalDateSuggestion && !loading && (
-              <div className="absolute -bottom-6 left-0 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                <Sparkles className="w-3 h-3" />
-                <span>{naturalDateSuggestion}</span>
-              </div>
-            )}
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder="Que necesitas hacer?"
+                disabled={loading}
+                className="w-full px-4 py-2 text-sm bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white dark:focus:bg-slate-800 transition-colors disabled:opacity-50"
+              />
+
+              {/* Natural date suggestion */}
+              {naturalDateSuggestion && !loading && !showContextualHint && (
+                <div className="absolute -bottom-6 left-0 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+                  <Sparkles className="w-3 h-3" />
+                  <span>{naturalDateSuggestion}</span>
+                </div>
+              )}
+
+              {/* Nivel 2: Contextual hint (mientras escribe) */}
+              {showContextualHint && !naturalDateSuggestion && (
+                <div className="absolute -bottom-6 left-0 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 animate-fade-in">
+                  <span>💡 Presiona Shift+Enter para añadir detalles</span>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={() => setShowModal(true)}
               disabled={loading}
-              className="ml-2 p-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-all disabled:opacity-50"
+              className="ml-2 p-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-all disabled:opacity-50 relative group"
               title="Agregar con detalles (Shift+Enter)"
             >
               <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+
+              {/* Nivel 3: Badge permanente sutil */}
+              <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded border border-blue-200 dark:border-blue-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                ⇧↵
+              </span>
             </button>
           </div>
 
@@ -201,15 +263,24 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
                 placeholder="Que necesitas hacer?"
                 autoFocus
                 disabled={loading}
                 className="w-full px-4 py-3 text-sm bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               />
-              {naturalDateSuggestion && !loading && (
+              {naturalDateSuggestion && !loading && !showContextualHint && (
                 <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
                   <Sparkles className="w-3 h-3" />
                   <span>Se detectó &quot;{naturalDateSuggestion}&quot;</span>
+                </div>
+              )}
+
+              {/* Contextual hint en mobile */}
+              {showContextualHint && !naturalDateSuggestion && (
+                <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 animate-fade-in">
+                  <span>💡 Usa el botón &quot;Con detalles&quot; para añadir descripción y fecha</span>
                 </div>
               )}
             </div>
@@ -298,6 +369,32 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Nivel 1: First-time hint tooltip (solo primera vez) */}
+      {showFirstTimeHint && (
+        <div className="fixed inset-0 z-[70] flex items-start justify-center pt-24 px-4 pointer-events-none">
+          <div className="bg-blue-600 text-white px-6 py-4 rounded-lg shadow-2xl max-w-md pointer-events-auto animate-bounce-gentle">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 text-2xl">💡</div>
+              <div className="flex-1">
+                <h4 className="font-semibold mb-1">¡Tip rápido!</h4>
+                <p className="text-sm leading-relaxed">
+                  Presiona <kbd className="px-2 py-1 bg-blue-700 rounded font-mono text-xs">Shift+Enter</kbd> en el input para crear tareas con descripción y fecha.
+                </p>
+              </div>
+              <button
+                onClick={dismissFirstTimeHint}
+                className="flex-shrink-0 text-white hover:text-blue-100 transition-colors"
+                aria-label="Cerrar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
