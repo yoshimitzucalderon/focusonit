@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Trash2, Calendar, Edit3 } from 'lucide-react'
+import { Check, Trash2, Calendar, Edit3, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { format, isPast, isToday } from 'date-fns'
+import { format, isPast, isToday, differenceInDays } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { motion, PanInfo } from 'framer-motion'
 
@@ -134,9 +134,13 @@ export default function TaskItem({ task }: TaskItemProps) {
     }
   }, [editing])
 
-  // Verificar si está atrasada
+  // Verificar si está atrasada y calcular días
   const isOverdue =
     task.due_date && !task.completed && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
+
+  const daysOverdue = isOverdue && task.due_date
+    ? differenceInDays(new Date(), new Date(task.due_date))
+    : 0
 
   return (
     <motion.div
@@ -231,14 +235,23 @@ export default function TaskItem({ task }: TaskItemProps) {
             </div>
           </div>
         ) : (
-          <h3
-            onDoubleClick={() => !task.completed && setEditing(true)}
-            className={`text-base transition-all duration-200 dark:text-white ${
-              task.completed ? 'line-through' : 'cursor-pointer hover:text-primary-600 dark:hover:text-primary-400'
-            } ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}
-          >
-            {task.title}
-          </h3>
+          <div className="flex items-start gap-2">
+            <h3
+              onDoubleClick={() => !task.completed && setEditing(true)}
+              className={`flex-1 text-base transition-all duration-200 dark:text-white ${
+                task.completed ? 'line-through' : 'cursor-pointer hover:text-primary-600 dark:hover:text-primary-400'
+              } ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}
+            >
+              {task.title}
+            </h3>
+            {/* Badge de días atrasados */}
+            {isOverdue && daysOverdue > 0 && (
+              <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded-full">
+                <Clock className="w-3 h-3" />
+                {daysOverdue}d
+              </span>
+            )}
+          </div>
         )}
 
         {task.description && (
