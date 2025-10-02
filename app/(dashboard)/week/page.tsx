@@ -108,50 +108,56 @@ function WeekPageContent() {
   if (!user) return null
 
   return (
-    <div className="pb-20 md:pb-6">
-      <TaskInput userId={user.id} />
+    <>
+      {/* Barra superior sticky */}
+      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
+        <TaskInput userId={user.id} />
+      </div>
 
-      <div className="mt-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold dark:text-white">Esta Semana</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {totalPending} {totalPending === 1 ? 'tarea pendiente' : 'tareas pendientes'} en los
-            próximos 7 días
-          </p>
-        </div>
-
-        {/* Groups por día */}
-        <div className="space-y-8">
-          {weekGroups.map((group, index) => (
-            <div key={index} className="space-y-3">
-              <div className="flex items-baseline gap-3">
-                <h3 className="text-lg font-semibold dark:text-white capitalize">
-                  {group.label}
-                </h3>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {group.tasks.length}
-                </span>
-              </div>
-
-              {group.tasks.length > 0 ? (
-                <TaskList tasks={group.tasks} />
-              ) : (
-                <p className="text-sm text-gray-400 dark:text-gray-500 italic pl-4">
-                  Sin tareas programadas
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {totalPending === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-              No tienes tareas pendientes para esta semana
+      {/* Contenido scrolleable */}
+      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
+        <div className="mt-6 space-y-6">
+          {/* Header */}
+          <div>
+            <h2 className="text-2xl font-bold dark:text-white">Esta Semana</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {totalPending} {totalPending === 1 ? 'tarea pendiente' : 'tareas pendientes'} en los
+              próximos 7 días
             </p>
           </div>
-        )}
+
+          {/* Groups por día */}
+          <div className="space-y-8">
+            {weekGroups.map((group, index) => (
+              <div key={index} className="space-y-3">
+                <div className="flex items-baseline gap-3">
+                  <h3 className="text-lg font-semibold dark:text-white capitalize">
+                    {group.label}
+                  </h3>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {group.tasks.length}
+                  </span>
+                </div>
+
+                {group.tasks.length > 0 ? (
+                  <TaskList tasks={group.tasks} />
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 italic pl-4">
+                    Sin tareas programadas
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {totalPending === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">
+                No tienes tareas pendientes para esta semana
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Barra de acciones masivas */}
@@ -159,7 +165,7 @@ function WeekPageContent() {
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
       />
-    </div>
+    </>
   )
 }
 

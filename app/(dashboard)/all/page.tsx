@@ -93,24 +93,30 @@ function AllPageContent() {
   if (!user) return null
 
   return (
-    <div className="pb-20 md:pb-6">
-      <TaskInput userId={user.id} />
+    <>
+      {/* Barra superior sticky */}
+      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
+        <TaskInput userId={user.id} />
+      </div>
 
-      <div className="mt-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold dark:text-white">Todas las Tareas</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {allPendingTasks.length}{' '}
-            {allPendingTasks.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}
-          </p>
+      {/* Contenido scrolleable */}
+      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
+        <div className="mt-6 space-y-6">
+          {/* Header */}
+          <div>
+            <h2 className="text-2xl font-bold dark:text-white">Todas las Tareas</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {allPendingTasks.length}{' '}
+              {allPendingTasks.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}
+            </p>
+          </div>
+
+          {/* Task List */}
+          <TaskList
+            tasks={allPendingTasks}
+            emptyMessage="¡Felicitaciones! No tienes tareas pendientes"
+          />
         </div>
-
-        {/* Task List */}
-        <TaskList
-          tasks={allPendingTasks}
-          emptyMessage="¡Felicitaciones! No tienes tareas pendientes"
-        />
       </div>
 
       {/* Barra de acciones masivas */}
@@ -118,7 +124,7 @@ function AllPageContent() {
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
       />
-    </div>
+    </>
   )
 }
 

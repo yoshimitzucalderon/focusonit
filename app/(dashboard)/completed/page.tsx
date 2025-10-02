@@ -98,25 +98,31 @@ function CompletedPageContent() {
   if (!user) return null
 
   return (
-    <div className="pb-20 md:pb-6">
-      <TaskInput userId={user.id} />
+    <>
+      {/* Barra superior sticky */}
+      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
+        <TaskInput userId={user.id} />
+      </div>
 
-      <div className="mt-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {completedTasks.length}{' '}
-            {completedTasks.length === 1 ? 'tarea completada' : 'tareas completadas'} en los
-            últimos 30 días
-          </p>
+      {/* Contenido scrolleable */}
+      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
+        <div className="mt-6 space-y-6">
+          {/* Header */}
+          <div>
+            <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {completedTasks.length}{' '}
+              {completedTasks.length === 1 ? 'tarea completada' : 'tareas completadas'} en los
+              últimos 30 días
+            </p>
+          </div>
+
+          {/* Task List */}
+          <TaskList
+            tasks={completedTasks}
+            emptyMessage="No has completado tareas en los últimos 30 días"
+          />
         </div>
-
-        {/* Task List */}
-        <TaskList
-          tasks={completedTasks}
-          emptyMessage="No has completado tareas en los últimos 30 días"
-        />
       </div>
 
       {/* Barra de acciones masivas */}
@@ -125,7 +131,7 @@ function CompletedPageContent() {
         onBulkDelete={handleBulkDelete}
         completeButtonText="Reabrir"
       />
-    </div>
+    </>
   )
 }
 

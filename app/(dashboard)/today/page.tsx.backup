@@ -144,15 +144,10 @@ function TodayPageContent() {
   if (!user) return null
 
   return (
-    <>
-      {/* Barra superior sticky */}
-      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
-        <TaskInput userId={user.id} />
-      </div>
+    <div className="pb-20 md:pb-6">
+      <TaskInput userId={user.id} />
 
-      {/* Contenido scrolleable */}
-      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
-        <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -239,7 +234,6 @@ function TodayPageContent() {
             emptyMessage={overdueCount > 0 ? 'No hay tareas programadas para hoy' : '¡Todo listo! No hay tareas pendientes para hoy'}
           />
         </div>
-        </div>
       </div>
 
       {/* Barra de acciones masivas */}
@@ -247,7 +241,7 @@ function TodayPageContent() {
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
       />
-    </>
+    </div>
   )
 }
 

@@ -12,11 +12,17 @@ interface BulkActionsBarProps {
 export function BulkActionsBar({ onBulkComplete, onBulkDelete, completeButtonText = 'Completar' }: BulkActionsBarProps) {
   const { selectedIds, clearSelection, hasSelection } = useSelection()
 
+  console.log('🔍 BulkActionsBar render:', {
+    hasSelection,
+    selectedCount: selectedIds.size,
+    selectedIds: Array.from(selectedIds)
+  })
+
   // Solo mostrar si hay tareas seleccionadas
   if (!hasSelection) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50 safe-area-bottom">
+    <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-40">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Contador + botón cerrar */}
         <div className="flex items-center gap-3">
