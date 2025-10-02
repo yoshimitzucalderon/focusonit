@@ -92,24 +92,41 @@ export default function SwipeWrapper({
 
   return (
     <>
-      <div className="relative overflow-hidden">
-        {/* Botones de acción (detrás del swipe) */}
-        <div className="absolute inset-y-0 right-0 flex z-10">
+      <div className="relative overflow-visible">
+        {/* Botones de acción - z-index ALTO cuando están visibles */}
+        <div
+          className="absolute inset-y-0 right-0 flex"
+          style={{
+            zIndex: isSwipeOpen ? 40 : 0,
+            pointerEvents: isSwipeOpen ? 'auto' : 'none'
+          }}
+        >
           {/* Botón Completado - MÁS ANCHO */}
           <button
             type="button"
             onClick={(e) => {
-              console.log('BOTÓN COMPLETADO CLICKED!')
+              console.log('🟢 BOTÓN COMPLETADO CLICKED!')
               e.preventDefault()
               e.stopPropagation()
               if (onComplete) {
                 handleActionClick(onComplete)
               }
             }}
-            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-green-500 text-white hover:bg-green-600 active:bg-green-700 transition-colors touch-manipulation"
+            onTouchEnd={(e) => {
+              console.log('🟢 BOTÓN COMPLETADO TOUCHED!')
+              e.preventDefault()
+              e.stopPropagation()
+              if (onComplete) {
+                handleActionClick(onComplete)
+              }
+            }}
+            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-green-500 text-white
+                       hover:bg-green-600 hover:shadow-lg
+                       active:bg-green-700 active:scale-95 active:shadow-inner
+                       transition-all duration-150 touch-manipulation"
           >
-            <CheckCircle size={26} />
-            <span className="text-sm font-semibold mt-1">
+            <CheckCircle size={26} className="mb-1" />
+            <span className="text-sm font-semibold">
               {isCompleted ? 'Reabrir' : 'Hecho'}
             </span>
           </button>
@@ -118,7 +135,7 @@ export default function SwipeWrapper({
           <button
             type="button"
             onClick={(e) => {
-              console.log('BOTÓN BORRAR CLICKED!')
+              console.log('🔴 BOTÓN BORRAR CLICKED!')
               e.preventDefault()
               e.stopPropagation()
               const confirmed = window.confirm('¿Eliminar esta tarea?')
@@ -128,21 +145,38 @@ export default function SwipeWrapper({
                 closeSwipe()
               }
             }}
-            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-red-500 text-white hover:bg-red-600 active:bg-red-700 transition-colors touch-manipulation"
+            onTouchEnd={(e) => {
+              console.log('🔴 BOTÓN BORRAR TOUCHED!')
+              e.preventDefault()
+              e.stopPropagation()
+              const confirmed = window.confirm('¿Eliminar esta tarea?')
+              if (confirmed && onDelete) {
+                handleActionClick(onDelete)
+              } else {
+                closeSwipe()
+              }
+            }}
+            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-red-500 text-white
+                       hover:bg-red-600 hover:shadow-lg
+                       active:bg-red-700 active:scale-95 active:shadow-inner
+                       transition-all duration-150 touch-manipulation"
           >
-            <Trash2 size={26} />
-            <span className="text-sm font-semibold mt-1">Borrar</span>
+            <Trash2 size={26} className="mb-1" />
+            <span className="text-sm font-semibold">Borrar</span>
           </button>
         </div>
 
-        {/* Contenido (TaskItem) - draggable */}
+        {/* Contenido (TaskItem) - draggable con z-index MENOR cuando está abierto */}
         <motion.div
-          drag="x"
+          drag={!isSwipeOpen ? "x" : false}
           dragDirectionLock
           dragConstraints={{ left: SNAP_FULL, right: 100 }}
           dragElastic={0.05}
           dragMomentum={false}
-          style={{ x }}
+          style={{
+            x,
+            zIndex: isSwipeOpen ? 10 : 20
+          }}
           onDragEnd={handleDragEnd}
           animate={{
             x: isSwipeOpen ? SNAP_FULL : SNAP_CLOSED,
@@ -152,16 +186,16 @@ export default function SwipeWrapper({
             stiffness: 400,
             damping: 40,
           }}
-          className="relative bg-white dark:bg-slate-900 cursor-grab active:cursor-grabbing z-20"
+          className="relative bg-white dark:bg-slate-900 cursor-grab active:cursor-grabbing"
         >
           {children}
         </motion.div>
       </div>
 
-      {/* Backdrop para cerrar swipe */}
+      {/* Backdrop para cerrar swipe - z-index MENOR que botones */}
       {isSwipeOpen && (
         <div
-          className="fixed inset-0 z-30"
+          className="fixed inset-0 z-5"
           onClick={closeSwipe}
           onTouchEnd={closeSwipe}
         />
