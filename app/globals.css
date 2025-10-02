@@ -223,3 +223,9 @@ body {
 .selection-checkbox {
   animation: slideInLeft 0.2s ease-out;
 }
+/* Prevenir overscroll en mobile */
+@media (max-width: 768px) {
+  body {
+    overscroll-behavior-y: none;
+  }
+}
