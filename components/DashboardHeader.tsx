@@ -209,7 +209,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
               {naturalDateSuggestion && !loading && (
                 <div className="mt-2 flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
                   <Sparkles className="w-3 h-3" />
-                  <span>Se detectó "{naturalDateSuggestion}"</span>
+                  <span>Se detectó &quot;{naturalDateSuggestion}&quot;</span>
                 </div>
               )}
             </div>
