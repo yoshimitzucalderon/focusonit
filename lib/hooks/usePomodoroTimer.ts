@@ -142,9 +142,25 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       }))
 
       toast.success('Timer iniciado - 25 minutos')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting timer:', error)
-      toast.error('Error al iniciar timer')
+
+      // Show user-friendly error message
+      const errorMessage = error?.message || 'Error desconocido al iniciar timer'
+
+      if (errorMessage.includes('time_sessions no existe')) {
+        toast.error('Error: Tabla no encontrada. Ejecuta la migración SQL primero.', {
+          duration: 5000,
+        })
+      } else if (errorMessage.includes('permisos')) {
+        toast.error('Error: Sin permisos. Verifica las políticas RLS.', {
+          duration: 5000,
+        })
+      } else {
+        toast.error(`Error al iniciar timer: ${errorMessage}`, {
+          duration: 4000,
+        })
+      }
     }
   }, [taskId, userId, POMODORO_DURATION])
 

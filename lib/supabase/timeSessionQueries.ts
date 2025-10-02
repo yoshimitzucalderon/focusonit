@@ -16,30 +16,52 @@ export async function createTimeSession(
 ) {
   const supabase = createClient()
 
-  // First, pause any active sessions for this user (one timer at a time)
-  await pauseAllActiveSessions(userId)
+  try {
+    // First, pause any active sessions for this user (one timer at a time)
+    await pauseAllActiveSessions(userId)
 
-  const sessionData: TimeSessionInsert = {
-    task_id: taskId,
-    user_id: userId,
-    session_type: sessionType,
-    started_at: new Date().toISOString(),
-    is_active: true,
-    is_completed: false,
-  }
+    const sessionData: TimeSessionInsert = {
+      task_id: taskId,
+      user_id: userId,
+      session_type: sessionType,
+      started_at: new Date().toISOString(),
+      is_active: true,
+      is_completed: false,
+    }
 
-  const { data, error } = await supabase
-    .from('time_sessions')
-    .insert(sessionData)
-    .select()
-    .single()
+    console.log('Creating time session with data:', sessionData)
 
-  if (error) {
-    console.error('Error creating time session:', error)
+    const { data, error } = await supabase
+      .from('time_sessions')
+      .insert(sessionData)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error creating time session:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })
+
+      // Provide user-friendly error messages
+      if (error.code === '42P01') {
+        throw new Error('La tabla time_sessions no existe. Por favor ejecuta la migración SQL primero.')
+      }
+      if (error.code === '42501') {
+        throw new Error('No tienes permisos para crear sesiones de tiempo. Verifica las políticas RLS.')
+      }
+
+      throw new Error(error.message || 'Error al crear sesión de tiempo')
+    }
+
+    console.log('Time session created successfully:', data)
+    return data
+  } catch (error: any) {
+    console.error('Exception in createTimeSession:', error)
     throw error
   }
-
-  return data
 }
 
 /**
