@@ -3,17 +3,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Check, Edit3, Clock, FileText, ChevronDown, ChevronUp } from 'lucide-react'
+import { Check, Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { isPast, isToday, differenceInDays } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
+import { useSelection } from '@/context/SelectionContext'
 
 interface TaskItemProps {
   task: Task
 }
 
 export default function TaskItem({ task }: TaskItemProps) {
+  const { selectedIds, toggleSelection } = useSelection()
+  const isSelected = selectedIds.has(task.id)
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(task.title)
   const [isCompleting, setIsCompleting] = useState(false)
@@ -148,9 +151,27 @@ export default function TaskItem({ task }: TaskItemProps) {
           isOverdue
             ? 'border-red-300 dark:border-red-800 border-l-4 border-l-red-500'
             : 'border-gray-200 dark:border-gray-700 hover:border-l-primary-500'
+        } ${
+          isSelected ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''
         }`}
     >
-      {/* Checkbox */}
+      {/* Checkbox de SELECCIÓN (círculo) - siempre visible */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          toggleSelection(task.id)
+        }}
+        className="flex-shrink-0 mt-0.5"
+        aria-label={isSelected ? 'Deseleccionar tarea' : 'Seleccionar tarea'}
+      >
+        {isSelected ? (
+          <CheckCircle2 size={20} className="text-primary-600 dark:text-primary-400" />
+        ) : (
+          <Circle size={20} className="text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500" />
+        )}
+      </button>
+
+      {/* Checkbox de COMPLETAR (cuadrado) */}
       <button
         onClick={toggleComplete}
         className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all mt-0.5 ${

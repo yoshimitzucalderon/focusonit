@@ -9,7 +9,6 @@ import { startOfDay, endOfDay, addDays, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
-import { SelectionModeButton } from '@/components/SelectionModeButton'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -114,15 +113,12 @@ function WeekPageContent() {
 
       <div className="mt-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold dark:text-white">Esta Semana</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {totalPending} {totalPending === 1 ? 'tarea pendiente' : 'tareas pendientes'} en los
-              próximos 7 días
-            </p>
-          </div>
-          <SelectionModeButton />
+        <div>
+          <h2 className="text-2xl font-bold dark:text-white">Esta Semana</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {totalPending} {totalPending === 1 ? 'tarea pendiente' : 'tareas pendientes'} en los
+            próximos 7 días
+          </p>
         </div>
 
         {/* Groups por día */}

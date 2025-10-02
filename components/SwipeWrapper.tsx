@@ -3,7 +3,6 @@
 import { useState, ReactNode } from 'react'
 import { motion, useMotionValue, PanInfo } from 'framer-motion'
 import { CheckCircle, Trash2 } from 'lucide-react'
-import { useSelection } from '@/context/SelectionContext'
 
 interface SwipeWrapperProps {
   children: ReactNode
@@ -20,8 +19,6 @@ export default function SwipeWrapper({
   onDelete,
   isCompleted = false,
 }: SwipeWrapperProps) {
-  const { selectedIds, isSelectionMode, toggleSelection } = useSelection()
-  const isSelected = selectedIds.has(taskId)
   const [isSwipeOpen, setIsSwipeOpen] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const x = useMotionValue(0)
@@ -35,36 +32,51 @@ export default function SwipeWrapper({
   const handleDragEnd = (event: any, info: PanInfo) => {
     const offset = info.offset.x
     const velocity = info.velocity.x
+    const currentX = x.get()
 
-    // Si está cerrado, ignorar swipe a la derecha
-    if (!isSwipeOpen && offset > 0) {
-      x.set(SNAP_CLOSED)
-      return
-    }
+    console.log('=== SWIPE DEBUG ===')
+    console.log('isOpen:', isSwipeOpen)
+    console.log('offset.x:', offset)
+    console.log('velocity.x:', velocity)
+    console.log('current x:', currentX)
+    console.log('==================')
 
-    // Si está abierto y swipe a la derecha, cerrar
-    if (isSwipeOpen && (offset > SWIPE_THRESHOLD || velocity > 500)) {
-      x.set(SNAP_CLOSED)
-      setIsSwipeOpen(false)
-      return
-    }
-
-    // Si el movimiento es muy pequeño, ignorar
-    if (Math.abs(offset) < SWIPE_THRESHOLD) {
-      x.set(SNAP_CLOSED)
-      setIsSwipeOpen(false)
-      return
-    }
-
-    // Determinar a qué snap point ir
-    if (velocity < -500 || offset < -90) {
-      // Swipe rápido o largo a la izquierda - abrir completamente
+    // CASO 1: Swipe a la derecha para CERRAR (cuando está abierto)
+    if (isSwipeOpen) {
+      // Si se movió hacia la derecha O tiene velocidad positiva
+      if (offset > SWIPE_THRESHOLD || velocity > 300) {
+        console.log('Cerrando con swipe derecha')
+        x.set(SNAP_CLOSED)
+        setIsSwipeOpen(false)
+        return
+      }
+      // Si no se movió lo suficiente, mantener abierto
       x.set(SNAP_FULL)
-      setIsSwipeOpen(true)
-    } else {
-      // Cerrar
-      x.set(SNAP_CLOSED)
-      setIsSwipeOpen(false)
+      return
+    }
+
+    // CASO 2: Swipe a la izquierda para ABRIR (cuando está cerrado)
+    if (!isSwipeOpen) {
+      // Ignorar swipe a la derecha cuando está cerrado
+      if (offset > 0) {
+        x.set(SNAP_CLOSED)
+        return
+      }
+
+      // Validar threshold mínimo
+      if (Math.abs(offset) < SWIPE_THRESHOLD) {
+        x.set(SNAP_CLOSED)
+        return
+      }
+
+      // Abrir si se movió suficiente o tiene velocidad
+      if (velocity < -500 || offset < -90) {
+        console.log('Abriendo con swipe izquierda')
+        x.set(SNAP_FULL)
+        setIsSwipeOpen(true)
+      } else {
+        x.set(SNAP_CLOSED)
+      }
     }
   }
 
@@ -91,24 +103,6 @@ export default function SwipeWrapper({
   return (
     <>
       <div className="relative overflow-hidden">
-        {/* Checkbox de selección (solo visible en modo selección) */}
-        {isSelectionMode && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-50 selection-checkbox">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() => toggleSelection(taskId)}
-              onClick={(e) => e.stopPropagation()}
-              className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-2 focus:ring-primary-500 cursor-pointer"
-            />
-          </div>
-        )}
-
-        {/* Indicador visual de selección */}
-        {isSelected && (
-          <div className="absolute inset-0 bg-primary-50 dark:bg-primary-900/20 pointer-events-none z-0" />
-        )}
-
         {/* Botones de acción (detrás del swipe) */}
         <div className="absolute inset-y-0 right-0 flex">
           {/* Botón Completar */}
@@ -135,13 +129,9 @@ export default function SwipeWrapper({
 
         {/* Contenido (TaskItem) - draggable */}
         <motion.div
-          drag={!isSelectionMode ? 'x' : false} // Deshabilitar drag en modo selección
+          drag="x"
           dragDirectionLock
-          dragConstraints={
-            isSwipeOpen
-              ? { left: SNAP_FULL, right: 50 } // permite swipe derecha cuando está abierto
-              : { left: SNAP_FULL, right: 0 }   // bloquea derecha cuando está cerrado
-          }
+          dragConstraints={{ left: SNAP_FULL, right: 100 }}
           dragElastic={0.05}
           dragMomentum={false}
           style={{ x }}
@@ -151,25 +141,22 @@ export default function SwipeWrapper({
           }}
           transition={{
             type: 'spring',
-            stiffness: 300,
-            damping: 30,
+            stiffness: 400,
+            damping: 40,
           }}
-          className={`relative bg-white dark:bg-slate-900 ${
-            !isSelectionMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-          } ${isSelectionMode ? 'pl-12' : ''}`} // espacio para checkbox
-          onClick={() => {
-            if (isSelectionMode) {
-              toggleSelection(taskId)
-            }
-          }}
+          className="relative bg-white dark:bg-slate-900 cursor-grab active:cursor-grabbing"
         >
           {children}
         </motion.div>
       </div>
 
       {/* Backdrop para cerrar swipe */}
-      {isSwipeOpen && !isSelectionMode && (
-        <div className="fixed inset-0 z-30" onClick={closeSwipe} />
+      {isSwipeOpen && (
+        <div
+          className="fixed inset-0 z-30"
+          onClick={closeSwipe}
+          onTouchEnd={closeSwipe}
+        />
       )}
 
       {/* Modal de confirmación para eliminar */}

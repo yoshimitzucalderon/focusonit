@@ -7,7 +7,6 @@ import TaskInput from '@/components/TaskInput'
 import TaskList from '@/components/TaskList'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
-import { SelectionModeButton } from '@/components/SelectionModeButton'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -99,15 +98,12 @@ function AllPageContent() {
 
       <div className="mt-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold dark:text-white">Todas las Tareas</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {allPendingTasks.length}{' '}
-              {allPendingTasks.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}
-            </p>
-          </div>
-          <SelectionModeButton />
+        <div>
+          <h2 className="text-2xl font-bold dark:text-white">Todas las Tareas</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {allPendingTasks.length}{' '}
+            {allPendingTasks.length === 1 ? 'tarea pendiente' : 'tareas pendientes'}
+          </p>
         </div>
 
         {/* Task List */}

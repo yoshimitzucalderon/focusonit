@@ -8,7 +8,6 @@ import TaskList from '@/components/TaskList'
 import { subDays } from 'date-fns'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
-import { SelectionModeButton } from '@/components/SelectionModeButton'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
@@ -104,16 +103,13 @@ function CompletedPageContent() {
 
       <div className="mt-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {completedTasks.length}{' '}
-              {completedTasks.length === 1 ? 'tarea completada' : 'tareas completadas'} en los
-              últimos 30 días
-            </p>
-          </div>
-          <SelectionModeButton />
+        <div>
+          <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {completedTasks.length}{' '}
+            {completedTasks.length === 1 ? 'tarea completada' : 'tareas completadas'} en los
+            últimos 30 días
+          </p>
         </div>
 
         {/* Task List */}

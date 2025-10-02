@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
-import { SelectionModeButton } from '@/components/SelectionModeButton'
 
 function TodayPageContent() {
   const { user } = useAuth()
@@ -158,28 +157,23 @@ function TodayPageContent() {
             </p>
           </div>
 
-          {/* Botones de control */}
-          <div className="flex items-center gap-2">
-            <SelectionModeButton />
-
-            {/* Toggle para ocultar completadas */}
-            <button
-              onClick={() => setHideCompleted(!hideCompleted)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
-            >
-              {hideCompleted ? (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  <span className="hidden sm:inline">Mostrar completadas</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" />
-                  <span className="hidden sm:inline">Ocultar completadas</span>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Toggle para ocultar completadas */}
+          <button
+            onClick={() => setHideCompleted(!hideCompleted)}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
+          >
+            {hideCompleted ? (
+              <>
+                <EyeOff className="w-4 h-4" />
+                <span className="hidden sm:inline">Mostrar completadas</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4" />
+                <span className="hidden sm:inline">Ocultar completadas</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Sección de Tareas Atrasadas */}
