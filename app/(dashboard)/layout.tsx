@@ -19,7 +19,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Header */}
       <DashboardHeader userEmail={user.email} />
 
@@ -27,7 +27,7 @@ export default async function DashboardLayout({
       <DashboardSidebar />
 
       {/* Main Content */}
-      <main className="pt-16 pb-24 md:pl-64 md:pb-8">
+      <main className="pt-16 pb-24 md:pl-64 md:pb-8 bg-white dark:bg-slate-900">
         {children}
       </main>
 

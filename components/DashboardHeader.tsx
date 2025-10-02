@@ -34,7 +34,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
           )}
           <button
             onClick={handleLogout}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
             aria-label="Logout"
           >
             <LogOut size={20} />
