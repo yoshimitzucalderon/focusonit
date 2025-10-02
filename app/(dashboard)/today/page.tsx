@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
-import TaskInput from '@/components/TaskInput'
 import TaskList from '@/components/TaskList'
 import { startOfDay, endOfDay, isPast, isToday } from 'date-fns'
 import { Eye, EyeOff, AlertTriangle, ArrowRight } from 'lucide-react'
@@ -145,14 +144,7 @@ function TodayPageContent() {
 
   return (
     <>
-      {/* Barra superior sticky */}
-      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
-        <TaskInput userId={user.id} />
-      </div>
-
-      {/* Contenido scrolleable */}
-      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
-        <div className="mt-6 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -238,7 +230,6 @@ function TodayPageContent() {
             tasks={todayTasks}
             emptyMessage={overdueCount > 0 ? 'No hay tareas programadas para hoy' : '¡Todo listo! No hay tareas pendientes para hoy'}
           />
-        </div>
         </div>
       </div>
 

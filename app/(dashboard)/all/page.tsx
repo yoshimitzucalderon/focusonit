@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
-import TaskInput from '@/components/TaskInput'
 import TaskList from '@/components/TaskList'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
@@ -94,15 +93,8 @@ function AllPageContent() {
 
   return (
     <>
-      {/* Barra superior sticky */}
-      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
-        <TaskInput userId={user.id} />
-      </div>
-
-      {/* Contenido scrolleable */}
-      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
-        <div className="mt-6 space-y-6">
-          {/* Header */}
+      <div className="space-y-6">
+        {/* Header */}
           <div>
             <h2 className="text-2xl font-bold dark:text-white">Todas las Tareas</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -112,11 +104,10 @@ function AllPageContent() {
           </div>
 
           {/* Task List */}
-          <TaskList
-            tasks={allPendingTasks}
-            emptyMessage="¡Felicitaciones! No tienes tareas pendientes"
-          />
-        </div>
+        <TaskList
+          tasks={allPendingTasks}
+          emptyMessage="¡Felicitaciones! No tienes tareas pendientes"
+        />
       </div>
 
       {/* Barra de acciones masivas */}

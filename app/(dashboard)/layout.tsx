@@ -28,7 +28,9 @@ export default async function DashboardLayout({
 
       {/* Main Content */}
       <main className="pt-16 pb-24 md:pl-64 md:pb-8 bg-white dark:bg-slate-900">
-        {children}
+        <div className="px-4 md:px-6 lg:px-8 py-6">
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}

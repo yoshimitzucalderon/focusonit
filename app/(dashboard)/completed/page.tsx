@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
-import TaskInput from '@/components/TaskInput'
 import TaskList from '@/components/TaskList'
 import { subDays } from 'date-fns'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
@@ -99,15 +98,8 @@ function CompletedPageContent() {
 
   return (
     <>
-      {/* Barra superior sticky */}
-      <div className="sticky top-0 z-40 bg-gray-50 dark:bg-slate-900 pb-4 pt-2">
-        <TaskInput userId={user.id} />
-      </div>
-
-      {/* Contenido scrolleable */}
-      <div className="pb-32 md:pb-6 bg-gray-50 dark:bg-slate-900">
-        <div className="mt-6 space-y-6">
-          {/* Header */}
+      <div className="space-y-6">
+        {/* Header */}
           <div>
             <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -118,11 +110,10 @@ function CompletedPageContent() {
           </div>
 
           {/* Task List */}
-          <TaskList
-            tasks={completedTasks}
-            emptyMessage="No has completado tareas en los últimos 30 días"
-          />
-        </div>
+        <TaskList
+          tasks={completedTasks}
+          emptyMessage="No has completado tareas en los últimos 30 días"
+        />
       </div>
 
       {/* Barra de acciones masivas */}
