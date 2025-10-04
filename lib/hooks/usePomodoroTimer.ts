@@ -109,7 +109,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, timeRemaining, userId, taskId, activeSession])
+  }, [isRunning, timeRemaining, userId, taskId, activeSession, handleComplete])
 
   // Heartbeat to update Supabase every 30 seconds
   useEffect(() => {
@@ -134,7 +134,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(heartbeatRef.current)
       }
     }
-  }, [isRunning, activeSession])
+  }, [isRunning, activeSession, HEARTBEAT_INTERVAL])
 
   // Start timer
   const start = useCallback(async () => {

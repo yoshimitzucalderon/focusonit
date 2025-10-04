@@ -8,6 +8,7 @@ import { subDays } from 'date-fns'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
+import { TaskUpdate } from '@/types/database.types'
 import toast from 'react-hot-toast'
 
 function CompletedPageContent() {
@@ -44,13 +45,15 @@ function CompletedPageContent() {
     if (!confirmed) return
 
     try {
+      const updateData: TaskUpdate = {
+        completed: false,
+        completed_at: null,
+      }
+
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
-          .update({
-            completed: false,
-            completed_at: null,
-          })
+          .update(updateData)
           .eq('id', taskId)
       )
 
