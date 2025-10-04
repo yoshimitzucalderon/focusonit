@@ -9,7 +9,6 @@ import { es } from 'date-fns/locale'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
-import { Database } from '@/types/database.types'
 import toast from 'react-hot-toast'
 
 function WeekPageContent() {
@@ -55,15 +54,13 @@ function WeekPageContent() {
     if (!confirmed) return
 
     try {
-      const updateData: Database['public']['Tables']['tasks']['Update'] = {
-        completed: true,
-        completed_at: new Date().toISOString(),
-      }
-
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
-          .update(updateData)
+          .update({
+            completed: true,
+            completed_at: new Date().toISOString(),
+          })
           .eq('id', taskId)
       )
 
