@@ -97,7 +97,7 @@ function TodayPageContent() {
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
-          })
+          } satisfies TaskUpdate)
           .eq('id', taskId)
       )
 
