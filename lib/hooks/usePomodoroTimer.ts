@@ -32,8 +32,14 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   // Load total time spent on this task
   useEffect(() => {
     const loadTotalTime = async () => {
-      const total = await getTotalTimeForTask(taskId)
-      setTotalTimeSpent(total)
+      try {
+        const total = await getTotalTimeForTask(taskId)
+        setTotalTimeSpent(total)
+      } catch (error) {
+        console.error('Error loading total time:', error)
+        // Don't show toast for background loading errors
+        setTotalTimeSpent(0)
+      }
     }
     loadTotalTime()
   }, [taskId])
@@ -109,7 +115,12 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   useEffect(() => {
     if (isRunning && activeSession) {
       heartbeatRef.current = setInterval(async () => {
-        await heartbeatTimeSession(activeSession.id)
+        try {
+          await heartbeatTimeSession(activeSession.id)
+        } catch (error) {
+          console.error('Heartbeat error (non-critical):', error)
+          // Don't show error to user - heartbeat is background sync
+        }
       }, HEARTBEAT_INTERVAL)
     } else {
       if (heartbeatRef.current) {

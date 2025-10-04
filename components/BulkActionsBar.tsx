@@ -2,6 +2,7 @@
 
 import { Trash2, CheckCircle, X } from 'lucide-react'
 import { useSelection } from '@/context/SelectionContext'
+import { memo } from 'react'
 
 interface BulkActionsBarProps {
   onBulkComplete: () => void
@@ -9,14 +10,8 @@ interface BulkActionsBarProps {
   completeButtonText?: string
 }
 
-export function BulkActionsBar({ onBulkComplete, onBulkDelete, completeButtonText = 'Completar' }: BulkActionsBarProps) {
+function BulkActionsBarComponent({ onBulkComplete, onBulkDelete, completeButtonText = 'Completar' }: BulkActionsBarProps) {
   const { selectedIds, clearSelection, hasSelection } = useSelection()
-
-  console.log('🔍 BulkActionsBar render:', {
-    hasSelection,
-    selectedCount: selectedIds.size,
-    selectedIds: Array.from(selectedIds)
-  })
 
   // Solo mostrar si hay tareas seleccionadas
   if (!hasSelection) return null
@@ -60,3 +55,7 @@ export function BulkActionsBar({ onBulkComplete, onBulkDelete, completeButtonTex
     </div>
   )
 }
+
+// Memoizar el componente para evitar re-renders innecesarios
+// Solo se re-renderizará cuando cambien las props (onBulkComplete, onBulkDelete, completeButtonText)
+export const BulkActionsBar = memo(BulkActionsBarComponent)
