@@ -55,15 +55,13 @@ function WeekPageContent() {
     if (!confirmed) return
 
     try {
-      const updateData: TaskUpdate = {
-        completed: true,
-        completed_at: new Date().toISOString(),
-      }
-
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
-          .update(updateData)
+          .update({
+            completed: true,
+            completed_at: new Date().toISOString(),
+          } as TaskUpdate)
           .eq('id', taskId)
       )
 

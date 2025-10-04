@@ -45,15 +45,13 @@ function CompletedPageContent() {
     if (!confirmed) return
 
     try {
-      const updateData: TaskUpdate = {
-        completed: false,
-        completed_at: null,
-      }
-
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
-          .update(updateData)
+          .update({
+            completed: false,
+            completed_at: null,
+          } as TaskUpdate)
           .eq('id', taskId)
       )
 
