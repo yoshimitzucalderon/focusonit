@@ -40,7 +40,7 @@ export default function TaskItem({ task }: TaskItemProps) {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ title: title.trim() })
+        .update({ title: title.trim() } as any)
         .eq('id', task.id)
 
       if (error) throw error
@@ -60,7 +60,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         .from('tasks')
         .update({
           due_date: newDate ? newDate.toISOString() : null,
-        })
+        } as any)
         .eq('id', task.id)
 
       if (error) throw error
@@ -77,7 +77,7 @@ export default function TaskItem({ task }: TaskItemProps) {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ description: descriptionValue.trim() || null })
+        .update({ description: descriptionValue.trim() || null } as any)
         .eq('id', task.id)
 
       if (error) throw error

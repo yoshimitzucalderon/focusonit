@@ -45,7 +45,7 @@ function AllPageContent() {
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
-          })
+          } as any)
           .eq('id', taskId)
       )
 

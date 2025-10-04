@@ -50,7 +50,7 @@ function CompletedPageContent() {
           .update({
             completed: false,
             completed_at: null,
-          })
+          } as any)
           .eq('id', taskId)
       )
 

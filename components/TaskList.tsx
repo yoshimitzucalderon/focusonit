@@ -23,7 +23,7 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
         .update({
           completed: !task.completed,
           completed_at: !task.completed ? new Date().toISOString() : null,
-        })
+        } as any)
         .eq('id', task.id)
 
       if (error) throw error
