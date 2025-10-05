@@ -97,7 +97,16 @@ export function DatePicker({
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (value) {
+            console.log('🗓️ DatePicker - Value recibido:', value)
+            console.log('   getDate():', value.getDate())
+            console.log('   getMonth():', value.getMonth())
+            console.log('   toString():', value.toString())
+            console.log('   Formateado:', format(value, "d 'de' MMM", { locale: es }))
+          }
+          setIsOpen(!isOpen)
+        }}
         className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
           value
             ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
