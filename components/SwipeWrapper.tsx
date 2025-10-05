@@ -20,6 +20,7 @@ export default function SwipeWrapper({
   isCompleted = false,
 }: SwipeWrapperProps) {
   const [isSwipeOpen, setIsSwipeOpen] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const x = useMotionValue(0)
 
   // Snap points
@@ -93,12 +94,12 @@ export default function SwipeWrapper({
   return (
     <>
       <div className="relative overflow-visible">
-        {/* Botones de acción - z-index ALTO cuando están visibles */}
+        {/* Botones de acción - z-index ALTO cuando están visibles Y NO se está arrastrando */}
         <div
           className="absolute inset-y-0 right-0 flex"
           style={{
-            zIndex: isSwipeOpen ? 40 : 0,
-            pointerEvents: isSwipeOpen ? 'auto' : 'none'
+            zIndex: isSwipeOpen && !isDragging ? 40 : 0,
+            pointerEvents: isSwipeOpen && !isDragging ? 'auto' : 'none'
           }}
         >
           {/* Botón Completado - MÁS ANCHO */}
@@ -166,7 +167,7 @@ export default function SwipeWrapper({
           </button>
         </div>
 
-        {/* Contenido (TaskItem) - draggable con z-index MENOR cuando está abierto */}
+        {/* Contenido (TaskItem) - draggable con z-index ALTO cuando se arrastra */}
         <motion.div
           drag="x"
           dragDirectionLock
@@ -175,9 +176,13 @@ export default function SwipeWrapper({
           dragMomentum={false}
           style={{
             x,
-            zIndex: isSwipeOpen ? 10 : 20
+            zIndex: isDragging ? 50 : 20
           }}
-          onDragEnd={handleDragEnd}
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={(event, info) => {
+            setIsDragging(false)
+            handleDragEnd(event, info)
+          }}
           animate={{
             x: isSwipeOpen ? SNAP_FULL : SNAP_CLOSED,
           }}
