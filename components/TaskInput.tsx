@@ -148,21 +148,27 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 </div>
               )}
             </div>
-            {/* DEBUG: VoiceTaskButton */}
-            <div className="p-3 bg-red-500 text-white font-bold">
-              VOICE BUTTON SPACE
-            </div>
-            {/* COMENTADO TEMPORALMENTE
             <VoiceTaskButton
               onProcessedTask={(task) => {
+                console.log('📥 Tarea recibida desde voz:', task)
                 setTitle(task.title)
                 if (task.description) setDescription(task.description)
-                if (task.dueDate) setDueDate(new Date(task.dueDate))
+
+                // Parsear fecha correctamente (n8n envía "YYYY-MM-DD")
+                if (task.dueDate) {
+                  // Si es formato "YYYY-MM-DD", añadir hora para evitar problemas de timezone
+                  const dateStr = task.dueDate.includes('T')
+                    ? task.dueDate
+                    : `${task.dueDate}T12:00:00`
+
+                  const parsedDate = new Date(dateStr)
+                  console.log('📅 Fecha parseada:', parsedDate)
+                  setDueDate(parsedDate)
+                }
+
                 setShowModal(true)
               }}
             />
-            */}
-            {/* DEBUG: Should see voice button above */}
             <button
               onClick={() => setShowModal(true)}
               disabled={loading}
