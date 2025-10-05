@@ -74,3 +74,34 @@ export function getPacificDate(): string {
 
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
+
+/**
+ * Parsea una fecha en formato YYYY-MM-DD y la convierte a un Date object
+ * usando el timezone local del navegador (evita conversión UTC)
+ * @param dateString - Fecha en formato "YYYY-MM-DD"
+ * @returns Date object con la fecha correcta a mediodía
+ */
+export function parseDateString(dateString: string): Date {
+  // Separar año, mes, día
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  // Crear fecha en timezone LOCAL (mes es 0-indexed)
+  // Usamos mediodía (12:00) para evitar problemas con DST
+  const date = new Date(year, month - 1, day, 12, 0, 0, 0);
+
+  return date;
+}
+
+/**
+ * Convierte un Date object a string en formato YYYY-MM-DD
+ * usando el timezone local (NO convierte a UTC)
+ * @param date - Date object a convertir
+ * @returns string en formato "YYYY-MM-DD"
+ */
+export function toDateOnlyString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}

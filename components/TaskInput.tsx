@@ -9,7 +9,7 @@ import { es } from 'date-fns/locale'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
-import { getPacificTimestamp } from '@/lib/utils/timezone'
+import { getPacificTimestamp, parseDateString, toDateOnlyString } from '@/lib/utils/timezone'
 
 interface TaskInputProps {
   userId: string
@@ -48,7 +48,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
-        due_date: parsedDate ? parsedDate.toISOString() : null,
+        due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         created_at: getPacificTimestamp(),
       })
 
@@ -79,7 +79,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         user_id: userId,
         title: title.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? dueDate.toISOString() : null,
+        due_date: dueDate ? toDateOnlyString(dueDate) : null,
         created_at: getPacificTimestamp(),
       })
 
@@ -156,13 +156,10 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
                 // Parsear fecha correctamente (n8n envía "YYYY-MM-DD")
                 if (task.dueDate) {
-                  // Si es formato "YYYY-MM-DD", añadir hora para evitar problemas de timezone
-                  const dateStr = task.dueDate.includes('T')
-                    ? task.dueDate
-                    : `${task.dueDate}T12:00:00`
-
-                  const parsedDate = new Date(dateStr)
+                  const parsedDate = parseDateString(task.dueDate)
+                  console.log('📅 Fecha original:', task.dueDate)
                   console.log('📅 Fecha parseada:', parsedDate)
+                  console.log('📅 ISO String:', parsedDate.toISOString())
                   setDueDate(parsedDate)
                 }
 
