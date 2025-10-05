@@ -15,9 +15,13 @@ interface VoiceTaskButtonProps {
 }
 
 export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProps) {
+  console.log('🎤 VoiceTaskButton COMPONENT LOADED');
+
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [isSupported, setIsSupported] = useState(false);
+
+  console.log('🎤 VoiceTaskButton RENDERING', { isSupported, isListening });
 
   useEffect(() => {
     // Verificar soporte del navegador
@@ -98,26 +102,31 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
 
   // Mostrar botón siempre (remover md:hidden temporalmente para debug)
   return (
-    <button
-      type="button"
-      onClick={toggleListening}
-      disabled={!isSupported}
-      className={`p-3 rounded-full transition-colors ${
-        !isSupported
-          ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500'
-          : isListening
-          ? 'bg-red-500 hover:bg-red-600 text-white'
-          : 'bg-blue-500 hover:bg-blue-600 text-white'
-      }`}
-      title={
-        !isSupported
-          ? 'Reconocimiento de voz no disponible en este navegador'
-          : isListening
-          ? 'Detener grabación'
-          : 'Grabar tarea por voz'
-      }
-    >
-      {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-    </button>
+    <>
+      <div className="p-3 bg-yellow-200 text-black text-xs">
+        DEBUG: Voice Button Here | Supported: {isSupported ? 'YES' : 'NO'}
+      </div>
+      <button
+        type="button"
+        onClick={toggleListening}
+        disabled={!isSupported}
+        className={`p-3 rounded-full transition-colors ${
+          !isSupported
+            ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500'
+            : isListening
+            ? 'bg-red-500 hover:bg-red-600 text-white'
+            : 'bg-blue-500 hover:bg-blue-600 text-white'
+        }`}
+        title={
+          !isSupported
+            ? 'Reconocimiento de voz no disponible en este navegador'
+            : isListening
+            ? 'Detener grabación'
+            : 'Grabar tarea por voz'
+        }
+      >
+        {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+      </button>
+    </>
   );
 }

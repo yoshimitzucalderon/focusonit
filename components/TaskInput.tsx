@@ -145,6 +145,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 </div>
               )}
             </div>
+            {/* DEBUG: VoiceTaskButton */}
             <VoiceTaskButton
               onProcessedTask={(task) => {
                 setTitle(task.title)
@@ -153,6 +154,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 setShowModal(true)
               }}
             />
+            {/* DEBUG: Should see voice button above */}
             <button
               onClick={() => setShowModal(true)}
               disabled={loading}
