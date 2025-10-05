@@ -26,7 +26,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
   useEffect(() => {
     // Verificar soporte del navegador
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       console.log('Speech Recognition disponible:', !!SpeechRecognition);
       if (SpeechRecognition) {
         setIsSupported(true);
@@ -35,7 +35,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
         recognitionInstance.interimResults = false;
         recognitionInstance.lang = 'es-ES';
 
-        recognitionInstance.onresult = async (event) => {
+        recognitionInstance.addEventListener('result', async (event: any) => {
           const transcript = event.results[0][0].transcript;
           console.log('Transcripción:', transcript);
 
@@ -66,15 +66,15 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
             console.error('Error:', error);
             toast.error('Error al procesar el audio');
           }
-        };
+        });
 
-        recognitionInstance.onstart = () => {
+        recognitionInstance.addEventListener('start', () => {
           console.log('✅ Grabación INICIADA');
           setIsListening(true);
           toast.success('Escuchando... Habla ahora');
-        };
+        });
 
-        recognitionInstance.onerror = (event) => {
+        recognitionInstance.addEventListener('error', (event: any) => {
           console.error('Error de reconocimiento:', event.error);
           setIsListening(false);
           if (event.error === 'no-speech') {
@@ -84,12 +84,12 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
           } else {
             toast.error('Error en el reconocimiento de voz');
           }
-        };
+        });
 
-        recognitionInstance.onend = () => {
+        recognitionInstance.addEventListener('end', () => {
           console.log('🛑 Grabación FINALIZADA');
           setIsListening(false);
-        };
+        });
 
         setRecognition(recognitionInstance);
       }
