@@ -155,7 +155,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
         type="button"
         onClick={toggleListening}
         disabled={!isSupported}
-        className={`p-3 rounded-full transition-colors ${
+        className={`ml-2 p-3 rounded-full transition-colors ${
           !isSupported
             ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500'
             : isListening
