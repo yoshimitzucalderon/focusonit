@@ -1,9 +1,35 @@
 /**
- * Utilidades para manejo de timezone del Pacífico (America/Los_Angeles)
+ * Utilidades para manejo de timezones y fechas
  */
 
 /**
- * Obtiene la fecha/hora actual en timezone del Pacífico
+ * Obtiene la fecha/hora actual en el timezone LOCAL del navegador
+ * @returns string en formato ISO compatible con Supabase timestamptz
+ */
+export function getLocalTimestamp(): string {
+  const now = new Date();
+
+  // Formato: "2025-10-04T14:30:45-07:00" (incluye offset del timezone)
+  // Esto es compatible con Supabase timestamptz y usa la hora local del usuario
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  // Obtener offset del timezone (ej: -07:00 para Pacífico, -05:00 para Este)
+  const offset = -now.getTimezoneOffset();
+  const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+  const offsetSign = offset >= 0 ? '+' : '-';
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetSign}${offsetHours}:${offsetMinutes}`;
+}
+
+/**
+ * Obtiene la fecha/hora actual en timezone del Pacífico (America/Los_Angeles)
+ * @deprecated Usa getLocalTimestamp() para respetar el timezone del usuario
  * @returns string en formato ISO: "2025-10-04T14:30:45"
  */
 export function getPacificTimestamp(): string {

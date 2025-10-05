@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
-import { getPacificTimestamp, toDateOnlyString, parseDateString } from '@/lib/utils/timezone'
+import { getLocalTimestamp, toDateOnlyString, parseDateString } from '@/lib/utils/timezone'
 
 interface TaskItemProps {
   task: Task
@@ -44,7 +44,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           title: title.trim(),
-          updated_at: getPacificTimestamp()
+          updated_at: getLocalTimestamp()
         })
         .eq('id', task.id)
 
@@ -66,7 +66,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           due_date: newDate ? toDateOnlyString(newDate) : null,
-          updated_at: getPacificTimestamp()
+          updated_at: getLocalTimestamp()
         })
         .eq('id', task.id)
 
@@ -87,7 +87,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           description: descriptionValue.trim() || null,
-          updated_at: getPacificTimestamp()
+          updated_at: getLocalTimestamp()
         })
         .eq('id', task.id)
 
