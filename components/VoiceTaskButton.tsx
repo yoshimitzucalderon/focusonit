@@ -88,15 +88,31 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
   }, [onProcessedTask]);
 
   const toggleListening = () => {
-    if (!recognition) return;
+    if (!recognition) {
+      toast.error('Reconocimiento de voz no disponible');
+      return;
+    }
 
     if (isListening) {
-      recognition.stop();
-      setIsListening(false);
+      try {
+        recognition.stop();
+        setIsListening(false);
+      } catch (error) {
+        console.error('Error al detener:', error);
+      }
     } else {
-      recognition.start();
-      setIsListening(true);
-      toast.success('Escuchando... Habla ahora');
+      try {
+        recognition.start();
+        setIsListening(true);
+        toast.success('Escuchando... Habla ahora');
+      } catch (error: any) {
+        console.error('Error al iniciar:', error);
+        if (error.message?.includes('not-allowed') || error.name === 'NotAllowedError') {
+          toast.error('Permiso de micrófono denegado. Ve a Configuración → Safari → Micrófono');
+        } else {
+          toast.error('Error al iniciar reconocimiento de voz');
+        }
+      }
     }
   };
 
