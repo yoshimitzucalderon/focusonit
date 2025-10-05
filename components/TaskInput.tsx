@@ -146,6 +146,10 @@ export default function TaskInput({ userId }: TaskInputProps) {
               )}
             </div>
             {/* DEBUG: VoiceTaskButton */}
+            <div className="p-3 bg-red-500 text-white font-bold">
+              VOICE BUTTON SPACE
+            </div>
+            {/* COMENTADO TEMPORALMENTE
             <VoiceTaskButton
               onProcessedTask={(task) => {
                 setTitle(task.title)
@@ -154,6 +158,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 setShowModal(true)
               }}
             />
+            */}
             {/* DEBUG: Should see voice button above */}
             <button
               onClick={() => setShowModal(true)}
