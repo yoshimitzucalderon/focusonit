@@ -245,7 +245,11 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
           {/* Mobile plus button */}
           <button
             onClick={() => setShowMobileInput(!showMobileInput)}
-            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            className={`md:hidden p-2 rounded-lg transition-colors ${
+              showMobileInput
+                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                : 'hover:bg-gray-100 dark:hover:bg-slate-700'
+            }`}
             aria-label="Nueva tarea"
           >
             <Plus size={20} />
