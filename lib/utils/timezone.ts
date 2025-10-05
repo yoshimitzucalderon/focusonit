@@ -85,18 +85,22 @@ export function parseDateString(dateString: string): Date {
   // Separar año, mes, día
   const [year, month, day] = dateString.split('-').map(Number);
 
-  // Crear fecha en timezone LOCAL (mes es 0-indexed)
-  // Usamos mediodía (12:00) para evitar problemas con DST
+  // CRÍTICO: Crear fecha a mediodía para evitar problemas de timezone
+  // El constructor new Date(year, month, day, hour) usa SIEMPRE el timezone local
+  // Usamos 12:00 para que incluso con DST no cambie de día
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);
 
-  console.log('🔍 DEBUG parseDateString:');
-  console.log('  Input:', dateString);
-  console.log('  Year:', year, 'Month:', month, 'Day:', day);
-  console.log('  Date object:', date);
-  console.log('  getFullYear():', date.getFullYear());
-  console.log('  getMonth():', date.getMonth(), '(0-indexed)');
-  console.log('  getDate():', date.getDate());
-  console.log('  toString():', date.toString());
+  // Verificar que la fecha se creó correctamente
+  if (date.getDate() !== day) {
+    console.warn('⚠️ WARNING: parseDateString - día incorrecto!');
+    console.warn('  Input:', dateString, '→ día esperado:', day);
+    console.warn('  Date object creado:', date);
+    console.warn('  getDate():', date.getDate(), '(debería ser', day, ')');
+
+    // Forzar el día correcto
+    date.setDate(day);
+    console.warn('  Corregido a:', date, '→ getDate():', date.getDate());
+  }
 
   return date;
 }

@@ -159,36 +159,9 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
                 // Parsear fecha correctamente (n8n envía "YYYY-MM-DD")
                 if (task.dueDate) {
-                  // TEST: Diferentes formas de parsear
-                  const [year, month, day] = task.dueDate.split('-').map(Number)
-
-                  console.log('🧪 EXPERIMENTO - Probando diferentes parseos:')
-                  console.log('📅 String original:', task.dueDate)
-
-                  // Método 1: Constructor con componentes (LOCAL)
-                  const date1 = new Date(year, month - 1, day, 12, 0, 0)
-                  console.log('1️⃣ new Date(year, month-1, day):')
-                  console.log('   Object:', date1)
-                  console.log('   getDate():', date1.getDate())
-                  console.log('   getMonth():', date1.getMonth())
-                  console.log('   toString():', date1.toString())
-
-                  // Método 2: String directo (puede usar UTC)
-                  const date2 = new Date(task.dueDate)
-                  console.log('2️⃣ new Date(string):')
-                  console.log('   Object:', date2)
-                  console.log('   getDate():', date2.getDate())
-                  console.log('   toString():', date2.toString())
-
-                  // Método 3: String con tiempo
-                  const date3 = new Date(task.dueDate + 'T12:00:00')
-                  console.log('3️⃣ new Date(string + "T12:00:00"):')
-                  console.log('   Object:', date3)
-                  console.log('   getDate():', date3.getDate())
-                  console.log('   toString():', date3.toString())
-
-                  console.log('✅ USANDO MÉTODO 1 (componentes locales)')
-                  setDueDate(date1)
+                  const parsedDate = parseDateString(task.dueDate)
+                  console.log('📅 Fecha parseada desde voz:', task.dueDate, '→', parsedDate.getDate(), 'de', parsedDate.getMonth() + 1)
+                  setDueDate(parsedDate)
                 }
 
                 // Guardar el createdAt de n8n (ya en hora del Pacífico)
