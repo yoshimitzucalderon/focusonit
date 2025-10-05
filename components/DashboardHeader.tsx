@@ -245,10 +245,10 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
           {/* Mobile plus button */}
           <button
             onClick={() => setShowMobileInput(!showMobileInput)}
-            className={`md:hidden p-2 rounded-lg transition-colors relative z-10 ${
+            className={`md:hidden p-2 rounded-lg transition-colors relative ${
               showMobileInput
-                ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700'
-                : 'hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 dark:active:bg-slate-600'
+                ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 z-[60]'
+                : 'hover:bg-gray-100 dark:hover:bg-slate-700 active:bg-gray-200 dark:active:bg-slate-600 z-[60]'
             }`}
             aria-label="Nueva tarea"
           >
