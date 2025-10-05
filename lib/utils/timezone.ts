@@ -76,14 +76,38 @@ export function getPacificDate(): string {
 }
 
 /**
- * Parsea una fecha en formato YYYY-MM-DD y la convierte a un Date object
+ * Parsea una fecha en formato YYYY-MM-DD o ISO 8601 y la convierte a un Date object
  * usando el timezone local del navegador (evita conversión UTC)
- * @param dateString - Fecha en formato "YYYY-MM-DD"
+ * @param dateString - Fecha en formato "YYYY-MM-DD" o "YYYY-MM-DDTHH:mm:ss+00:00" (ISO 8601)
  * @returns Date object con la fecha correcta a mediodía
  */
 export function parseDateString(dateString: string): Date {
+  // Manejar diferentes formatos de entrada
+  let dateOnly: string;
+
+  if (dateString.includes('T')) {
+    // Formato ISO 8601: "2025-10-06T00:00:00+00:00"
+    // Extraer solo la parte de la fecha (YYYY-MM-DD)
+    dateOnly = dateString.split('T')[0];
+  } else {
+    // Formato simple: "2025-10-06"
+    dateOnly = dateString;
+  }
+
   // Separar año, mes, día
-  const [year, month, day] = dateString.split('-').map(Number);
+  const parts = dateOnly.split('-');
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+
+  // Validar que los valores son números válidos
+  if (isNaN(year) || isNaN(month) || isNaN(day)) {
+    console.error('❌ ERROR parseDateString: Fecha inválida');
+    console.error('  Input:', dateString);
+    console.error('  Parseado:', { year, month, day });
+    // Retornar fecha actual como fallback
+    return new Date();
+  }
 
   // CRÍTICO: Crear fecha a mediodía para evitar problemas de timezone
   // El constructor new Date(year, month, day, hour) usa SIEMPRE el timezone local
@@ -93,7 +117,9 @@ export function parseDateString(dateString: string): Date {
   // Verificar que la fecha se creó correctamente
   if (date.getDate() !== day) {
     console.warn('⚠️ WARNING: parseDateString - día incorrecto!');
-    console.warn('  Input:', dateString, '→ día esperado:', day);
+    console.warn('  Input:', dateString);
+    console.warn('  Parseado como:', dateOnly);
+    console.warn('  Componentes:', { year, month, day });
     console.warn('  Date object creado:', date);
     console.warn('  getDate():', date.getDate(), '(debería ser', day, ')');
 
