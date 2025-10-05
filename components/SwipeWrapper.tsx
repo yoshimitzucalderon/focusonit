@@ -168,9 +168,9 @@ export default function SwipeWrapper({
 
         {/* Contenido (TaskItem) - draggable con z-index MENOR cuando está abierto */}
         <motion.div
-          drag={!isSwipeOpen ? "x" : false}
+          drag="x"
           dragDirectionLock
-          dragConstraints={{ left: SNAP_FULL, right: 100 }}
+          dragConstraints={{ left: SNAP_FULL, right: SNAP_CLOSED }}
           dragElastic={0.05}
           dragMomentum={false}
           style={{
