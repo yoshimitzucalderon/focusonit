@@ -28,6 +28,20 @@ export function getLocalTimestamp(): string {
 }
 
 /**
+ * Obtiene solo el offset del timezone del navegador (ej: "-07:00", "+00:00")
+ * @returns string con el offset en formato "+HH:MM" o "-HH:MM"
+ */
+export function getTimezoneOffset(): string {
+  const now = new Date();
+  const offset = -now.getTimezoneOffset();
+  const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+  const offsetSign = offset >= 0 ? '+' : '-';
+
+  return `${offsetSign}${offsetHours}:${offsetMinutes}`;
+}
+
+/**
  * Obtiene la fecha/hora actual en timezone del Pacífico (America/Los_Angeles)
  * @deprecated Usa getLocalTimestamp() para respetar el timezone del usuario
  * @returns string en formato ISO: "2025-10-04T14:30:45"

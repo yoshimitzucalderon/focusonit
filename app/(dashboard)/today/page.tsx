@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
-import { parseDateString, toDateOnlyString } from '@/lib/utils/timezone'
+import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 
 function TodayPageContent() {
   const { user } = useAuth()
@@ -68,7 +68,11 @@ function TodayPageContent() {
         supabase
           .from('tasks')
           // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
-          .update({ due_date: toDateOnlyString(today) })
+          .update({
+            due_date: toDateOnlyString(today),
+            updated_at: getLocalTimestamp(),
+            timezone_offset: getTimezoneOffset()
+          })
           .eq('id', task.id)
       )
 
@@ -98,9 +102,10 @@ function TodayPageContent() {
           // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
           .update({
             completed: true,
-            completed_at: new Date().toISOString(),
-          }
-          )
+            completed_at: getLocalTimestamp(),
+            updated_at: getLocalTimestamp(),
+            timezone_offset: getTimezoneOffset()
+          })
           .eq('id', taskId)
       )
 

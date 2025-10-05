@@ -9,7 +9,7 @@ import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalD
 import { format } from 'date-fns'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
-import { toDateOnlyString, parseDateString } from '@/lib/utils/timezone'
+import { toDateOnlyString, parseDateString, getTimezoneOffset } from '@/lib/utils/timezone'
 
 interface DashboardHeaderProps {
   userEmail?: string
@@ -101,6 +101,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         user_id: userId,
         title: title.trim(),
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
+        timezone_offset: getTimezoneOffset(),
       })
 
       if (error) throw error
@@ -142,6 +143,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         title: title.trim(),
         description: description.trim() || null,
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
+        timezone_offset: getTimezoneOffset(),
       })
 
       if (error) throw error

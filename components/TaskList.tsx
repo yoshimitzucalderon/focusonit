@@ -7,7 +7,7 @@ import { CheckCircle2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-import { getLocalTimestamp } from '@/lib/utils/timezone'
+import { getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 
 interface TaskListProps {
   tasks: Task[]
@@ -26,7 +26,8 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
         .update({
           completed: !task.completed,
           completed_at: !task.completed ? nowLocal : null,
-          updated_at: nowLocal
+          updated_at: nowLocal,
+          timezone_offset: getTimezoneOffset()
         })
         .eq('id', task.id)
 

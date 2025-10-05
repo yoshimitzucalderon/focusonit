@@ -10,7 +10,7 @@ import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
-import { parseDateString } from '@/lib/utils/timezone'
+import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 
 function WeekPageContent() {
   const { user } = useAuth()
@@ -61,7 +61,9 @@ function WeekPageContent() {
           // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
           .update({
             completed: true,
-            completed_at: new Date().toISOString(),
+            completed_at: getLocalTimestamp(),
+            updated_at: getLocalTimestamp(),
+            timezone_offset: getTimezoneOffset()
           })
           .eq('id', taskId)
       )

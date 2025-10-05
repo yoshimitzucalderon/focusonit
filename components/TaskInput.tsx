@@ -9,7 +9,7 @@ import { es } from 'date-fns/locale'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
-import { getLocalTimestamp, parseDateString, toDateOnlyString } from '@/lib/utils/timezone'
+import { getLocalTimestamp, parseDateString, toDateOnlyString, getTimezoneOffset } from '@/lib/utils/timezone'
 
 interface TaskInputProps {
   userId: string
@@ -51,6 +51,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         title: title.trim(),
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         created_at: getLocalTimestamp(),
+        timezone_offset: getTimezoneOffset(),
       })
 
       if (error) throw error
@@ -83,6 +84,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
         // Usar createdAt de voz si existe, sino generar nuevo con hora local
         created_at: voiceCreatedAt || getLocalTimestamp(),
+        timezone_offset: getTimezoneOffset(),
       })
 
       if (error) throw error
