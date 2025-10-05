@@ -96,15 +96,15 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
     }
   };
 
-  // Si no hay soporte, mostrar botón deshabilitado
+  // Mostrar botón siempre (remover md:hidden temporalmente para debug)
   return (
     <button
       type="button"
       onClick={toggleListening}
       disabled={!isSupported}
-      className={`md:hidden p-3 rounded-full transition-colors ${
+      className={`p-3 rounded-full transition-colors ${
         !isSupported
-          ? 'bg-gray-300 cursor-not-allowed'
+          ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed text-gray-500'
           : isListening
           ? 'bg-red-500 hover:bg-red-600 text-white'
           : 'bg-blue-500 hover:bg-blue-600 text-white'
