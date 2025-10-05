@@ -9,6 +9,7 @@ import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalD
 import { format } from 'date-fns'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
+import { ThemeToggle } from './ThemeToggle'
 import { toDateOnlyString, parseDateString, getTimezoneOffset } from '@/lib/utils/timezone'
 
 interface DashboardHeaderProps {
@@ -257,13 +258,14 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
           <div className="flex-1" />
 
-          {/* Email y Logout alineados a la derecha */}
+          {/* Email, Theme Toggle y Logout alineados a la derecha */}
           <div className="flex items-center gap-3 pr-4 md:pr-6">
             {userEmail && (
               <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:inline font-medium">
                 {userEmail}
               </span>
             )}
+            <ThemeToggle />
             <button
               onClick={handleLogout}
               className="group relative p-2.5 rounded-full transition-all duration-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:scale-110"
