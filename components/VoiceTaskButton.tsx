@@ -68,17 +68,26 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
           }
         };
 
+        recognitionInstance.onstart = () => {
+          console.log('✅ Grabación INICIADA');
+          setIsListening(true);
+          toast.success('Escuchando... Habla ahora');
+        };
+
         recognitionInstance.onerror = (event) => {
           console.error('Error de reconocimiento:', event.error);
           setIsListening(false);
           if (event.error === 'no-speech') {
             toast.error('No se detectó ninguna voz');
+          } else if (event.error === 'not-allowed') {
+            toast.error('Permiso de micrófono denegado');
           } else {
             toast.error('Error en el reconocimiento de voz');
           }
         };
 
         recognitionInstance.onend = () => {
+          console.log('🛑 Grabación FINALIZADA');
           setIsListening(false);
         };
 
@@ -102,9 +111,9 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
       }
     } else {
       try {
+        console.log('🎙️ Intentando iniciar grabación...');
         recognition.start();
-        setIsListening(true);
-        toast.success('Escuchando... Habla ahora');
+        // No cambiar isListening aquí - esperar al evento onstart
       } catch (error: any) {
         console.error('Error al iniciar:', error);
         if (error.message?.includes('not-allowed') || error.name === 'NotAllowedError') {
@@ -116,13 +125,8 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
     }
   };
 
-  // Mostrar botón siempre (remover md:hidden temporalmente para debug)
   return (
-    <>
-      <div className="p-3 bg-yellow-200 text-black text-xs">
-        DEBUG: Voice Button Here | Supported: {isSupported ? 'YES' : 'NO'}
-      </div>
-      <button
+    <button
         type="button"
         onClick={toggleListening}
         disabled={!isSupported}
@@ -143,6 +147,5 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
       >
         {isListening ? <MicOff size={20} /> : <Mic size={20} />}
       </button>
-    </>
   );
 }
