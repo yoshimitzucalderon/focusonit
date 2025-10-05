@@ -23,6 +23,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
     // Verificar soporte del navegador
     if (typeof window !== 'undefined') {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      console.log('Speech Recognition disponible:', !!SpeechRecognition);
       if (SpeechRecognition) {
         setIsSupported(true);
         const recognitionInstance = new SpeechRecognition();
@@ -95,20 +96,26 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
     }
   };
 
-  if (!isSupported) {
-    return null; // No mostrar el botón si no hay soporte
-  }
-
+  // Si no hay soporte, mostrar botón deshabilitado
   return (
     <button
       type="button"
       onClick={toggleListening}
+      disabled={!isSupported}
       className={`md:hidden p-3 rounded-full transition-colors ${
-        isListening
+        !isSupported
+          ? 'bg-gray-300 cursor-not-allowed'
+          : isListening
           ? 'bg-red-500 hover:bg-red-600 text-white'
           : 'bg-blue-500 hover:bg-blue-600 text-white'
       }`}
-      title={isListening ? 'Detener grabación' : 'Grabar tarea por voz'}
+      title={
+        !isSupported
+          ? 'Reconocimiento de voz no disponible en este navegador'
+          : isListening
+          ? 'Detener grabación'
+          : 'Grabar tarea por voz'
+      }
     >
       {isListening ? <MicOff size={20} /> : <Mic size={20} />}
     </button>
