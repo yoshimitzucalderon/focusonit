@@ -31,15 +31,28 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
       if (SpeechRecognition) {
         setIsSupported(true);
         const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = false;
-        recognitionInstance.interimResults = false;
+        recognitionInstance.continuous = true; // Cambiado a true para escuchar más tiempo
+        recognitionInstance.interimResults = true; // Ver resultados mientras hablas
         recognitionInstance.lang = 'es-ES';
+        recognitionInstance.maxAlternatives = 1;
 
         recognitionInstance.addEventListener('result', async (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          console.log('Transcripción:', transcript);
+          // Obtener el último resultado final (no intermedio)
+          const lastResult = event.results[event.results.length - 1];
+          if (!lastResult.isFinal) {
+            console.log('📝 Resultado intermedio:', lastResult[0].transcript);
+            return; // Esperar a que sea final
+          }
+
+          const transcript = lastResult[0].transcript;
+          console.log('✅ Transcripción FINAL:', transcript);
+
+          // Detener reconocimiento después de capturar
+          recognitionInstance.stop();
 
           try {
+            toast.loading('Procesando tu tarea...');
+
             // Enviar a n8n para procesamiento con Gemini
             const response = await fetch('/api/voice-to-task', {
               method: 'POST',
@@ -50,6 +63,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
             if (!response.ok) throw new Error('Error al procesar la voz');
 
             const data = await response.json();
+            console.log('📦 Respuesta de n8n:', data);
 
             // Pasar la tarea procesada al componente padre
             if (data.title) {
@@ -58,12 +72,12 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
                 description: data.description,
                 dueDate: data.dueDate
               });
-              toast.success('Tarea procesada desde voz');
+              toast.success('Tarea creada: ' + data.title);
             } else {
               throw new Error('No se pudo procesar la tarea');
             }
           } catch (error) {
-            console.error('Error:', error);
+            console.error('❌ Error:', error);
             toast.error('Error al procesar el audio');
           }
         });
@@ -75,14 +89,17 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
         });
 
         recognitionInstance.addEventListener('error', (event: any) => {
-          console.error('Error de reconocimiento:', event.error);
+          console.error('❌ Error de reconocimiento:', event.error);
           setIsListening(false);
           if (event.error === 'no-speech') {
-            toast.error('No se detectó ninguna voz');
+            toast.error('No se detectó ninguna voz. Habla más fuerte o más cerca.');
           } else if (event.error === 'not-allowed') {
             toast.error('Permiso de micrófono denegado');
+          } else if (event.error === 'aborted') {
+            console.log('⚠️ Grabación abortada - puede ser normal si ya se procesó');
+            // No mostrar error si fue abortado intencionalmente
           } else {
-            toast.error('Error en el reconocimiento de voz');
+            toast.error('Error: ' + event.error);
           }
         });
 
