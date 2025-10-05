@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
+import { getPacificTimestamp } from '@/lib/utils/timezone'
 
 interface TaskItemProps {
   task: Task
@@ -41,7 +42,10 @@ export default function TaskItem({ task }: TaskItemProps) {
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
-        .update({ title: title.trim() })
+        .update({
+          title: title.trim(),
+          updated_at: getPacificTimestamp()
+        })
         .eq('id', task.id)
 
       if (error) throw error
@@ -62,6 +66,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           due_date: newDate ? newDate.toISOString() : null,
+          updated_at: getPacificTimestamp()
         })
         .eq('id', task.id)
 
@@ -80,7 +85,10 @@ export default function TaskItem({ task }: TaskItemProps) {
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
-        .update({ description: descriptionValue.trim() || null })
+        .update({
+          description: descriptionValue.trim() || null,
+          updated_at: getPacificTimestamp()
+        })
         .eq('id', task.id)
 
       if (error) throw error

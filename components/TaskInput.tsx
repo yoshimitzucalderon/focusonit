@@ -9,6 +9,7 @@ import { es } from 'date-fns/locale'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
+import { getPacificTimestamp } from '@/lib/utils/timezone'
 
 interface TaskInputProps {
   userId: string
@@ -48,6 +49,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         user_id: userId,
         title: title.trim(),
         due_date: parsedDate ? parsedDate.toISOString() : null,
+        created_at: getPacificTimestamp(),
       })
 
       if (error) throw error
@@ -78,6 +80,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         title: title.trim(),
         description: description.trim() || null,
         due_date: dueDate ? dueDate.toISOString() : null,
+        created_at: getPacificTimestamp(),
       })
 
       if (error) throw error

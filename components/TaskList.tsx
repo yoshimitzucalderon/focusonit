@@ -7,6 +7,7 @@ import { CheckCircle2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { getPacificTimestamp } from '@/lib/utils/timezone'
 
 interface TaskListProps {
   tasks: Task[]
@@ -18,12 +19,14 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
 
   const handleComplete = async (task: Task) => {
     try {
+      const nowPacific = getPacificTimestamp()
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           completed: !task.completed,
-          completed_at: !task.completed ? new Date().toISOString() : null,
+          completed_at: !task.completed ? nowPacific : null,
+          updated_at: nowPacific
         })
         .eq('id', task.id)
 
