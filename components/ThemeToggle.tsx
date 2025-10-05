@@ -27,7 +27,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="p-2 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 relative group"
+      className="p-2 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white relative group"
       title={getLabel()}
       aria-label={`Cambiar tema (actual: ${getLabel()})`}
     >
