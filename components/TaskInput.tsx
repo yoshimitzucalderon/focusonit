@@ -22,6 +22,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [loading, setLoading] = useState(false)
   const [naturalDateSuggestion, setNaturalDateSuggestion] = useState<string | null>(null)
+  const [voiceCreatedAt, setVoiceCreatedAt] = useState<string | null>(null) // Para guardar createdAt de voz
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -80,7 +81,8 @@ export default function TaskInput({ userId }: TaskInputProps) {
         title: title.trim(),
         description: description.trim() || null,
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
-        created_at: getPacificTimestamp(),
+        // Usar createdAt de voz si existe, sino generar nuevo
+        created_at: voiceCreatedAt || getPacificTimestamp(),
       })
 
       if (error) throw error
@@ -90,6 +92,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
       setDueDate(null)
       setShowModal(false)
       setNaturalDateSuggestion(null)
+      setVoiceCreatedAt(null) // Limpiar
       toast.success('Tarea creada')
 
       // Mantener focus en el input
@@ -156,11 +159,23 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
                 // Parsear fecha correctamente (n8n envía "YYYY-MM-DD")
                 if (task.dueDate) {
-                  const parsedDate = parseDateString(task.dueDate)
-                  console.log('📅 Fecha original:', task.dueDate)
-                  console.log('📅 Fecha parseada:', parsedDate)
-                  console.log('📅 ISO String:', parsedDate.toISOString())
+                  // Parsear usando constructor de Date con componentes locales
+                  const [year, month, day] = task.dueDate.split('-').map(Number)
+                  const parsedDate = new Date(year, month - 1, day, 12, 0, 0)
+
+                  console.log('📅 Fecha original n8n:', task.dueDate)
+                  console.log('📅 Componentes:', { year, month, day })
+                  console.log('📅 Date object creado:', parsedDate)
+                  console.log('📅 Día del mes:', parsedDate.getDate())
+                  console.log('📅 Formateado:', format(parsedDate, "d 'de' MMM", { locale: es }))
+
                   setDueDate(parsedDate)
+                }
+
+                // Guardar el createdAt de n8n (ya en hora del Pacífico)
+                if (task.createdAt) {
+                  console.log('🕐 CreatedAt desde n8n:', task.createdAt)
+                  setVoiceCreatedAt(task.createdAt)
                 }
 
                 setShowModal(true)

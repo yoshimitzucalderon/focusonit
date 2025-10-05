@@ -8,6 +8,10 @@ interface ProcessedTask {
   title: string;
   description?: string;
   dueDate?: string;
+  priority?: string;
+  tags?: string[];
+  createdAt?: string;
+  source?: string;
 }
 
 interface VoiceTaskButtonProps {

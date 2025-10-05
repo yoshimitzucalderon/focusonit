@@ -89,6 +89,15 @@ export function parseDateString(dateString: string): Date {
   // Usamos mediodía (12:00) para evitar problemas con DST
   const date = new Date(year, month - 1, day, 12, 0, 0, 0);
 
+  console.log('🔍 DEBUG parseDateString:');
+  console.log('  Input:', dateString);
+  console.log('  Year:', year, 'Month:', month, 'Day:', day);
+  console.log('  Date object:', date);
+  console.log('  getFullYear():', date.getFullYear());
+  console.log('  getMonth():', date.getMonth(), '(0-indexed)');
+  console.log('  getDate():', date.getDate());
+  console.log('  toString():', date.toString());
+
   return date;
 }
 
