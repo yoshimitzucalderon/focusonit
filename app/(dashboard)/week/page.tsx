@@ -10,6 +10,7 @@ import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { parseDateString } from '@/lib/utils/timezone'
 
 function WeekPageContent() {
   const { user } = useAuth()
@@ -29,7 +30,7 @@ function WeekPageContent() {
       const dayTasks = tasks.filter((task) => {
         if (!task.due_date || task.completed) return false
 
-        const taskDate = new Date(task.due_date)
+        const taskDate = parseDateString(task.due_date)
         return taskDate >= dayStart && taskDate <= dayEnd
       })
 

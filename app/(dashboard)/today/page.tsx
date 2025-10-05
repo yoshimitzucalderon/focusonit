@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
+import { parseDateString, toDateOnlyString } from '@/lib/utils/timezone'
 
 function TodayPageContent() {
   const { user } = useAuth()
@@ -37,7 +38,7 @@ function TodayPageContent() {
         return
       }
 
-      const taskDate = new Date(task.due_date)
+      const taskDate = parseDateString(task.due_date)
 
       // Tareas atrasadas (pasadas, no completadas, y no son de hoy)
       if (isPast(taskDate) && !isToday(taskDate) && !task.completed) {
@@ -67,7 +68,7 @@ function TodayPageContent() {
         supabase
           .from('tasks')
           // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
-          .update({ due_date: today.toISOString() })
+          .update({ due_date: toDateOnlyString(today) })
           .eq('id', task.id)
       )
 

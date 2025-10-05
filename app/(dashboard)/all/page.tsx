@@ -8,6 +8,7 @@ import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
+import { parseDateString } from '@/lib/utils/timezone'
 
 function AllPageContent() {
   const { user } = useAuth()
@@ -26,7 +27,7 @@ function AllPageContent() {
         if (!b.due_date) return -1
 
         // Ordenar por fecha
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+        return parseDateString(a.due_date).getTime() - parseDateString(b.due_date).getTime()
       })
   }, [tasks])
 

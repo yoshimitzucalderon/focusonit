@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
-import { getPacificTimestamp, toDateOnlyString } from '@/lib/utils/timezone'
+import { getPacificTimestamp, toDateOnlyString, parseDateString } from '@/lib/utils/timezone'
 
 interface TaskItemProps {
   task: Task
@@ -116,11 +116,12 @@ export default function TaskItem({ task }: TaskItemProps) {
   }, [editing])
 
   // Verificar si está atrasada y calcular días
+  const taskDueDate = task.due_date ? parseDateString(task.due_date) : null
   const isOverdue =
-    task.due_date && !task.completed && isPast(new Date(task.due_date)) && !isToday(new Date(task.due_date))
+    taskDueDate && !task.completed && isPast(taskDueDate) && !isToday(taskDueDate)
 
-  const daysOverdue = isOverdue && task.due_date
-    ? differenceInDays(new Date(), new Date(task.due_date))
+  const daysOverdue = isOverdue && taskDueDate
+    ? differenceInDays(new Date(), taskDueDate)
     : 0
 
   return (
@@ -313,7 +314,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         <div className="mt-2 flex items-center gap-3 flex-wrap">
           {/* Fecha con DatePicker */}
           <DatePicker
-            value={task.due_date ? new Date(task.due_date) : null}
+            value={taskDueDate}
             onChange={updateDate}
             placeholder="Agregar fecha"
           />

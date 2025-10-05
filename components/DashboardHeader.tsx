@@ -9,6 +9,7 @@ import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalD
 import { format } from 'date-fns'
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
+import { toDateOnlyString, parseDateString } from '@/lib/utils/timezone'
 
 interface DashboardHeaderProps {
   userEmail?: string
@@ -99,7 +100,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
-        due_date: parsedDate ? parsedDate.toISOString() : null,
+        due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
       })
 
       if (error) throw error
@@ -140,7 +141,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         user_id: userId,
         title: title.trim(),
         description: description.trim() || null,
-        due_date: dueDate ? dueDate.toISOString() : null,
+        due_date: dueDate ? toDateOnlyString(dueDate) : null,
       })
 
       if (error) throw error
@@ -219,7 +220,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
               onProcessedTask={(task) => {
                 setTitle(task.title)
                 if (task.description) setDescription(task.description)
-                if (task.dueDate) setDueDate(new Date(task.dueDate))
+                if (task.dueDate) setDueDate(parseDateString(task.dueDate))
                 setShowModal(true)
               }}
             />
@@ -306,7 +307,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                 onProcessedTask={(task) => {
                   setTitle(task.title)
                   if (task.description) setDescription(task.description)
-                  if (task.dueDate) setDueDate(new Date(task.dueDate))
+                  if (task.dueDate) setDueDate(parseDateString(task.dueDate))
                   setShowModal(true)
                 }}
               />
