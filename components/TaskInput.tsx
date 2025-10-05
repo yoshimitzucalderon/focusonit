@@ -8,6 +8,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 import { DatePicker } from './DatePicker'
+import VoiceTaskButton from './VoiceTaskButton'
 
 interface TaskInputProps {
   userId: string
@@ -144,6 +145,14 @@ export default function TaskInput({ userId }: TaskInputProps) {
                 </div>
               )}
             </div>
+            <VoiceTaskButton
+              onProcessedTask={(task) => {
+                setTitle(task.title)
+                if (task.description) setDescription(task.description)
+                if (task.dueDate) setDueDate(new Date(task.dueDate))
+                setShowModal(true)
+              }}
+            />
             <button
               onClick={() => setShowModal(true)}
               disabled={loading}

@@ -1,0 +1,104 @@
+{
+  "name": "Voice to Task Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice-to-task",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.0-flash-exp",
+        "prompt": "=Eres un asistente que convierte texto dictado en tareas estructuradas.\n\nTexto dictado: {{ $json.body.transcript }}\n\nAnaliza el texto y extrae:\n1. Título de la tarea (máximo 100 caracteres)\n2. Descripción detallada (si el usuario proporcionó detalles adicionales)\n3. Fecha de vencimiento (si se mencionó alguna fecha como \"mañana\", \"el lunes\", \"en 3 días\", etc.)\n\nResponde ÚNICAMENTE con un objeto JSON válido con esta estructura:\n{\n  \"title\": \"título de la tarea\",\n  \"description\": \"descripción detallada\" o null,\n  \"dueDate\": \"YYYY-MM-DD\" o null\n}\n\nNotas importantes:\n- El título debe ser conciso y claro\n- La descripción debe incluir detalles relevantes si los hay\n- Para la fecha, usa el formato ISO (YYYY-MM-DD)\n- Si hoy es {{ $now.format('YYYY-MM-DD') }}, calcula las fechas relativas correctamente\n- Si no se menciona una fecha, dueDate debe ser null\n\nRespuesta:",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 500
+        }
+      },
+      "id": "gemini-node",
+      "name": "Gemini 2.0 Flash",
+      "type": "n8n-nodes-base.gemini",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "credentials": {
+        "geminiApi": {
+          "id": "YOUR_GEMINI_CREDENTIALS_ID",
+          "name": "Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer el JSON de la respuesta de Gemini\nconst geminiResponse = $input.first().json.text;\n\n// Intentar parsear el JSON\ntry {\n  // Buscar el objeto JSON en la respuesta\n  const jsonMatch = geminiResponse.match(/\\{[\\s\\S]*\\}/);\n  \n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[0]);\n    return {\n      json: {\n        title: parsed.title || 'Nueva tarea',\n        description: parsed.description || null,\n        dueDate: parsed.dueDate || null\n      }\n    };\n  } else {\n    throw new Error('No se encontró JSON en la respuesta');\n  }\n} catch (error) {\n  // Si falla el parsing, retornar el texto como título\n  return {\n    json: {\n      title: $input.first().json.body.transcript.substring(0, 100),\n      description: null,\n      dueDate: null\n    }\n  };\n}"
+      },
+      "id": "code-node",
+      "name": "Parse JSON Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "response-node",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gemini 2.0 Flash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.0 Flash": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-20T00:00:00.000Z",
+  "versionId": "1"
+}
