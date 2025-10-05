@@ -50,9 +50,9 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
           // Detener reconocimiento después de capturar
           recognitionInstance.stop();
 
-          try {
-            toast.loading('Procesando tu tarea...');
+          const loadingToast = toast.loading('Procesando tu tarea...');
 
+          try {
             // Enviar a n8n para procesamiento con Gemini
             const response = await fetch('/api/voice-to-task', {
               method: 'POST',
@@ -64,6 +64,9 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
 
             const data = await response.json();
             console.log('📦 Respuesta de n8n:', data);
+
+            // Cerrar el toast de loading
+            toast.dismiss(loadingToast);
 
             // Pasar la tarea procesada al componente padre
             if (data.title) {
@@ -78,6 +81,7 @@ export default function VoiceTaskButton({ onProcessedTask }: VoiceTaskButtonProp
             }
           } catch (error) {
             console.error('❌ Error:', error);
+            toast.dismiss(loadingToast);
             toast.error('Error al procesar el audio');
           }
         });
