@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalDate'
 import { format } from 'date-fns'
 import { DatePicker } from './DatePicker'
+import VoiceTaskButton from './VoiceTaskButton'
 
 interface DashboardHeaderProps {
   userEmail?: string
@@ -214,6 +215,15 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
               )}
             </div>
 
+            <VoiceTaskButton
+              onProcessedTask={(task) => {
+                setTitle(task.title)
+                if (task.description) setDescription(task.description)
+                if (task.dueDate) setDueDate(new Date(task.dueDate))
+                setShowModal(true)
+              }}
+            />
+
             <button
               onClick={() => setShowModal(true)}
               disabled={loading}
@@ -292,6 +302,14 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
               )}
             </div>
             <div className="flex gap-2 mt-3">
+              <VoiceTaskButton
+                onProcessedTask={(task) => {
+                  setTitle(task.title)
+                  if (task.description) setDescription(task.description)
+                  if (task.dueDate) setDueDate(new Date(task.dueDate))
+                  setShowModal(true)
+                }}
+              />
               <button
                 onClick={() => setShowModal(true)}
                 disabled={loading}
