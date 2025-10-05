@@ -40,7 +40,8 @@ export default function TaskItem({ task }: TaskItemProps) {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ title: title.trim() } as any)
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .update({ title: title.trim() })
         .eq('id', task.id)
 
       if (error) throw error
@@ -58,9 +59,10 @@ export default function TaskItem({ task }: TaskItemProps) {
     try {
       const { error } = await supabase
         .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           due_date: newDate ? newDate.toISOString() : null,
-        } as any)
+        })
         .eq('id', task.id)
 
       if (error) throw error
@@ -77,7 +79,8 @@ export default function TaskItem({ task }: TaskItemProps) {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ description: descriptionValue.trim() || null } as any)
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .update({ description: descriptionValue.trim() || null })
         .eq('id', task.id)
 
       if (error) throw error

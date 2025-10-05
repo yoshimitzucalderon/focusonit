@@ -20,10 +20,11 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
     try {
       const { error } = await supabase
         .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           completed: !task.completed,
           completed_at: !task.completed ? new Date().toISOString() : null,
-        } as any)
+        })
         .eq('id', task.id)
 
       if (error) throw error
@@ -36,6 +37,7 @@ export default function TaskList({ tasks, emptyMessage = 'No hay tareas' }: Task
   const handleDelete = async (taskId: string) => {
     try {
       const { error } = await supabase.from('tasks').delete().eq('id', taskId)
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
 
       if (error) throw error
 

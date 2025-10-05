@@ -42,6 +42,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         parsedDate = parseNaturalDate(naturalDateText)
       }
 
+      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
@@ -70,6 +71,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
     setLoading(true)
     try {
+      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),

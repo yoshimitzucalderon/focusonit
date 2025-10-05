@@ -47,10 +47,11 @@ function CompletedPageContent() {
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
+          // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
           .update({
             completed: false,
             completed_at: null,
-          } as any)
+          })
           .eq('id', taskId)
       )
 

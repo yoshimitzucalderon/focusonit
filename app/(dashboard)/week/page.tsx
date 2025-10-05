@@ -57,10 +57,11 @@ function WeekPageContent() {
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
           .from('tasks')
+          // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
           .update({
             completed: true,
             completed_at: new Date().toISOString(),
-          } as any)
+          })
           .eq('id', taskId)
       )
 

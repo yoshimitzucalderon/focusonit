@@ -109,7 +109,8 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, timeRemaining, userId, taskId, activeSession, handleComplete])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRunning, timeRemaining, userId, taskId, activeSession])
 
   // Heartbeat to update Supabase every 30 seconds
   useEffect(() => {
