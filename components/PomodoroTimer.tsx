@@ -1,10 +1,10 @@
 'use client'
 
-import { Timer, Play, Pause, Clock, X } from 'lucide-react'
+import { Timer, Play, Pause, Clock, X, Wind } from 'lucide-react'
 import { usePomodoroTimer } from '@/lib/hooks/usePomodoroTimer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CircularProgress } from './CircularProgress'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 
 interface PomodoroTimerProps {
@@ -28,11 +28,53 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
   const [showExpanded, setShowExpanded] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale')
+
+  // Relaxing messages for break time
+  const breakMessages = useMemo(() => [
+    'Respira profundo',
+    'Momento para ti',
+    'Estira tus músculos',
+    'Cierra los ojos',
+    'Toma agua',
+    'Relaja tus hombros',
+    'Mira a lo lejos'
+  ], [])
+
+  const randomMessage = useMemo(() =>
+    breakMessages[Math.floor(Math.random() * breakMessages.length)],
+    [breakMessages, showExpanded]
+  )
 
   useEffect(() => {
     setMounted(true)
     return () => setMounted(false)
   }, [])
+
+  // Breathing animation cycle for break mode (4-7-8 technique)
+  useEffect(() => {
+    if (!isBreak || !showExpanded) return
+
+    const breathCycle = () => {
+      // Inhale: 4 seconds
+      setBreathPhase('inhale')
+
+      setTimeout(() => {
+        // Hold: 7 seconds
+        setBreathPhase('hold')
+
+        setTimeout(() => {
+          // Exhale: 8 seconds
+          setBreathPhase('exhale')
+        }, 7000)
+      }, 4000)
+    }
+
+    breathCycle()
+    const interval = setInterval(breathCycle, 19000) // Total cycle: 4+7+8 = 19 seconds
+
+    return () => clearInterval(interval)
+  }, [isBreak, showExpanded])
 
   // Calculate progress percentage (how much time has elapsed)
   const progressPercentage = ((currentDuration - timeRemaining) / currentDuration) * 100
@@ -68,7 +110,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
       style={{
         isolation: 'isolate',
         background: isBreak
-          ? 'radial-gradient(circle at 50% 50%, rgba(251, 146, 60, 0.15), rgba(234, 88, 12, 0.1))'
+          ? 'linear-gradient(135deg, #FED7AA 0%, #FBCFE8 50%, #DDD6FE 100%)'
           : 'radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.15), rgba(139, 92, 246, 0.1))'
       }}
     >
@@ -110,22 +152,38 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
         {/* Timer Display */}
         <div className="flex flex-col items-center">
-          <motion.h3
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-sm font-bold uppercase tracking-widest mb-1"
-            style={{
-              background: isBreak
-                ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
-                : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}
-          >
-            {isBreak ? (sessionType === 'long_break' ? 'Descanso largo' : 'Descanso corto') : 'Pomodoro'}
-          </motion.h3>
+          {isBreak ? (
+            <motion.h3
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-2xl font-bold mb-2"
+              style={{
+                background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}
+            >
+              {randomMessage}
+            </motion.h3>
+          ) : (
+            <motion.h3
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-sm font-bold uppercase tracking-widest mb-1"
+              style={{
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              Pomodoro
+            </motion.h3>
+          )}
 
           {/* Pomodoro Counter with dots */}
           {!isBreak && pomodoroCount > 0 && (
@@ -160,113 +218,209 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
             </motion.div>
           )}
 
-          {/* Circular Progress with Gradient */}
+          {/* Circular Progress with Gradient OR Breathing Circle */}
           <motion.div
             className="relative mb-8"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, type: "spring", damping: 20 }}
           >
+            {isBreak && (
+              <>
+                {/* Floating particles for break mode */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full"
+                    style={{
+                      background: 'linear-gradient(135deg, #14B8A6, #3B82F6)',
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                    }}
+                    animate={{
+                      y: [0, -30, 0],
+                      x: [0, Math.random() * 20 - 10, 0],
+                      opacity: [0.3, 0.7, 0.3],
+                      scale: [1, 1.5, 1],
+                    }}
+                    transition={{
+                      duration: 6 + Math.random() * 4,
+                      repeat: Infinity,
+                      delay: i * 0.8,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
+              </>
+            )}
+
             {/* Glow effect */}
             <div
               className="absolute inset-0 rounded-full blur-2xl opacity-40"
               style={{
                 background: isBreak
-                  ? 'radial-gradient(circle, rgba(251, 146, 60, 0.6) 0%, transparent 70%)'
+                  ? 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, transparent 70%)'
                   : 'radial-gradient(circle, rgba(79, 70, 229, 0.6) 0%, transparent 70%)'
               }}
             />
 
-            {/* SVG Circle with Gradient */}
-            <svg width="240" height="240" className="relative transform -rotate-90">
-              <defs>
-                <linearGradient id={`gradient-${isBreak ? 'break' : 'work'}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                  {isBreak ? (
-                    <>
-                      <stop offset="0%" stopColor="#fb923c" />
-                      <stop offset="100%" stopColor="#ea580c" />
-                    </>
-                  ) : (
-                    <>
-                      <stop offset="0%" stopColor="#4f46e5" />
-                      <stop offset="50%" stopColor="#7c3aed" />
-                      <stop offset="100%" stopColor="#ec4899" />
-                    </>
-                  )}
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Background circle */}
-              <circle
-                cx="120"
-                cy="120"
-                r="100"
-                fill="none"
-                stroke="rgba(203, 213, 225, 0.3)"
-                strokeWidth="14"
-              />
-
-              {/* Progress circle */}
-              <motion.circle
-                cx="120"
-                cy="120"
-                r="100"
-                fill="none"
-                stroke={`url(#gradient-${isBreak ? 'break' : 'work'})`}
-                strokeWidth="14"
-                strokeLinecap="round"
-                strokeDasharray={628}
-                initial={{ strokeDashoffset: 628 }}
-                animate={{
-                  strokeDashoffset: 628 - (628 * progressPercentage) / 100
-                }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-                filter="url(#glow)"
-                style={{
-                  filter: 'drop-shadow(0 0 8px rgba(79, 70, 229, 0.5))'
-                }}
-              />
-            </svg>
-
-            {/* Time in center */}
-            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
-                <span
-                  className="text-6xl font-black font-mono tabular-nums"
-                  style={{
-                    background: isBreak
-                      ? 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
-                      : 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    textShadow: '0 2px 20px rgba(79, 70, 229, 0.15)'
-                  }}
-                >
-                  {timeRemainingFormatted}
-                </span>
-                {isBreak && (
+            {isBreak ? (
+              /* Breathing Circle for Break Mode */
+              <div className="relative w-[240px] h-[240px] flex items-center justify-center">
+                {/* Concentric ripples */}
+                {[1, 2, 3].map((ring) => (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="text-center mt-2"
+                    key={ring}
+                    className="absolute rounded-full border-2"
+                    style={{
+                      borderColor: 'rgba(20, 184, 166, 0.2)',
+                      width: '180px',
+                      height: '180px',
+                    }}
+                    animate={{
+                      scale: breathPhase === 'inhale' ? [1, 1.3] : breathPhase === 'exhale' ? [1.3, 1] : 1.3,
+                      opacity: breathPhase === 'hold' ? 0.3 : [0.4, 0.1],
+                    }}
+                    transition={{
+                      duration: breathPhase === 'inhale' ? 4 : breathPhase === 'exhale' ? 8 : 7,
+                      delay: ring * 0.3,
+                      ease: "easeInOut",
+                      repeat: breathPhase === 'hold' ? 0 : Infinity,
+                      repeatDelay: breathPhase === 'inhale' ? 15 : breathPhase === 'exhale' ? 11 : 0
+                    }}
+                  />
+                ))}
+
+                {/* Central breathing circle */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
+                    boxShadow: '0 0 40px rgba(20, 184, 166, 0.5)',
+                    width: '120px',
+                    height: '120px',
+                  }}
+                  animate={{
+                    scale: breathPhase === 'inhale' ? [0.8, 1.2] : breathPhase === 'exhale' ? [1.2, 0.8] : 1.2,
+                  }}
+                  transition={{
+                    duration: breathPhase === 'inhale' ? 4 : breathPhase === 'exhale' ? 8 : 7,
+                    ease: "easeInOut",
+                    repeat: breathPhase === 'hold' ? 0 : Infinity,
+                    repeatDelay: breathPhase === 'inhale' ? 15 : breathPhase === 'exhale' ? 11 : 0
+                  }}
+                />
+
+                {/* Wind icon in center */}
+                <Wind className="absolute w-12 h-12 text-white" />
+              </div>
+            ) : (
+              /* SVG Circle with Gradient for Work Mode */
+              <svg width="240" height="240" className="relative transform -rotate-90">
+                <defs>
+                  <linearGradient id="gradient-work" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#4f46e5" />
+                    <stop offset="50%" stopColor="#7c3aed" />
+                    <stop offset="100%" stopColor="#ec4899" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Background circle */}
+                <circle
+                  cx="120"
+                  cy="120"
+                  r="100"
+                  fill="none"
+                  stroke="rgba(203, 213, 225, 0.3)"
+                  strokeWidth="14"
+                />
+
+                {/* Progress circle */}
+                <motion.circle
+                  cx="120"
+                  cy="120"
+                  r="100"
+                  fill="none"
+                  stroke="url(#gradient-work)"
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                  strokeDasharray={628}
+                  initial={{ strokeDashoffset: 628 }}
+                  animate={{
+                    strokeDashoffset: 628 - (628 * progressPercentage) / 100
+                  }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  filter="url(#glow)"
+                  style={{
+                    filter: 'drop-shadow(0 0 8px rgba(79, 70, 229, 0.5))'
+                  }}
+                />
+              </svg>
+            )}
+
+            {/* Time or Breathing Instructions in center */}
+            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+              {isBreak ? (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                  className="text-center"
+                >
+                  <motion.div
+                    key={breathPhase}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="text-3xl font-bold"
+                    style={{
+                      background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    }}
                   >
-                    <span className="text-sm font-medium text-orange-600">☕ Relájate</span>
+                    {breathPhase === 'inhale' && 'Inhala...'}
+                    {breathPhase === 'hold' && 'Sostén...'}
+                    {breathPhase === 'exhale' && 'Exhala...'}
                   </motion.div>
-                )}
-              </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.8 }}
+                    className="mt-4 text-gray-600 text-sm"
+                  >
+                    {timeRemainingFormatted}
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                >
+                  <span
+                    className="text-6xl font-black font-mono tabular-nums"
+                    style={{
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      textShadow: '0 2px 20px rgba(79, 70, 229, 0.15)'
+                    }}
+                  >
+                    {timeRemainingFormatted}
+                  </span>
+                </motion.div>
+              )}
             </div>
           </motion.div>
 
