@@ -27,6 +27,8 @@ export default function VoiceEditButton({
   const recognitionRef = useRef<any>(null)
   const isListeningRef = useRef(false)
   const isProcessingRef = useRef(false)
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const finalTranscriptRef = useRef<string>('')
 
   // Mantener refs sincronizadas con states
   useEffect(() => {
@@ -116,6 +118,10 @@ export default function VoiceEditButton({
 
     return () => {
       clearInterval(checkInterval)
+      // Limpiar timeout de silencio si existe
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current)
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('blur', handleBlur)
       window.removeEventListener('beforeunload', handleBeforeUnload)
@@ -153,8 +159,10 @@ export default function VoiceEditButton({
       const recognition = new SpeechRecognition()
       recognitionRef.current = recognition
       recognition.lang = 'es-MX'
-      recognition.continuous = false
-      recognition.interimResults = false
+      recognition.continuous = true  // Cambio a true para detectar silencio
+      recognition.interimResults = true  // Ver resultados mientras hablas
+
+      finalTranscriptRef.current = ''  // Reset del transcript
 
       recognition.addEventListener('start', () => {
         console.log('🎤 Recognition started')
@@ -162,61 +170,105 @@ export default function VoiceEditButton({
         toast.success('Escuchando... Di tu comando')
       })
 
-      recognition.addEventListener('result', async (event: any) => {
-        const transcript = event.results[0][0].transcript
-        console.log('🎤 Comando:', transcript)
-
-        setIsListening(false)
-        setIsProcessing(true)
-
-        const loadingToast = toast.loading('Procesando comando...')
-
-        try {
-          const response = await fetch('/api/voice-edit-task', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transcript, currentTask })
-          })
-
-          if (!response.ok) throw new Error('Error al procesar')
-
-          const result = await response.json()
-          console.log('✅ Respuesta completa:', result)
-          console.log('✅ Campos cambiados:', result.changedFields)
-
-          toast.dismiss(loadingToast)
-
-          // Verificar si hay cambios válidos
-          const hasChanges = result.changedFields &&
-            typeof result.changedFields === 'object' &&
-            Object.keys(result.changedFields).length > 0 &&
-            Object.keys(result.changedFields).some(key => result.changedFields[key] !== undefined && result.changedFields[key] !== null)
-
-          if (hasChanges) {
-            setSuggestedChanges(result)
-          } else {
-            console.warn('No se detectaron cambios válidos:', result)
-            toast.error('No se detectaron cambios en el comando. Intenta ser más específico.')
-          }
-        } catch (err) {
-          console.error(err)
-          toast.dismiss(loadingToast)
-          toast.error('Error al procesar comando')
-        } finally {
-          setIsProcessing(false)
+      recognition.addEventListener('result', (event: any) => {
+        // Limpiar timeout de silencio previo
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
         }
+
+        // Acumular transcripción (final + interim)
+        let interimTranscript = ''
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscriptRef.current += transcript + ' '
+          } else {
+            interimTranscript += transcript
+          }
+        }
+
+        console.log('🎤 Final:', finalTranscriptRef.current, 'Interim:', interimTranscript)
+
+        // Iniciar timeout de silencio de 3 segundos
+        silenceTimeoutRef.current = setTimeout(async () => {
+          console.log('🔇 3 segundos de silencio detectados - procesando...')
+
+          const finalText = finalTranscriptRef.current.trim()
+          if (!finalText) {
+            toast.error('No se detectó voz. Intenta de nuevo.')
+            recognitionRef.current?.stop()
+            return
+          }
+
+          // Detener reconocimiento y procesar
+          try {
+            recognitionRef.current?.stop()
+          } catch (err) {
+            console.error('Error al detener:', err)
+          }
+
+          setIsListening(false)
+          setIsProcessing(true)
+
+          const loadingToast = toast.loading('Procesando comando...')
+
+          try {
+            const response = await fetch('/api/voice-edit-task', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transcript: finalText, currentTask })
+            })
+
+            if (!response.ok) throw new Error('Error al procesar')
+
+            const result = await response.json()
+            console.log('✅ Respuesta completa:', result)
+            console.log('✅ Campos cambiados:', result.changedFields)
+
+            toast.dismiss(loadingToast)
+
+            // Verificar si hay cambios válidos
+            const hasChanges = result.changedFields &&
+              typeof result.changedFields === 'object' &&
+              Object.keys(result.changedFields).length > 0 &&
+              Object.keys(result.changedFields).some(key => result.changedFields[key] !== undefined && result.changedFields[key] !== null)
+
+            if (hasChanges) {
+              setSuggestedChanges(result)
+            } else {
+              console.warn('No se detectaron cambios válidos:', result)
+              toast.error('No se detectaron cambios en el comando. Intenta ser más específico.')
+            }
+          } catch (err) {
+            console.error(err)
+            toast.dismiss(loadingToast)
+            toast.error('Error al procesar comando')
+          } finally {
+            setIsProcessing(false)
+            finalTranscriptRef.current = ''
+          }
+        }, 3000) // 3 segundos de silencio
       })
 
       recognition.addEventListener('error', (event: any) => {
         console.log('🚨 Recognition error:', event.error)
+
+        // Limpiar timeout de silencio en caso de error
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
+
         setIsListening(false)
         setIsProcessing(false)
+        finalTranscriptRef.current = ''
 
         if (event.error === 'no-speech') {
           toast.error('No se detectó voz. Intenta de nuevo.')
         } else if (event.error === 'not-allowed') {
           toast.error('Permiso de micrófono denegado')
-        } else {
+        } else if (event.error !== 'aborted') {
+          // No mostrar error si fue abort intencional
           toast.error('Error: ' + event.error)
         }
 
@@ -228,6 +280,13 @@ export default function VoiceEditButton({
 
       recognition.addEventListener('end', () => {
         console.log('🛑 Recognition ended')
+
+        // Limpiar timeout de silencio cuando termina
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current)
+          silenceTimeoutRef.current = null
+        }
+
         setIsListening(false)
         // NO limpiar la referencia aquí para que el interval pueda detectarla
         // recognitionRef.current = null
