@@ -1,6 +1,6 @@
 'use client'
 
-import { Timer, Play, Pause, Clock, X, Wind } from 'lucide-react'
+import { Timer, Play, Pause, Clock, X, Wind, Zap } from 'lucide-react'
 import { usePomodoroTimer } from '@/lib/hooks/usePomodoroTimer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CircularProgress } from './CircularProgress'
@@ -111,7 +111,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
         isolation: 'isolate',
         background: isBreak
           ? 'linear-gradient(135deg, #FED7AA 0%, #FBCFE8 50%, #DDD6FE 100%)'
-          : 'radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.15), rgba(139, 92, 246, 0.1))'
+          : 'linear-gradient(135deg, #EFF6FF 0%, #F3F4F6 100%)'
       }}
     >
       <motion.div
@@ -123,14 +123,14 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
         className="relative w-full max-w-md"
         style={{
           background: isBreak
-            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 237, 213, 0.8) 100%)'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(238, 242, 255, 0.8) 100%)',
+            ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 250, 245, 0.9) 100%)'
+            : 'rgba(255, 255, 255, 0.98)',
           backdropFilter: 'blur(20px)',
           boxShadow: isBreak
-            ? '0 20px 60px rgba(251, 146, 60, 0.3), 0 10px 30px rgba(234, 88, 12, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)'
-            : '0 20px 60px rgba(79, 70, 229, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+            ? '0 20px 60px rgba(251, 146, 60, 0.25), 0 10px 30px rgba(234, 88, 12, 0.15)'
+            : '0 25px 70px rgba(79, 70, 229, 0.35), 0 15px 40px rgba(139, 92, 246, 0.25)',
           borderRadius: '32px',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
+          border: isBreak ? '1px solid rgba(251, 146, 60, 0.1)' : '1px solid rgba(79, 70, 229, 0.1)',
           padding: '48px 40px'
         }}
       >
@@ -169,15 +169,9 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-sm font-bold uppercase tracking-widest mb-1"
-              style={{
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
+              className="text-3xl font-bold mb-2 text-purple-900"
             >
-              Pomodoro
+              ¡Enfócate!
             </motion.h3>
           )}
 
@@ -315,54 +309,71 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                 <Wind className="absolute w-12 h-12 text-white" />
               </div>
             ) : (
-              /* SVG Circle with Gradient for Work Mode */
-              <svg width="240" height="240" className="relative transform -rotate-90">
-                <defs>
-                  <linearGradient id="gradient-work" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#4f46e5" />
-                    <stop offset="50%" stopColor="#7c3aed" />
-                    <stop offset="100%" stopColor="#ec4899" />
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                    <feMerge>
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
+              /* Energetic Circle for Work Mode */
+              <div className="relative w-[240px] h-[240px] flex items-center justify-center">
+                {/* SVG Circle with Progress */}
+                <svg width="240" height="240" className="absolute transform -rotate-90">
+                  <defs>
+                    <linearGradient id="gradient-work" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3B82F6" />
+                      <stop offset="50%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#EC4899" />
+                    </linearGradient>
+                  </defs>
 
-                {/* Background circle */}
-                <circle
-                  cx="120"
-                  cy="120"
-                  r="100"
-                  fill="none"
-                  stroke="rgba(203, 213, 225, 0.3)"
-                  strokeWidth="14"
-                />
+                  {/* Background circle */}
+                  <circle
+                    cx="120"
+                    cy="120"
+                    r="100"
+                    fill="none"
+                    stroke="rgba(203, 213, 225, 0.25)"
+                    strokeWidth="12"
+                  />
 
-                {/* Progress circle */}
-                <motion.circle
-                  cx="120"
-                  cy="120"
-                  r="100"
-                  fill="none"
-                  stroke="url(#gradient-work)"
-                  strokeWidth="14"
-                  strokeLinecap="round"
-                  strokeDasharray={628}
-                  initial={{ strokeDashoffset: 628 }}
-                  animate={{
-                    strokeDashoffset: 628 - (628 * progressPercentage) / 100
-                  }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  filter="url(#glow)"
+                  {/* Progress circle */}
+                  <motion.circle
+                    cx="120"
+                    cy="120"
+                    r="100"
+                    fill="none"
+                    stroke="url(#gradient-work)"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray={628}
+                    initial={{ strokeDashoffset: 628 }}
+                    animate={{
+                      strokeDashoffset: 628 - (628 * progressPercentage) / 100
+                    }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  />
+                </svg>
+
+                {/* Central energetic circle with Zap icon */}
+                <motion.div
+                  className="absolute rounded-full flex items-center justify-center"
                   style={{
-                    filter: 'drop-shadow(0 0 8px rgba(79, 70, 229, 0.5))'
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+                    width: '140px',
+                    height: '140px',
                   }}
-                />
-              </svg>
+                  animate={{
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      '0 0 30px rgba(79, 70, 229, 0.4)',
+                      '0 0 45px rgba(139, 92, 246, 0.6)',
+                      '0 0 30px rgba(79, 70, 229, 0.4)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Zap className="w-16 h-16 text-white fill-white" />
+                </motion.div>
+              </div>
             )}
 
             {/* Time or Breathing Instructions in center */}
@@ -412,17 +423,9 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5, type: "spring" }}
+                  className="text-center"
                 >
-                  <span
-                    className="text-6xl font-black font-mono tabular-nums"
-                    style={{
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #ec4899 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      textShadow: '0 2px 20px rgba(79, 70, 229, 0.15)'
-                    }}
-                  >
+                  <span className="text-7xl font-black font-mono tabular-nums text-purple-900">
                     {timeRemainingFormatted}
                   </span>
                 </motion.div>
