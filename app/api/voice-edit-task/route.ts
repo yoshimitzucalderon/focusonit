@@ -42,10 +42,16 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json()
 
-    console.log('✅ Cambios detectados:', result)
+    console.log('✅ Respuesta de n8n:', result)
+
+    // Verificar que result tenga la estructura correcta
+    // n8n puede devolver el objeto directamente o dentro de una propiedad
+    const changedFields = result.changedFields || result
+
+    console.log('✅ Cambios procesados:', changedFields)
 
     return NextResponse.json({
-      changedFields: result,
+      changedFields,
       original: currentTask
     })
   } catch (error) {

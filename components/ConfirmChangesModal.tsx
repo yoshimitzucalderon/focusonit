@@ -30,13 +30,27 @@ export default function ConfirmChangesModal({
 }: ConfirmChangesModalProps) {
   const { changedFields, original } = changes
 
-  // Cerrar con ESC
+  // Cerrar con ESC y bloquear scroll del body
   useEffect(() => {
+    // Bloquear scroll del body
+    const originalOverflow = document.body.style.overflow
+    const originalPosition = document.body.style.position
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
     }
     window.addEventListener('keydown', handleEsc)
-    return () => window.removeEventListener('keydown', handleEsc)
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+      // Restaurar scroll del body
+      document.body.style.overflow = originalOverflow
+      document.body.style.position = originalPosition
+      document.body.style.width = ''
+    }
   }, [onCancel])
 
   const priorityLabels = {
@@ -47,11 +61,12 @@ export default function ConfirmChangesModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 overflow-y-auto"
       onClick={onCancel}
+      style={{ isolation: 'isolate' }}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl my-8 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl my-8 max-h-[90vh] overflow-y-auto relative z-[10000]"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-semibold mb-4 dark:text-white">

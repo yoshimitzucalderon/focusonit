@@ -28,30 +28,46 @@ export default function VoiceEditButton({
 
   // Cleanup al desmontar o cuando el navegador pierde foco
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && recognitionRef.current) {
+    const stopRecognition = () => {
+      if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
+          recognitionRef.current.abort()
           setIsListening(false)
           setIsProcessing(false)
-          toast.error('Grabación detenida al minimizar')
+          toast.error('Grabación detenida')
         } catch (err) {
           console.error('Error al detener reconocimiento:', err)
         }
       }
     }
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopRecognition()
+      }
+    }
+
+    const handleBlur = () => {
+      stopRecognition()
+    }
+
+    const handleBeforeUnload = () => {
+      stopRecognition()
+    }
+
+    // Eventos para diferentes navegadores y dispositivos
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('blur', handleBlur)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pagehide', stopRecognition)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop()
-        } catch (err) {
-          console.error('Error al limpiar reconocimiento:', err)
-        }
-      }
+      window.removeEventListener('blur', handleBlur)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('pagehide', stopRecognition)
+      stopRecognition()
     }
   }, [])
 
@@ -95,14 +111,22 @@ export default function VoiceEditButton({
           if (!response.ok) throw new Error('Error al procesar')
 
           const result = await response.json()
-          console.log('✅ Cambios detectados:', result)
+          console.log('✅ Respuesta completa:', result)
+          console.log('✅ Campos cambiados:', result.changedFields)
 
           toast.dismiss(loadingToast)
 
-          if (result.changedFields && Object.keys(result.changedFields).length > 0) {
+          // Verificar si hay cambios válidos
+          const hasChanges = result.changedFields &&
+            typeof result.changedFields === 'object' &&
+            Object.keys(result.changedFields).length > 0 &&
+            Object.keys(result.changedFields).some(key => result.changedFields[key] !== undefined && result.changedFields[key] !== null)
+
+          if (hasChanges) {
             setSuggestedChanges(result)
           } else {
-            toast.error('No se detectaron cambios en el comando')
+            console.warn('No se detectaron cambios válidos:', result)
+            toast.error('No se detectaron cambios en el comando. Intenta ser más específico.')
           }
         } catch (err) {
           console.error(err)
