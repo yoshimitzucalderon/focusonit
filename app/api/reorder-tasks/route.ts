@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // Verificar autenticación
     const {
