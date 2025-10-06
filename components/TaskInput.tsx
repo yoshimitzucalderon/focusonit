@@ -45,6 +45,17 @@ export default function TaskInput({ userId }: TaskInputProps) {
         parsedDate = parseNaturalDate(naturalDateText)
       }
 
+      // Obtener la última posición para el usuario
+      const { data: lastTask } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextPosition = (lastTask?.position ?? -1) + 1
+
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
@@ -52,6 +63,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         created_at: getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
+        position: nextPosition,
       })
 
       if (error) throw error
@@ -76,6 +88,17 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
     setLoading(true)
     try {
+      // Obtener la última posición para el usuario
+      const { data: lastTask } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextPosition = (lastTask?.position ?? -1) + 1
+
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
@@ -85,6 +108,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         // Usar createdAt de voz si existe, sino generar nuevo con hora local
         created_at: voiceCreatedAt || getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
+        position: nextPosition,
       })
 
       if (error) throw error
@@ -279,7 +303,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
                   setDueDate(null)
                 }}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition-all disabled:opacity-50"
               >
                 Cancelar
               </button>

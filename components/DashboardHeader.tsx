@@ -97,12 +97,24 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         parsedDate = parseNaturalDate(naturalDateText)
       }
 
+      // Obtener la última posición para el usuario
+      const { data: lastTask } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextPosition = (lastTask?.position ?? -1) + 1
+
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         timezone_offset: getTimezoneOffset(),
+        position: nextPosition,
       })
 
       if (error) throw error
@@ -138,6 +150,17 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
     setLoading(true)
     try {
+      // Obtener la última posición para el usuario
+      const { data: lastTask } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .single()
+
+      const nextPosition = (lastTask?.position ?? -1) + 1
+
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
@@ -145,6 +168,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         description: description.trim() || null,
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
         timezone_offset: getTimezoneOffset(),
+        position: nextPosition,
       })
 
       if (error) throw error
@@ -400,7 +424,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                   setDueDate(null)
                 }}
                 disabled={loading}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition-all disabled:opacity-50"
               >
                 Cancelar
               </button>

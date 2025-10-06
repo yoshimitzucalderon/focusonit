@@ -24,6 +24,7 @@ export interface Database {
           synced_with_calendar: boolean
           priority: 'baja' | 'media' | 'alta'
           timezone_offset: number | null
+          position: number
         }
         Insert: {
           id?: string
@@ -39,6 +40,7 @@ export interface Database {
           synced_with_calendar?: boolean
           priority?: 'baja' | 'media' | 'alta'
           timezone_offset?: number | null
+          position?: number
         }
         Update: {
           id?: string
@@ -54,6 +56,7 @@ export interface Database {
           synced_with_calendar?: boolean
           priority?: 'baja' | 'media' | 'alta'
           timezone_offset?: number | null
+          position?: number
         }
       }
       time_sessions: {

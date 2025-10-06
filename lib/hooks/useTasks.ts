@@ -18,7 +18,8 @@ export function useTasks() {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('position', { ascending: true })  // Ordenar por position manual
+        .order('created_at', { ascending: false })  // Fallback por fecha
 
       if (error) {
         console.error('Error fetching tasks:', error)
