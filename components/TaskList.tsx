@@ -14,6 +14,8 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
+  MouseSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -71,9 +73,9 @@ function SortableTaskWrapper({
       style={style}
       className={`relative ${
         isDragging
-          ? 'scale-105 shadow-2xl ring-2 ring-purple-400 dark:ring-purple-500 rounded-lg z-50'
+          ? 'opacity-40'
           : ''
-      } transition-all duration-200`}
+      }`}
     >
       <div className="flex items-stretch gap-2">
         {/* Contenido de la tarea */}
@@ -85,13 +87,14 @@ function SortableTaskWrapper({
         <div
           {...attributes}
           {...listeners}
-          className="hidden md:flex lg:hidden items-center justify-center w-10 cursor-grab active:cursor-grabbing hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all group/handle"
+          className="hidden md:flex lg:hidden items-center justify-center w-12 cursor-grab active:cursor-grabbing active:bg-purple-200 dark:active:bg-purple-900/40 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors touch-none select-none group/handle"
           title="Mantén presionado para arrastrar"
+          style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
         >
-          <div className="flex flex-col items-center gap-0.5">
-            <GripVertical className="w-5 h-5 text-purple-400 dark:text-purple-500 group-hover/handle:text-purple-600 dark:group-hover/handle:text-purple-400 transition-colors" />
-            <span className="text-[10px] text-purple-400 dark:text-purple-500 font-medium opacity-0 group-hover/handle:opacity-100 transition-opacity">
-              Mover
+          <div className="flex flex-col items-center gap-1 pointer-events-none">
+            <GripVertical className="w-6 h-6 text-purple-500 dark:text-purple-400 group-active/handle:text-purple-700 dark:group-active/handle:text-purple-300" />
+            <span className="text-[9px] text-purple-500 dark:text-purple-400 font-semibold uppercase tracking-wider">
+              Hold
             </span>
           </div>
         </div>
@@ -153,10 +156,17 @@ export default function TaskList({
   const activeTask = activeId ? items.find(task => task.id === activeId) : null
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    // Mouse sensor - Desktop instantáneo
+    useSensor(MouseSensor, {
       activationConstraint: {
-        delay: 150, // 150ms delay para detectar intención (evita conflictos con clicks/swipes)
-        tolerance: 5, // Permitir 5px de movimiento durante el delay
+        distance: 5, // 5px para iniciar
+      },
+    }),
+    // Touch sensor - iPad/Mobile optimizado
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms para evitar scroll accidental
+        tolerance: 8, // Permite 8px de movimiento durante el delay
       },
     }),
     useSensor(KeyboardSensor, {
@@ -188,12 +198,23 @@ export default function TaskList({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
+
+    // Vibración táctil en dispositivos móviles
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50)
+    }
+
+    // Deshabilitar scroll del body durante drag
+    document.body.style.overflow = 'hidden'
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
     setActiveId(null)
+
+    // Restaurar scroll del body
+    document.body.style.overflow = ''
 
     if (over && active.id !== over.id) {
       const oldIndex = items.findIndex((task) => task.id === active.id)
@@ -204,6 +225,11 @@ export default function TaskList({
       // Actualizar localmente inmediatamente
       setItems(newItems)
 
+      // Vibración de confirmación
+      if ('vibrate' in navigator) {
+        navigator.vibrate([30, 50, 30])
+      }
+
       // Actualizar posiciones en la BD
       await updateTaskPositions(newItems)
     }
@@ -211,6 +237,8 @@ export default function TaskList({
 
   const handleDragCancel = () => {
     setActiveId(null)
+    // Restaurar scroll del body
+    document.body.style.overflow = ''
   }
 
   const moveTaskUp = async (index: number) => {
