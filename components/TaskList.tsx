@@ -109,30 +109,20 @@ function SortableTaskWrapper({
           <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
         </div>
 
-        {/* Botones ↑↓ - Solo Móvil (<md) */}
-        <div className="md:hidden flex flex-col gap-1 justify-center py-1 order-first">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onMoveUp?.()
-            }}
-            disabled={isFirst}
-            className="p-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="Mover arriba"
-          >
-            <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onMoveDown?.()
-            }}
-            disabled={isLast}
-            className="p-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="Mover abajo"
-          >
-            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
+        {/* Drag Handle - Móvil (<md) a la DERECHA igual que iPad */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex md:hidden items-center justify-center w-12 cursor-grab active:cursor-grabbing active:bg-purple-200 dark:active:bg-purple-900/40 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors touch-none select-none group/handle"
+          title="Mantén presionado para arrastrar"
+          style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
+        >
+          <div className="flex flex-col items-center gap-0.5 pointer-events-none">
+            <GripVertical className="w-5 h-5 text-purple-500 dark:text-purple-400 group-active/handle:text-purple-700 dark:group-active/handle:text-purple-300" />
+            <span className="text-[8px] text-purple-500 dark:text-purple-400 font-semibold uppercase tracking-wider">
+              Hold
+            </span>
+          </div>
         </div>
       </div>
     </div>
