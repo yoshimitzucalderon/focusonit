@@ -76,17 +76,23 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     }
 
     // Prevent multiple calls
-    console.log('Starting handleComplete')
+    console.log('🔔 Starting handleComplete for:', activeSession.session_type)
     isCompletingRef.current = true
 
     const currentType = activeSession.session_type
+    const currentCount = activeSession.pomodoro_count || 0
     const isWorkSession = currentType === 'work' || currentType === 'pomodoro_25'
     const isBreakSession = currentType === 'short_break' || currentType === 'long_break'
 
     try {
+      // Complete in database FIRST
       await completeTimeSession(activeSession.id)
+      console.log('✅ Session completed in DB')
+
+      // Clear UI state immediately to prevent confusion
       setIsRunning(false)
       setTimeRemaining(0)
+      setActiveSession(null)
 
       // Reload total time (only for work sessions)
       if (isWorkSession) {
@@ -94,10 +100,9 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         setTotalTimeSpent(total)
       }
 
-      // Play sound if enabled
+      // Play sound if enabled (ONE TIME ONLY)
       if (settings?.sound_enabled) {
         try {
-          // Using Web Audio API to generate a pleasant notification sound
           const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
           const oscillator = audioContext.createOscillator()
           const gainNode = audioContext.createGain()
@@ -105,7 +110,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
           oscillator.connect(gainNode)
           gainNode.connect(audioContext.destination)
 
-          // Pleasant notification sound (two-tone chime)
           oscillator.frequency.setValueAtTime(800, audioContext.currentTime)
           oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1)
 
@@ -120,14 +124,14 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         }
       }
 
-      // ONLY ONE notification type - Browser notification OR nothing
+      // ONLY ONE notification (ONE TIME ONLY)
       if (settings?.notifications_enabled && 'Notification' in window && Notification.permission === 'granted') {
         if (isWorkSession) {
           new Notification('¡Pomodoro completado! 🍅', {
             body: 'Tiempo de tomar un descanso',
             icon: '/icon-192x192.png',
           })
-        } else {
+        } else if (isBreakSession) {
           new Notification('¡Descanso completado! ☕', {
             body: 'Hora de volver al trabajo',
             icon: '/icon-192x192.png',
@@ -138,69 +142,83 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       // Handle next session based on type
       if (isWorkSession) {
         // Increment pomodoro count
-        const newCount = (activeSession.pomodoro_count || 0) + 1
+        const newCount = currentCount + 1
         setPomodoroCount(newCount)
+        console.log('📊 Pomodoro count updated to:', newCount)
 
         // Auto-start break if enabled
         if (settings?.auto_start_breaks) {
           const isLongBreak = newCount % POMODOROS_UNTIL_LONG_BREAK === 0
           const breakType: 'short_break' | 'long_break' = isLongBreak ? 'long_break' : 'short_break'
 
+          console.log('🚀 Auto-starting break:', breakType)
           setTimeout(async () => {
             try {
               const session = await createTimeSession(taskId, userId, breakType, newCount)
               setActiveSession(session)
               setTimeRemaining(breakType === 'long_break' ? LONG_BREAK_DURATION : SHORT_BREAK_DURATION)
               setIsRunning(true)
+              console.log('✅ Break session started')
+
+              // Reset completion flag AFTER starting new session
+              isCompletingRef.current = false
             } catch (error) {
               console.error('Error auto-starting break:', error)
+              isCompletingRef.current = false
             }
           }, 1000)
+          return // Exit early - flag will be reset after auto-start
         }
-        // No toast - only browser notification
       } else if (isBreakSession) {
-        // Reset count after long break
+        // Update count for next work session
+        const newCount = currentType === 'long_break' ? 0 : currentCount
         if (currentType === 'long_break') {
           setPomodoroCount(0)
+          console.log('♻️ Pomodoro count reset after long break')
         }
 
         // Auto-start work session if enabled
         if (settings?.auto_start_pomodoros) {
+          console.log('🚀 Auto-starting work session')
           setTimeout(async () => {
             try {
-              const newCount = currentType === 'long_break' ? 0 : pomodoroCount
               const session = await createTimeSession(taskId, userId, 'work', newCount)
               setActiveSession(session)
               setTimeRemaining(WORK_DURATION)
               setIsRunning(true)
+              console.log('✅ Work session started')
+
+              // Reset completion flag AFTER starting new session
+              isCompletingRef.current = false
             } catch (error) {
               console.error('Error auto-starting work:', error)
+              isCompletingRef.current = false
             }
           }, 1000)
+          return // Exit early - flag will be reset after auto-start
         }
-        // No toast - only browser notification
       }
 
-      setActiveSession(null)
-
-      // Reset flag after a delay to prevent rapid re-triggers
+      // Reset flag after delay (only if NOT auto-starting)
       setTimeout(() => {
         isCompletingRef.current = false
-        console.log('Reset isCompletingRef after delay')
+        console.log('🔄 Reset isCompletingRef (no auto-start)')
       }, 2000)
 
       if (onComplete) {
         onComplete()
       }
     } catch (error) {
-      console.error('Error completing timer:', error)
+      console.error('❌ Error completing timer:', error)
       toast.error('Error al completar timer')
+      setActiveSession(null)
+      setIsRunning(false)
       // Reset flag after delay even on error
       setTimeout(() => {
         isCompletingRef.current = false
       }, 2000)
     }
-  }, [activeSession, taskId, userId, onComplete, settings, pomodoroCount, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, POMODOROS_UNTIL_LONG_BREAK])
+  }, [activeSession, taskId, userId, onComplete, settings, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, POMODOROS_UNTIL_LONG_BREAK])
 
   // Sync timer based on real elapsed time
   const syncTimerFromSession = useCallback((session: TimeSession) => {
