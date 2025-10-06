@@ -4,7 +4,8 @@ import { Timer, Play, Pause, Clock, X } from 'lucide-react'
 import { usePomodoroTimer } from '@/lib/hooks/usePomodoroTimer'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CircularProgress } from './CircularProgress'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface PomodoroTimerProps {
   taskId: string
@@ -26,6 +27,12 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
   } = usePomodoroTimer({ taskId, userId, onComplete })
 
   const [showExpanded, setShowExpanded] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   // Calculate progress percentage (how much time has elapsed)
   const progressPercentage = ((currentDuration - timeRemaining) / currentDuration) * 100
@@ -49,6 +56,85 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
   }
 
   const currentColors = isBreak ? colors.break : colors.work
+
+  const modalContent = isRunning && showExpanded && mounted ? (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 dark:bg-black/85 z-[9999] flex items-center justify-center p-4 backdrop-blur-md"
+      onClick={() => setShowExpanded(false)}
+      style={{ isolation: 'isolate' }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative shadow-2xl"
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={() => setShowExpanded(false)}
+          className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors z-10"
+        >
+          <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+        </button>
+
+        {/* Timer Display */}
+        <div className="flex flex-col items-center">
+          <h3 className={`text-sm font-semibold ${currentColors.text} mb-2 uppercase tracking-wide`}>
+            {isBreak ? (sessionType === 'long_break' ? 'Descanso largo' : 'Descanso corto') : 'Pomodoro'}
+          </h3>
+
+          {/* Pomodoro Counter */}
+          {!isBreak && pomodoroCount > 0 && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+              Pomodoro {pomodoroCount} completado{pomodoroCount !== 1 ? 's' : ''}
+            </div>
+          )}
+
+          {/* Circular Progress */}
+          <div className="relative mb-6">
+            <CircularProgress
+              percentage={progressPercentage}
+              size={200}
+              strokeWidth={12}
+              color={currentColors.progress}
+            />
+            {/* Time in center */}
+            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+              <span className="text-4xl font-bold text-gray-900 dark:text-white font-mono">
+                {timeRemainingFormatted}
+              </span>
+              {isBreak && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  ☕ Relájate
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Pause Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Pause button clicked!')
+              pause()
+              setShowExpanded(false)
+            }}
+            className={`w-full px-6 py-3 ${currentColors.button} text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-95 cursor-pointer`}
+          >
+            <Pause className="w-5 h-5" />
+            {isBreak ? 'Pausar descanso' : 'Pausar Pomodoro'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  ) : null
 
   return (
     <>
@@ -115,84 +201,13 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
         </button>
       </div>
 
-      {/* Expanded Timer Modal */}
-      <AnimatePresence>
-        {isRunning && showExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/75 dark:bg-black/85 z-[9999] flex items-center justify-center p-4 backdrop-blur-md"
-            onClick={() => setShowExpanded(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative shadow-2xl z-[10000]"
-            >
-              {/* Close button */}
-              <button
-                onClick={() => setShowExpanded(false)}
-                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-
-              {/* Timer Display */}
-              <div className="flex flex-col items-center">
-                <h3 className={`text-sm font-semibold ${currentColors.text} mb-2 uppercase tracking-wide`}>
-                  {isBreak ? (sessionType === 'long_break' ? 'Descanso largo' : 'Descanso corto') : 'Pomodoro'}
-                </h3>
-
-                {/* Pomodoro Counter */}
-                {!isBreak && pomodoroCount > 0 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                    Pomodoro {pomodoroCount} completado{pomodoroCount !== 1 ? 's' : ''}
-                  </div>
-                )}
-
-                {/* Circular Progress */}
-                <div className="relative mb-6">
-                  <CircularProgress
-                    percentage={progressPercentage}
-                    size={200}
-                    strokeWidth={12}
-                    color={currentColors.progress}
-                  />
-                  {/* Time in center */}
-                  <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <span className="text-4xl font-bold text-gray-900 dark:text-white font-mono">
-                      {timeRemainingFormatted}
-                    </span>
-                    {isBreak && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        ☕ Relájate
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Pause Button */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    pause()
-                    setShowExpanded(false)
-                  }}
-                  className={`w-full px-6 py-3 ${currentColors.button} text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-95`}
-                >
-                  <Pause className="w-5 h-5" />
-                  {isBreak ? 'Pausar descanso' : 'Pausar Pomodoro'}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Expanded Timer Modal - Using Portal */}
+      {mounted && typeof window !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {modalContent}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   )
 }
