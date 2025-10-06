@@ -96,6 +96,58 @@ export async function updateTimeSession(
  * Pause/end a time session
  * Calculates duration and marks as inactive
  */
+/**
+ * Get the most recent paused (not completed) session for a task
+ */
+export async function getPausedTimeSession(taskId: string, userId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('time_sessions')
+    // @ts-ignore
+    .select('*')
+    .eq('task_id', taskId)
+    .eq('user_id', userId)
+    .eq('is_active', false)
+    .eq('is_completed', false)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching paused session:', error)
+    return null
+  }
+
+  return data as import('@/types/database.types').TimeSession | null
+}
+
+/**
+ * Resume a paused time session
+ */
+export async function resumeTimeSession(sessionId: string) {
+  const supabase = createClient()
+
+  // Simply reactivate the session - we'll recalculate time based on duration_seconds
+  const { data, error } = await supabase
+    .from('time_sessions')
+    // @ts-ignore
+    .update({
+      is_active: true,
+      ended_at: null,
+    })
+    .eq('id', sessionId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error resuming session:', error)
+    throw error
+  }
+
+  return data as import('@/types/database.types').TimeSession
+}
+
 export async function pauseTimeSession(sessionId: string) {
   const supabase = createClient()
 

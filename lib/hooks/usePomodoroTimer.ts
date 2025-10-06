@@ -321,16 +321,38 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     }
   }, [isRunning, activeSession, HEARTBEAT_INTERVAL])
 
-  // Start timer
+  // Start timer (or resume if there's a paused session)
   const start = useCallback(async () => {
     try {
-      const session = await createTimeSession(taskId, userId, 'work', pomodoroCount)
-      setActiveSession(session)
-      setTimeRemaining(WORK_DURATION)
-      setIsRunning(true)
+      // First check if there's a paused session for this task
+      const { getPausedTimeSession, resumeTimeSession, createTimeSession } = await import('@/lib/supabase/timeSessionQueries')
+      const pausedSession = await getPausedTimeSession(taskId, userId)
 
-      const minutes = settings?.work_duration || 25
-      toast.success(`Timer iniciado - ${minutes} minutos`)
+      let session
+      if (pausedSession && pausedSession.duration_seconds) {
+        // Resume the paused session
+        console.log('Resuming paused session:', pausedSession)
+        session = await resumeTimeSession(pausedSession.id)
+
+        // Calculate remaining time based on what was already spent
+        const targetDuration = pausedSession.session_type === 'short_break' ? SHORT_BREAK_DURATION :
+                               pausedSession.session_type === 'long_break' ? LONG_BREAK_DURATION :
+                               WORK_DURATION
+        const remaining = Math.max(0, targetDuration - pausedSession.duration_seconds)
+
+        setTimeRemaining(remaining)
+        toast.success(`Timer reanudado - ${Math.ceil(remaining / 60)} minutos restantes`)
+      } else {
+        // Create new session
+        session = await createTimeSession(taskId, userId, 'work', pomodoroCount)
+        setTimeRemaining(WORK_DURATION)
+
+        const minutes = settings?.work_duration || 25
+        toast.success(`Timer iniciado - ${minutes} minutos`)
+      }
+
+      setActiveSession(session)
+      setIsRunning(true)
     } catch (error: any) {
       console.error('Error starting timer:', error)
 
@@ -351,7 +373,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         })
       }
     }
-  }, [taskId, userId, WORK_DURATION, settings, pomodoroCount])
+  }, [taskId, userId, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, settings, pomodoroCount])
 
   // Pause timer
   const pause = useCallback(async () => {
