@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import TaskItem from './TaskItem'
 import SwipeWrapper from './SwipeWrapper'
@@ -65,38 +65,49 @@ function SortableTaskWrapper({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      {/* Drag Handle - Solo visible en desktop en hover */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 items-center justify-center w-6 h-6 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity z-10"
-        title="Arrastrar para reordenar"
-      >
-        <GripVertical className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-      </div>
-
-      {/* Botones móvil - Solo visible en móvil */}
-      <div className="sm:hidden absolute right-0 top-1/2 -translate-y-1/2 translate-x-full ml-2 flex flex-col gap-1">
-        <button
-          onClick={onMoveUp}
-          disabled={isFirst}
-          className="p-1 bg-white dark:bg-slate-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm disabled:opacity-30 disabled:cursor-not-allowed active:bg-gray-100 dark:active:bg-slate-600"
-          title="Mover arriba"
+    <div ref={setNodeRef} style={style} className="relative">
+      <div className="flex items-stretch gap-2">
+        {/* Drag Handle - Desktop (≥1024px) */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="hidden lg:flex items-center justify-center w-8 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          title="Arrastrar para reordenar"
         >
-          <ChevronUp className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={isLast}
-          className="p-1 bg-white dark:bg-slate-700 border border-gray-300 dark:border-gray-600 rounded shadow-sm disabled:opacity-30 disabled:cursor-not-allowed active:bg-gray-100 dark:active:bg-slate-600"
-          title="Mover abajo"
-        >
-          <ChevronDown className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-        </button>
-      </div>
+          <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+        </div>
 
-      {children}
+        {/* Botones ↑↓ - Tablet/Móvil (<1024px) */}
+        <div className="lg:hidden flex flex-col gap-1 justify-center py-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onMoveUp?.()
+            }}
+            disabled={isFirst}
+            className="p-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Mover arriba"
+          >
+            <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onMoveDown?.()
+            }}
+            disabled={isLast}
+            className="p-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Mover abajo"
+          >
+            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+        </div>
+
+        {/* Contenido de la tarea */}
+        <div className="flex-1 min-w-0">
+          {children}
+        </div>
+      </div>
     </div>
   )
 }
@@ -110,9 +121,9 @@ export default function TaskList({
   const supabase = createClient()
 
   // Sincronizar cuando cambien las tasks desde el padre
-  if (tasks.length !== items.length || tasks.some((t, i) => t.id !== items[i]?.id)) {
+  useEffect(() => {
     setItems(tasks)
-  }
+  }, [tasks])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
