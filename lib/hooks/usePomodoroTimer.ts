@@ -44,6 +44,18 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     loadTotalTime()
   }, [taskId])
 
+  // Sync timer based on real elapsed time
+  const syncTimerFromSession = useCallback((session: TimeSession) => {
+    const elapsed = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000)
+    const remaining = Math.max(0, POMODORO_DURATION - elapsed)
+    setTimeRemaining(remaining)
+
+    // Auto-complete if time ran out while app was in background
+    if (remaining <= 0 && isRunning) {
+      handleComplete()
+    }
+  }, [POMODORO_DURATION, isRunning, handleComplete])
+
   // Check for active session on mount and after task changes
   useEffect(() => {
     const checkActiveSession = async () => {
@@ -53,18 +65,8 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         if (session && session.task_id === taskId) {
           // Resume this task's session
           setActiveSession(session)
-          const elapsed = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000)
-          const remaining = Math.max(0, POMODORO_DURATION - elapsed)
-          setTimeRemaining(remaining)
+          syncTimerFromSession(session)
           setIsRunning(true)
-
-          // Restore from localStorage if exists
-          const localKey = `pomodoro_active_${userId}_${taskId}`
-          const localData = localStorage.getItem(localKey)
-          if (localData) {
-            const parsed = JSON.parse(localData)
-            setTimeRemaining(parsed.timeRemaining || remaining)
-          }
         }
       } catch (error) {
         console.error('Error checking active session:', error)
@@ -72,30 +74,38 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     }
 
     checkActiveSession()
-  }, [taskId, userId, POMODORO_DURATION])
+  }, [taskId, userId, syncTimerFromSession])
 
-  // Timer countdown
+  // Detect when app visibility changes (mobile/desktop)
   useEffect(() => {
-    if (isRunning && timeRemaining > 0) {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isRunning && activeSession) {
+        // App came back to foreground - sync timer with real elapsed time
+        console.log('App visible again - syncing timer...')
+        syncTimerFromSession(activeSession)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isRunning, activeSession, syncTimerFromSession])
+
+  // Timer countdown - recalculate based on real time every second
+  useEffect(() => {
+    if (isRunning && activeSession && timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          const newValue = prev - 1
+        // Always recalculate based on real elapsed time from started_at
+        const elapsed = Math.floor((Date.now() - new Date(activeSession.started_at).getTime()) / 1000)
+        const remaining = Math.max(0, POMODORO_DURATION - elapsed)
 
-          // Save to localStorage
-          const localKey = `pomodoro_active_${userId}_${taskId}`
-          localStorage.setItem(localKey, JSON.stringify({
-            timeRemaining: newValue,
-            sessionId: activeSession?.id,
-            startedAt: activeSession?.started_at,
-          }))
+        setTimeRemaining(remaining)
 
-          if (newValue <= 0) {
-            handleComplete()
-            return 0
-          }
-
-          return newValue
-        })
+        if (remaining <= 0) {
+          handleComplete()
+        }
       }, 1000)
     } else {
       if (intervalRef.current) {
@@ -109,8 +119,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(intervalRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, timeRemaining, userId, taskId, activeSession])
+  }, [isRunning, activeSession, POMODORO_DURATION, handleComplete, timeRemaining])
 
   // Heartbeat to update Supabase every 30 seconds
   useEffect(() => {
@@ -145,14 +154,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       setTimeRemaining(POMODORO_DURATION)
       setIsRunning(true)
 
-      // Save to localStorage
-      const localKey = `pomodoro_active_${userId}_${taskId}`
-      localStorage.setItem(localKey, JSON.stringify({
-        timeRemaining: POMODORO_DURATION,
-        sessionId: session.id,
-        startedAt: session.started_at,
-      }))
-
       toast.success('Timer iniciado - 25 minutos')
     } catch (error: any) {
       console.error('Error starting timer:', error)
@@ -184,10 +185,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       await pauseTimeSession(activeSession.id)
       setIsRunning(false)
 
-      // Clear localStorage
-      const localKey = `pomodoro_active_${userId}_${taskId}`
-      localStorage.removeItem(localKey)
-
       // Reload total time
       const total = await getTotalTimeForTask(taskId)
       setTotalTimeSpent(total)
@@ -198,7 +195,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       console.error('Error pausing timer:', error)
       toast.error('Error al pausar timer')
     }
-  }, [activeSession, taskId, userId])
+  }, [activeSession, taskId])
 
   // Complete timer (finished 25 minutes)
   const handleComplete = useCallback(async () => {
@@ -208,10 +205,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       await completeTimeSession(activeSession.id)
       setIsRunning(false)
       setTimeRemaining(0)
-
-      // Clear localStorage
-      const localKey = `pomodoro_active_${userId}_${taskId}`
-      localStorage.removeItem(localKey)
 
       // Reload total time
       const total = await getTotalTimeForTask(taskId)
@@ -238,7 +231,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       console.error('Error completing timer:', error)
       toast.error('Error al completar timer')
     }
-  }, [activeSession, taskId, userId, onComplete])
+  }, [activeSession, taskId, onComplete])
 
   // Format time for display (MM:SS)
   const formatTime = useCallback((seconds: number): string => {
