@@ -122,7 +122,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 dark:bg-black/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/75 dark:bg-black/85 z-[9999] flex items-center justify-center p-4 backdrop-blur-md"
             onClick={() => setShowExpanded(false)}
           >
             <motion.div
@@ -176,11 +176,14 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
                 {/* Pause Button */}
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
                     pause()
                     setShowExpanded(false)
                   }}
-                  className={`w-full px-6 py-3 ${currentColors.button} text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2`}
+                  className={`w-full px-6 py-3 ${currentColors.button} text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 active:scale-95`}
                 >
                   <Pause className="w-5 h-5" />
                   {isBreak ? 'Pausar descanso' : 'Pausar Pomodoro'}
