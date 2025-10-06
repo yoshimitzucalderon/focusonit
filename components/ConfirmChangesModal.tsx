@@ -40,9 +40,9 @@ export default function ConfirmChangesModal({
   }, [onCancel])
 
   const priorityLabels = {
-    low: 'Baja',
-    medium: 'Media',
-    high: 'Alta'
+    baja: 'Baja',
+    media: 'Media',
+    alta: 'Alta'
   }
 
   return (

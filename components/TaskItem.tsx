@@ -21,7 +21,7 @@ interface VoiceTaskChanges {
   title?: string
   dueDate?: string | null
   description?: string | null
-  priority?: 'low' | 'medium' | 'high'
+  priority?: 'baja' | 'media' | 'alta'
 }
 
 export default function TaskItem({ task }: TaskItemProps) {
@@ -383,7 +383,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                 title: task.title,
                 dueDate: task.due_date,
                 description: task.description,
-                priority: (task.priority as 'low' | 'medium' | 'high') || 'medium'
+                priority: (task.priority as 'baja' | 'media' | 'alta') || 'media'
               }}
               onEditConfirmed={handleVoiceEdit}
             />

@@ -11,7 +11,7 @@ interface VoiceEditButtonProps {
     title: string
     dueDate: string | null
     description: string | null
-    priority: 'low' | 'medium' | 'high'
+    priority: 'baja' | 'media' | 'alta'
   }
   onEditConfirmed: (changes: any) => void
 }
