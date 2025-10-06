@@ -367,14 +367,6 @@ export default function TaskItem({ task }: TaskItemProps) {
             placeholder="Agregar fecha"
           />
 
-          {/* Pomodoro Timer - solo si la tarea no está completada */}
-          {!task.completed && (
-            <PomodoroTimer
-              taskId={task.id}
-              userId={task.user_id}
-            />
-          )}
-
           {/* Voice Edit Button - visible en todas las resoluciones */}
           {!task.completed && (
             <VoiceEditButton
@@ -386,6 +378,14 @@ export default function TaskItem({ task }: TaskItemProps) {
                 priority: task.priority || 'media'
               }}
               onEditConfirmed={handleVoiceEdit}
+            />
+          )}
+
+          {/* Pomodoro Timer - solo si la tarea no está completada */}
+          {!task.completed && (
+            <PomodoroTimer
+              taskId={task.id}
+              userId={task.user_id}
             />
           )}
         </div>

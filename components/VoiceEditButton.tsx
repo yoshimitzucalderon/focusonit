@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ConfirmChangesModal from './ConfirmChangesModal'
@@ -24,6 +24,36 @@ export default function VoiceEditButton({
   const [isListening, setIsListening] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [suggestedChanges, setSuggestedChanges] = useState<any>(null)
+  const recognitionRef = useRef<any>(null)
+
+  // Cleanup al desmontar o cuando el navegador pierde foco
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+          setIsListening(false)
+          setIsProcessing(false)
+          toast.error('Grabación detenida al minimizar')
+        } catch (err) {
+          console.error('Error al detener reconocimiento:', err)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (err) {
+          console.error('Error al limpiar reconocimiento:', err)
+        }
+      }
+    }
+  }, [])
 
   const startVoiceEdit = async () => {
     try {
@@ -36,6 +66,7 @@ export default function VoiceEditButton({
       }
 
       const recognition = new SpeechRecognition()
+      recognitionRef.current = recognition
       recognition.lang = 'es-MX'
       recognition.continuous = false
       recognition.interimResults = false
@@ -96,6 +127,10 @@ export default function VoiceEditButton({
         }
       })
 
+      recognition.addEventListener('end', () => {
+        recognitionRef.current = null
+      })
+
       recognition.start()
     } catch (err) {
       console.error(err)
@@ -109,14 +144,14 @@ export default function VoiceEditButton({
         onClick={startVoiceEdit}
         disabled={isListening || isProcessing}
         title="Editar con voz"
-        className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+        className="p-2 rounded-md bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-800/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isProcessing ? (
-          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          <Loader2 className="w-4 h-4 animate-spin text-purple-600 dark:text-purple-400" />
         ) : isListening ? (
           <MicOff className="w-4 h-4 text-red-500 animate-pulse" />
         ) : (
-          <Mic className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+          <Mic className="w-4 h-4 text-purple-600 dark:text-purple-400" />
         )}
       </button>
 

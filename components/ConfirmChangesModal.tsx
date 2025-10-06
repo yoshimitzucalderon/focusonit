@@ -47,11 +47,11 @@ export default function ConfirmChangesModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
       onClick={onCancel}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl"
+        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl my-8 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-semibold mb-4 dark:text-white">
@@ -62,8 +62,8 @@ export default function ConfirmChangesModal({
           {changedFields.title && (
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Título:</p>
-              <p className="text-red-600 line-through text-sm">{original.title}</p>
-              <p className="text-green-600 font-medium">{changedFields.title}</p>
+              <p className="text-red-600 line-through text-sm break-words">{original.title}</p>
+              <p className="text-green-600 font-medium break-words">{changedFields.title}</p>
             </div>
           )}
 
@@ -80,10 +80,12 @@ export default function ConfirmChangesModal({
           {changedFields.description && (
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Descripción:</p>
-              <p className="text-red-600 line-through text-sm">
+              <p className="text-red-600 line-through text-sm break-words whitespace-pre-wrap max-h-32 overflow-y-auto">
                 {original.description || 'Sin descripción'}
               </p>
-              <p className="text-green-600 font-medium">{changedFields.description}</p>
+              <p className="text-green-600 font-medium break-words whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {changedFields.description}
+              </p>
             </div>
           )}
 
@@ -100,16 +102,16 @@ export default function ConfirmChangesModal({
           )}
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 sticky bottom-0 bg-white dark:bg-gray-800 pt-2">
           <button
             onClick={onConfirm}
-            className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors font-medium min-h-[48px]"
           >
             Aplicar cambios
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 border border-gray-300 dark:border-gray-600 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors dark:text-white"
+            className="flex-1 border border-gray-300 dark:border-gray-600 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 transition-colors dark:text-white min-h-[48px]"
           >
             Cancelar
           </button>
