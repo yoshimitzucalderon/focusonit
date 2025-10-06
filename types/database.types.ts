@@ -22,6 +22,8 @@ export interface Database {
           updated_at: string
           google_event_id: string | null
           synced_with_calendar: boolean
+          priority: 'baja' | 'media' | 'alta'
+          timezone_offset: number | null
         }
         Insert: {
           id?: string
@@ -35,6 +37,8 @@ export interface Database {
           updated_at?: string
           google_event_id?: string | null
           synced_with_calendar?: boolean
+          priority?: 'baja' | 'media' | 'alta'
+          timezone_offset?: number | null
         }
         Update: {
           id?: string
@@ -48,6 +52,8 @@ export interface Database {
           updated_at?: string
           google_event_id?: string | null
           synced_with_calendar?: boolean
+          priority?: 'baja' | 'media' | 'alta'
+          timezone_offset?: number | null
         }
       }
       time_sessions: {

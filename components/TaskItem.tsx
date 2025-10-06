@@ -383,7 +383,7 @@ export default function TaskItem({ task }: TaskItemProps) {
                 title: task.title,
                 dueDate: task.due_date,
                 description: task.description,
-                priority: (task.priority as 'baja' | 'media' | 'alta') || 'media'
+                priority: task.priority || 'media'
               }}
               onEditConfirmed={handleVoiceEdit}
             />
