@@ -332,16 +332,19 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       if (pausedSession && pausedSession.duration_seconds) {
         // Resume the paused session
         console.log('Resuming paused session:', pausedSession)
-        session = await resumeTimeSession(pausedSession.id)
+        const timeAlreadySpent = pausedSession.duration_seconds
+        session = await resumeTimeSession(pausedSession.id, timeAlreadySpent)
 
         // Calculate remaining time based on what was already spent
         const targetDuration = pausedSession.session_type === 'short_break' ? SHORT_BREAK_DURATION :
                                pausedSession.session_type === 'long_break' ? LONG_BREAK_DURATION :
                                WORK_DURATION
-        const remaining = Math.max(0, targetDuration - pausedSession.duration_seconds)
+        const remaining = Math.max(0, targetDuration - timeAlreadySpent)
 
         setTimeRemaining(remaining)
-        toast.success(`Timer reanudado - ${Math.ceil(remaining / 60)} minutos restantes`)
+        const minutesRemaining = Math.ceil(remaining / 60)
+        const secondsRemaining = remaining % 60
+        toast.success(`Timer reanudado - ${minutesRemaining > 0 ? minutesRemaining + 'm' : ''} ${secondsRemaining}s restantes`)
       } else {
         // Create new session
         session = await createTimeSession(taskId, userId, 'work', pomodoroCount)

@@ -125,16 +125,21 @@ export async function getPausedTimeSession(taskId: string, userId: string) {
 /**
  * Resume a paused time session
  */
-export async function resumeTimeSession(sessionId: string) {
+export async function resumeTimeSession(sessionId: string, timeAlreadySpent: number) {
   const supabase = createClient()
 
-  // Simply reactivate the session - we'll recalculate time based on duration_seconds
+  // Adjust started_at to account for time already spent
+  // If 180 seconds were spent, set started_at to 180 seconds ago from now
+  const newStartedAt = new Date(Date.now() - (timeAlreadySpent * 1000))
+
   const { data, error } = await supabase
     .from('time_sessions')
     // @ts-ignore
     .update({
       is_active: true,
       ended_at: null,
+      started_at: newStartedAt.toISOString(),
+      duration_seconds: null, // Clear this since we're recalculating from started_at
     })
     .eq('id', sessionId)
     .select()
