@@ -152,11 +152,12 @@ export default function TaskList({
         distance: 5, // 5px para iniciar
       },
     }),
-    // Touch sensor - iPad/Mobile optimizado
+    // Touch sensor - Mobile/iPad optimizado
+    // Menor delay para mejor respuesta táctil
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 200, // 200ms para evitar scroll accidental
-        tolerance: 8, // Permite 8px de movimiento durante el delay
+        delay: 150, // 150ms - balance entre scroll accidental y respuesta
+        tolerance: 10, // Permite 10px de movimiento durante el delay
       },
     }),
     useSensor(KeyboardSensor, {
@@ -171,15 +172,23 @@ export default function TaskList({
         position: index,
       }))
 
+      console.log('📡 Enviando actualización de posiciones:', taskUpdates)
+
       const response = await fetch('/api/reorder-tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskUpdates }),
       })
 
-      if (!response.ok) throw new Error('Error al reordenar')
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('❌ API error:', response.status, errorData)
+        throw new Error('Error al reordenar')
+      }
+
+      console.log('✅ Posiciones actualizadas exitosamente')
     } catch (error) {
-      console.error('Error al reordenar:', error)
+      console.error('❌ Error al reordenar:', error)
       // Revertir cambios en caso de error
       setItems(tasks)
       toast.error('Error al guardar nuevo orden')
@@ -210,6 +219,8 @@ export default function TaskList({
       const oldIndex = items.findIndex((task) => task.id === active.id)
       const newIndex = items.findIndex((task) => task.id === over.id)
 
+      console.log('🔄 Drag end:', { activeId: active.id, overId: over.id, oldIndex, newIndex })
+
       const newItems = arrayMove(items, oldIndex, newIndex)
 
       // Actualizar localmente inmediatamente
@@ -222,6 +233,8 @@ export default function TaskList({
 
       // Actualizar posiciones en la BD
       await updateTaskPositions(newItems)
+    } else {
+      console.log('❌ Drag cancelled or same position:', { active: active.id, over: over?.id })
     }
   }
 
