@@ -17,6 +17,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -140,6 +142,7 @@ export default function TaskList({
   enableReorder = true
 }: TaskListProps) {
   const [items, setItems] = useState(tasks)
+  const [activeId, setActiveId] = useState<string | null>(null)
   const supabase = createClient()
 
   // Sincronizar cuando cambien las tasks desde el padre
@@ -147,10 +150,13 @@ export default function TaskList({
     setItems(tasks)
   }, [tasks])
 
+  const activeTask = activeId ? items.find(task => task.id === activeId) : null
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px antes de iniciar drag (evita conflictos con swipe)
+        delay: 150, // 150ms delay para detectar intención (evita conflictos con clicks/swipes)
+        tolerance: 5, // Permitir 5px de movimiento durante el delay
       },
     }),
     useSensor(KeyboardSensor, {
@@ -180,8 +186,14 @@ export default function TaskList({
     }
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+
+    setActiveId(null)
 
     if (over && active.id !== over.id) {
       const oldIndex = items.findIndex((task) => task.id === active.id)
@@ -195,6 +207,10 @@ export default function TaskList({
       // Actualizar posiciones en la BD
       await updateTaskPositions(newItems)
     }
+  }
+
+  const handleDragCancel = () => {
+    setActiveId(null)
   }
 
   const moveTaskUp = async (index: number) => {
@@ -312,11 +328,29 @@ export default function TaskList({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <SortableContext items={items.map(t => t.id)} strategy={verticalListSortingStrategy}>
         {content}
       </SortableContext>
+
+      {/* DragOverlay permite que el elemento arrastrado flote sobre TODA la página */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className="opacity-90 shadow-2xl ring-4 ring-purple-500 dark:ring-purple-400 rounded-lg scale-105">
+            <SwipeWrapper
+              taskId={activeTask.id}
+              onComplete={() => {}}
+              onDelete={() => {}}
+              isCompleted={activeTask.completed}
+            >
+              <TaskItem task={activeTask} />
+            </SwipeWrapper>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
