@@ -25,12 +25,24 @@ export default function VoiceEditButton({
   const [isProcessing, setIsProcessing] = useState(false)
   const [suggestedChanges, setSuggestedChanges] = useState<any>(null)
   const recognitionRef = useRef<any>(null)
+  const isListeningRef = useRef(false)
+  const isProcessingRef = useRef(false)
+
+  // Mantener refs sincronizadas con states
+  useEffect(() => {
+    isListeningRef.current = isListening
+  }, [isListening])
+
+  useEffect(() => {
+    isProcessingRef.current = isProcessing
+  }, [isProcessing])
 
   // Cleanup al desmontar o cuando el navegador pierde foco
   useEffect(() => {
     const stopRecognition = (showToast = true) => {
       if (recognitionRef.current) {
         try {
+          console.log('🛑 Deteniendo recognition...')
           // Solo usar stop(), abort() causa errores
           recognitionRef.current.stop()
           setIsListening(false)
@@ -49,18 +61,20 @@ export default function VoiceEditButton({
     }
 
     const handleVisibilityChange = () => {
-      console.log('👁️ Visibility change:', document.hidden, 'isListening:', isListening)
+      const isActive = isListeningRef.current || isProcessingRef.current
+      console.log('👁️ Visibility change:', document.hidden, 'isActive:', isActive)
       // Solo detener si realmente está grabando
-      if (document.hidden && (isListening || isProcessing)) {
+      if (document.hidden && isActive) {
         console.log('🛑 Página oculta - deteniendo grabación activa')
         stopRecognition()
       }
     }
 
     const handleBlur = () => {
-      console.log('👁️ Window blur, isListening:', isListening)
+      const isActive = isListeningRef.current || isProcessingRef.current
+      console.log('👁️ Window blur, isActive:', isActive)
       // Solo detener si está grabando
-      if (isListening || isProcessing) {
+      if (isActive) {
         console.log('🛑 Window blur - deteniendo grabación activa')
         stopRecognition()
       }
@@ -73,10 +87,11 @@ export default function VoiceEditButton({
     }
 
     const handleFocusOut = () => {
-      console.log('👁️ Focus out, isListening:', isListening)
+      const isActive = isListeningRef.current || isProcessingRef.current
+      console.log('👁️ Focus out, isActive:', isActive)
       // Delay para iOS, solo si está grabando
       setTimeout(() => {
-        if (document.hidden && (isListening || isProcessing)) {
+        if (document.hidden && (isListeningRef.current || isProcessingRef.current)) {
           console.log('🛑 Focus out - deteniendo grabación activa')
           stopRecognition()
         }
@@ -93,7 +108,7 @@ export default function VoiceEditButton({
     // Para iOS Safari/Chrome - usar Page Visibility API más agresivamente
     // SOLO si está grabando activamente
     const checkInterval = setInterval(() => {
-      if (document.hidden && recognitionRef.current && (isListening || isProcessing)) {
+      if (document.hidden && recognitionRef.current && (isListeningRef.current || isProcessingRef.current)) {
         console.log('⏰ Interval check: página oculta y grabación activa - deteniendo')
         stopRecognition(false) // Sin toast en interval para evitar spam
       }
@@ -106,9 +121,12 @@ export default function VoiceEditButton({
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('pagehide', () => stopRecognition(false))
       window.removeEventListener('focusout', handleFocusOut)
-      stopRecognition(false)
+      // Solo detener si realmente está activo
+      if (isListeningRef.current || isProcessingRef.current) {
+        stopRecognition(false)
+      }
     }
-  }, [isListening, isProcessing])
+  }, []) // ← SIN dependencias - solo se ejecuta una vez
 
   const startVoiceEdit = async () => {
     try {
