@@ -17,6 +17,13 @@ interface TaskItemProps {
   task: Task
 }
 
+interface VoiceTaskChanges {
+  title?: string
+  dueDate?: string | null
+  description?: string | null
+  priority?: 'low' | 'medium' | 'high'
+}
+
 export default function TaskItem({ task }: TaskItemProps) {
   const { selectedIds, toggleSelection } = useSelection()
   const isSelected = selectedIds.has(task.id)
@@ -109,7 +116,7 @@ export default function TaskItem({ task }: TaskItemProps) {
   }
 
   // Handler para edición por voz
-  const handleVoiceEdit = async (changes: Partial<Task>) => {
+  const handleVoiceEdit = async (changes: VoiceTaskChanges) => {
     try {
       const updateData: any = {
         updated_at: getLocalTimestamp()
