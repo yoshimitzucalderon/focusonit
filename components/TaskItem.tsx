@@ -239,8 +239,8 @@ export default function TaskItem({ task }: TaskItemProps) {
           <div className="flex items-start gap-2">
             <h3
               onDoubleClick={() => !task.completed && setEditing(true)}
-              className={`flex-1 text-sm sm:text-base transition-all duration-200 dark:text-white break-words ${
-                task.completed ? 'line-through' : 'cursor-pointer hover:text-primary-600 dark:hover:text-primary-400'
+              className={`flex-1 text-sm sm:text-base transition-all duration-200 text-gray-900 dark:text-white break-words ${
+                task.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'cursor-pointer hover:text-primary-600 dark:hover:text-primary-400'
               } ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}
             >
               {task.title}

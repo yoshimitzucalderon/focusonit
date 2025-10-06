@@ -31,13 +31,17 @@ export default function VoiceEditButton({
     const stopRecognition = (showToast = true) => {
       if (recognitionRef.current) {
         try {
+          // Solo usar stop(), abort() causa errores
           recognitionRef.current.stop()
-          recognitionRef.current.abort()
           setIsListening(false)
           setIsProcessing(false)
           if (showToast) {
             toast.error('Grabación detenida')
           }
+          // Limpiar referencia después de un delay
+          setTimeout(() => {
+            recognitionRef.current = null
+          }, 100)
         } catch (err) {
           console.error('Error al detener reconocimiento:', err)
         }
@@ -108,14 +112,16 @@ export default function VoiceEditButton({
 
   const startVoiceEdit = async () => {
     try {
-      // Limpiar cualquier reconocimiento anterior
+      // Limpiar cualquier reconocimiento anterior SOLO si existe
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
-          recognitionRef.current.abort()
+          // NO llamar a abort() aquí - solo stop() es suficiente
         } catch (err) {
           console.log('No hay reconocimiento previo que limpiar')
         }
+        // Limpiar la referencia
+        recognitionRef.current = null
       }
 
       // Verificar soporte del navegador
