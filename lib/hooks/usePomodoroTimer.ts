@@ -70,9 +70,13 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
 
   // Complete timer (finished session)
   const handleComplete = useCallback(async () => {
-    if (!activeSession || isCompletingRef.current) return
+    if (!activeSession || isCompletingRef.current) {
+      console.log('Skipping handleComplete - already running or no session')
+      return
+    }
 
     // Prevent multiple calls
+    console.log('Starting handleComplete')
     isCompletingRef.current = true
 
     const currentType = activeSession.session_type
@@ -116,7 +120,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         }
       }
 
-      // Notifications based on session type
+      // ONLY ONE notification type - Browser notification OR nothing
       if (settings?.notifications_enabled && 'Notification' in window && Notification.permission === 'granted') {
         if (isWorkSession) {
           new Notification('¡Pomodoro completado! 🍅', {
@@ -131,7 +135,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         }
       }
 
-      // Toast based on session type
+      // Handle next session based on type
       if (isWorkSession) {
         // Increment pomodoro count
         const newCount = (activeSession.pomodoro_count || 0) + 1
@@ -141,12 +145,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         if (settings?.auto_start_breaks) {
           const isLongBreak = newCount % POMODOROS_UNTIL_LONG_BREAK === 0
           const breakType: 'short_break' | 'long_break' = isLongBreak ? 'long_break' : 'short_break'
-
-          // Single toast for completion + auto-start
-          toast.success(
-            isLongBreak ? '¡Pomodoro completado! Iniciando descanso largo ☕' : '¡Pomodoro completado! Iniciando descanso ☕',
-            { duration: 3000, icon: '🎉' }
-          )
 
           setTimeout(async () => {
             try {
@@ -158,10 +156,8 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
               console.error('Error auto-starting break:', error)
             }
           }, 1000)
-        } else {
-          // Just completion message if no auto-start
-          toast.success('¡Pomodoro completado! 🍅', { duration: 3000, icon: '🎉' })
         }
+        // No toast - only browser notification
       } else if (isBreakSession) {
         // Reset count after long break
         if (currentType === 'long_break') {
@@ -170,9 +166,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
 
         // Auto-start work session if enabled
         if (settings?.auto_start_pomodoros) {
-          // Single toast for completion + auto-start
-          toast.success('¡Descanso completado! Volviendo al trabajo 💪', { duration: 3000, icon: '⚡' })
-
           setTimeout(async () => {
             try {
               const newCount = currentType === 'long_break' ? 0 : pomodoroCount
@@ -184,14 +177,17 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
               console.error('Error auto-starting work:', error)
             }
           }, 1000)
-        } else {
-          // Just completion message if no auto-start
-          toast.success('¡Descanso completado! ⚡', { duration: 3000, icon: '💪' })
         }
+        // No toast - only browser notification
       }
 
       setActiveSession(null)
-      isCompletingRef.current = false // Reset flag
+
+      // Reset flag after a delay to prevent rapid re-triggers
+      setTimeout(() => {
+        isCompletingRef.current = false
+        console.log('Reset isCompletingRef after delay')
+      }, 2000)
 
       if (onComplete) {
         onComplete()
@@ -199,7 +195,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     } catch (error) {
       console.error('Error completing timer:', error)
       toast.error('Error al completar timer')
-      isCompletingRef.current = false // Reset flag on error too
+      // Reset flag after delay even on error
+      setTimeout(() => {
+        isCompletingRef.current = false
+      }, 2000)
     }
   }, [activeSession, taskId, userId, onComplete, settings, pomodoroCount, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, POMODOROS_UNTIL_LONG_BREAK])
 
