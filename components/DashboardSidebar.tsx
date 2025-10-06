@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, CalendarDays, List, CheckCircle } from 'lucide-react'
+import { Calendar, CalendarDays, List, CheckCircle, BarChart3 } from 'lucide-react'
 import { SidebarLink } from './SidebarLink'
 
 export function DashboardSidebar() {
@@ -32,6 +32,9 @@ export function DashboardSidebar() {
             </SidebarLink>
             <SidebarLink href="/completed" icon={CheckCircle}>
               Completadas
+            </SidebarLink>
+            <SidebarLink href="/stats" icon={BarChart3}>
+              Estadísticas
             </SidebarLink>
           </div>
         </nav>

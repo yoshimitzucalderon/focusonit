@@ -271,6 +271,32 @@ export async function pauseAllActiveSessions(userId: string) {
 }
 
 /**
+ * Get all time sessions with task details
+ */
+export async function getTimeSessionsWithTasks(userId: string) {
+  const supabase = createClient()
+
+  const { data, error } = await supabase
+    .from('time_sessions')
+    .select(`
+      *,
+      tasks (
+        title,
+        description
+      )
+    `)
+    .eq('user_id', userId)
+    .order('started_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching sessions with tasks:', error)
+    throw error
+  }
+
+  return data || []
+}
+
+/**
  * Delete a time session
  */
 export async function deleteTimeSession(sessionId: string) {

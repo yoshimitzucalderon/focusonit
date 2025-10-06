@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2 } from 'lucide-react'
+import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2, Timer } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { isPast, isToday, differenceInDays } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -12,6 +12,7 @@ import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
 import { getLocalTimestamp, toDateOnlyString, parseDateString, getTimezoneOffset } from '@/lib/utils/timezone'
 import VoiceEditButton from './VoiceEditButton'
+import { getTotalTimeForTask } from '@/lib/supabase/timeSessionQueries'
 
 interface TaskItemProps {
   task: Task
@@ -32,11 +33,32 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState(task.description || '')
+  const [totalTimeSeconds, setTotalTimeSeconds] = useState<number>(0)
   const editInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
+
+  // Cargar tiempo total acumulado
+  useEffect(() => {
+    const loadTotalTime = async () => {
+      const total = await getTotalTimeForTask(task.id)
+      setTotalTimeSeconds(total)
+    }
+    loadTotalTime()
+  }, [task.id])
+
+  // Formatear tiempo total
+  const formatTotalTime = (seconds: number) => {
+    if (seconds === 0) return null
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    }
+    return `${minutes}m`
+  }
 
   // Editar título
   const saveTitle = async () => {
@@ -388,6 +410,14 @@ export default function TaskItem({ task }: TaskItemProps) {
               taskId={task.id}
               userId={task.user_id}
             />
+          )}
+
+          {/* Tiempo total acumulado */}
+          {totalTimeSeconds > 0 && (
+            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md">
+              <Timer className="w-3.5 h-3.5" />
+              <span>{formatTotalTime(totalTimeSeconds)}</span>
+            </div>
           )}
         </div>
       </div>
