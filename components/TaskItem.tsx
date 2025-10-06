@@ -286,7 +286,7 @@ export default function TaskItem({ task }: TaskItemProps) {
               transition={{ duration: 0.2 }}
               className="mt-2 bg-gray-50 dark:bg-slate-700/50 rounded-md p-2.5 sm:p-3 border border-gray-200 dark:border-gray-600"
             >
-              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-64 sm:max-h-96 overflow-y-auto break-words description-scroll">
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap max-h-64 sm:max-h-96 overflow-y-auto break-words description-scroll touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {task.description}
               </p>
               <div className="flex items-center gap-2 sm:gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">

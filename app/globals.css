@@ -226,7 +226,18 @@ body {
 /* Prevenir overscroll en mobile */
 @media (max-width: 768px) {
   body {
-    overscroll-behavior-y: none;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Mejorar scroll en áreas específicas dentro de tareas */
+  .description-scroll {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Permitir touch scroll en elementos internos */
+  .touch-pan-y {
+    touch-action: pan-y;
   }
 }
 

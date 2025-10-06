@@ -43,17 +43,31 @@ export default function VoiceEditButton({
     }
 
     const handleVisibilityChange = () => {
+      console.log('👁️ Visibility change:', document.hidden)
       if (document.hidden) {
+        console.log('🛑 Página oculta - deteniendo grabación')
         stopRecognition()
       }
     }
 
     const handleBlur = () => {
+      console.log('👁️ Window blur - deteniendo grabación')
       stopRecognition()
     }
 
     const handleBeforeUnload = () => {
+      console.log('👁️ Before unload - deteniendo grabación')
       stopRecognition()
+    }
+
+    const handleFocusOut = () => {
+      console.log('👁️ Focus out - deteniendo grabación')
+      // Delay para iOS
+      setTimeout(() => {
+        if (document.hidden) {
+          stopRecognition()
+        }
+      }, 100)
     }
 
     // Eventos para diferentes navegadores y dispositivos
@@ -61,12 +75,23 @@ export default function VoiceEditButton({
     window.addEventListener('blur', handleBlur)
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('pagehide', stopRecognition)
+    window.addEventListener('focusout', handleFocusOut)
+
+    // Para iOS Safari/Chrome - usar Page Visibility API más agresivamente
+    const checkInterval = setInterval(() => {
+      if (document.hidden && recognitionRef.current) {
+        console.log('⏰ Interval check: página oculta - deteniendo')
+        stopRecognition()
+      }
+    }, 500)
 
     return () => {
+      clearInterval(checkInterval)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('blur', handleBlur)
       window.removeEventListener('beforeunload', handleBeforeUnload)
       window.removeEventListener('pagehide', stopRecognition)
+      window.removeEventListener('focusout', handleFocusOut)
       stopRecognition()
     }
   }, [])

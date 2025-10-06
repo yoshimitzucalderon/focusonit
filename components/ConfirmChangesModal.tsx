@@ -32,12 +32,25 @@ export default function ConfirmChangesModal({
 
   // Cerrar con ESC y bloquear scroll del body
   useEffect(() => {
-    // Bloquear scroll del body
+    // Bloquear scroll del body de manera más compatible con mobile
     const originalOverflow = document.body.style.overflow
     const originalPosition = document.body.style.position
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
+    const originalTop = document.body.style.top
+    const originalWidth = document.body.style.width
+    const scrollY = window.scrollY
+
+    // En mobile, usar overflow: hidden sin position: fixed
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
+    if (isMobile) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+    }
 
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel()
@@ -49,7 +62,14 @@ export default function ConfirmChangesModal({
       // Restaurar scroll del body
       document.body.style.overflow = originalOverflow
       document.body.style.position = originalPosition
-      document.body.style.width = ''
+      document.body.style.top = originalTop
+      document.body.style.width = originalWidth
+      document.body.style.touchAction = ''
+
+      // Restaurar posición de scroll en desktop
+      if (!isMobile) {
+        window.scrollTo(0, scrollY)
+      }
     }
   }, [onCancel])
 
