@@ -35,6 +35,12 @@ CREATE INDEX IF NOT EXISTS idx_pomodoro_settings_user_id ON pomodoro_settings(us
 -- Enable Row Level Security
 ALTER TABLE pomodoro_settings ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their own pomodoro settings" ON pomodoro_settings;
+DROP POLICY IF EXISTS "Users can create their own pomodoro settings" ON pomodoro_settings;
+DROP POLICY IF EXISTS "Users can update their own pomodoro settings" ON pomodoro_settings;
+DROP POLICY IF EXISTS "Users can delete their own pomodoro settings" ON pomodoro_settings;
+
 -- RLS Policy: Users can only view their own settings
 CREATE POLICY "Users can view their own pomodoro settings"
   ON pomodoro_settings FOR SELECT
@@ -64,6 +70,9 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Drop existing trigger if it exists
+DROP TRIGGER IF EXISTS pomodoro_settings_updated_at ON pomodoro_settings;
 
 -- Trigger to call the function
 CREATE TRIGGER pomodoro_settings_updated_at

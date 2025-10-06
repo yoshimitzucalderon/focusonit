@@ -67,9 +67,10 @@ export interface Database {
           started_at: string
           ended_at: string | null
           duration_seconds: number | null
-          session_type: 'pomodoro_25' | 'custom'
+          session_type: 'work' | 'short_break' | 'long_break' | 'pomodoro_25' | 'custom'
           is_completed: boolean
           is_active: boolean
+          pomodoro_count: number
           created_at: string
           updated_at: string
         }
@@ -80,9 +81,10 @@ export interface Database {
           started_at?: string
           ended_at?: string | null
           duration_seconds?: number | null
-          session_type?: 'pomodoro_25' | 'custom'
+          session_type?: 'work' | 'short_break' | 'long_break' | 'pomodoro_25' | 'custom'
           is_completed?: boolean
           is_active?: boolean
+          pomodoro_count?: number
           created_at?: string
           updated_at?: string
         }
@@ -93,9 +95,10 @@ export interface Database {
           started_at?: string
           ended_at?: string | null
           duration_seconds?: number | null
-          session_type?: 'pomodoro_25' | 'custom'
+          session_type?: 'work' | 'short_break' | 'long_break' | 'pomodoro_25' | 'custom'
           is_completed?: boolean
           is_active?: boolean
+          pomodoro_count?: number
           created_at?: string
           updated_at?: string
         }

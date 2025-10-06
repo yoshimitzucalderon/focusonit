@@ -25,12 +25,32 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   const [timeRemaining, setTimeRemaining] = useState(0) // seconds
   const [isRunning, setIsRunning] = useState(false)
   const [totalTimeSpent, setTotalTimeSpent] = useState(0) // seconds
+  const [pomodoroCount, setPomodoroCount] = useState(0) // Current count in cycle
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Get duration from settings or use default
-  const POMODORO_DURATION = (settings?.work_duration || 25) * 60 // Convert minutes to seconds
-  const HEARTBEAT_INTERVAL = 30 * 1000 // 30 seconds
+  // Get durations from settings or use defaults
+  const WORK_DURATION = (settings?.work_duration || 25) * 60
+  const SHORT_BREAK_DURATION = (settings?.short_break_duration || 5) * 60
+  const LONG_BREAK_DURATION = (settings?.long_break_duration || 15) * 60
+  const POMODOROS_UNTIL_LONG_BREAK = settings?.pomodoros_until_long_break || 4
+  const HEARTBEAT_INTERVAL = 30 * 1000
+
+  // Determine session type and duration
+  const sessionType = activeSession?.session_type || 'work'
+  const isBreak = sessionType === 'short_break' || sessionType === 'long_break'
+
+  const getCurrentDuration = () => {
+    if (!activeSession) return WORK_DURATION
+    switch (activeSession.session_type) {
+      case 'short_break':
+        return SHORT_BREAK_DURATION
+      case 'long_break':
+        return LONG_BREAK_DURATION
+      default:
+        return WORK_DURATION
+    }
+  }
 
   // Load total time spent on this task
   useEffect(() => {
@@ -47,44 +67,96 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     loadTotalTime()
   }, [taskId])
 
-  // Complete timer (finished 25 minutes)
+  // Complete timer (finished session)
   const handleComplete = useCallback(async () => {
     if (!activeSession) return
+
+    const currentType = activeSession.session_type
+    const isWorkSession = currentType === 'work' || currentType === 'pomodoro_25'
+    const isBreakSession = currentType === 'short_break' || currentType === 'long_break'
 
     try {
       await completeTimeSession(activeSession.id)
       setIsRunning(false)
       setTimeRemaining(0)
 
-      // Reload total time
-      const total = await getTotalTimeForTask(taskId)
-      setTotalTimeSpent(total)
+      // Reload total time (only for work sessions)
+      if (isWorkSession) {
+        const total = await getTotalTimeForTask(taskId)
+        setTotalTimeSpent(total)
+      }
 
-      // Play success sound if enabled
+      // Play sound if enabled
       if (settings?.sound_enabled) {
         const audio = new Audio('/sounds/pomodoro-complete.mp3')
         audio.volume = (settings.sound_volume || 50) / 100
-        audio.play().catch(() => {
-          // Ignore if sound doesn't exist or autoplay is blocked
-        })
+        audio.play().catch(() => {})
       }
 
-      // Show notification if enabled
-      if (settings?.notifications_enabled && 'Notification' in window) {
-        if (Notification.permission === 'granted') {
+      // Notifications based on session type
+      if (settings?.notifications_enabled && 'Notification' in window && Notification.permission === 'granted') {
+        if (isWorkSession) {
           new Notification('¡Pomodoro completado! 🍅', {
             body: 'Tiempo de tomar un descanso',
             icon: '/icon-192x192.png',
           })
-        } else if (Notification.permission !== 'denied') {
-          Notification.requestPermission()
+        } else {
+          new Notification('¡Descanso completado! ☕', {
+            body: 'Hora de volver al trabajo',
+            icon: '/icon-192x192.png',
+          })
         }
       }
 
-      toast.success('¡Pomodoro completado! 🍅', {
-        duration: 4000,
-        icon: '🎉',
-      })
+      // Toast based on session type
+      if (isWorkSession) {
+        toast.success('¡Pomodoro completado! 🍅', { duration: 4000, icon: '🎉' })
+
+        // Increment pomodoro count
+        const newCount = (activeSession.pomodoro_count || 0) + 1
+        setPomodoroCount(newCount)
+
+        // Auto-start break if enabled
+        if (settings?.auto_start_breaks) {
+          const isLongBreak = newCount % POMODOROS_UNTIL_LONG_BREAK === 0
+          const breakType: 'short_break' | 'long_break' = isLongBreak ? 'long_break' : 'short_break'
+
+          setTimeout(async () => {
+            try {
+              const session = await createTimeSession(taskId, userId, breakType, newCount)
+              setActiveSession(session)
+              setTimeRemaining(breakType === 'long_break' ? LONG_BREAK_DURATION : SHORT_BREAK_DURATION)
+              setIsRunning(true)
+              toast.success(isLongBreak ? '¡Descanso largo iniciado! ☕' : '¡Descanso corto iniciado! ☕')
+            } catch (error) {
+              console.error('Error auto-starting break:', error)
+            }
+          }, 1000)
+        }
+      } else if (isBreakSession) {
+        toast.success('¡Descanso completado! ⚡', { duration: 4000, icon: '💪' })
+
+        // Reset count after long break
+        if (currentType === 'long_break') {
+          setPomodoroCount(0)
+        }
+
+        // Auto-start work session if enabled
+        if (settings?.auto_start_pomodoros) {
+          setTimeout(async () => {
+            try {
+              const newCount = currentType === 'long_break' ? 0 : pomodoroCount
+              const session = await createTimeSession(taskId, userId, 'work', newCount)
+              setActiveSession(session)
+              setTimeRemaining(WORK_DURATION)
+              setIsRunning(true)
+              toast.success('¡Nuevo Pomodoro iniciado! 🍅')
+            } catch (error) {
+              console.error('Error auto-starting work:', error)
+            }
+          }, 1000)
+        }
+      }
 
       setActiveSession(null)
 
@@ -95,19 +167,28 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       console.error('Error completing timer:', error)
       toast.error('Error al completar timer')
     }
-  }, [activeSession, taskId, onComplete, settings])
+  }, [activeSession, taskId, userId, onComplete, settings, pomodoroCount, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, POMODOROS_UNTIL_LONG_BREAK])
 
   // Sync timer based on real elapsed time
   const syncTimerFromSession = useCallback((session: TimeSession) => {
+    // Get correct duration for this session type
+    let targetDuration = WORK_DURATION
+    if (session.session_type === 'short_break') {
+      targetDuration = SHORT_BREAK_DURATION
+    } else if (session.session_type === 'long_break') {
+      targetDuration = LONG_BREAK_DURATION
+    }
+
     const elapsed = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000)
-    const remaining = Math.max(0, POMODORO_DURATION - elapsed)
+    const remaining = Math.max(0, targetDuration - elapsed)
     setTimeRemaining(remaining)
+    setPomodoroCount(session.pomodoro_count || 0)
 
     // Auto-complete if time ran out while app was in background
     if (remaining <= 0 && isRunning) {
       handleComplete()
     }
-  }, [POMODORO_DURATION, isRunning, handleComplete])
+  }, [WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, isRunning, handleComplete])
 
   // Check for active session on mount and after task changes
   useEffect(() => {
@@ -150,9 +231,17 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   useEffect(() => {
     if (isRunning && activeSession && timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
+        // Get correct duration for this session type
+        let targetDuration = WORK_DURATION
+        if (activeSession.session_type === 'short_break') {
+          targetDuration = SHORT_BREAK_DURATION
+        } else if (activeSession.session_type === 'long_break') {
+          targetDuration = LONG_BREAK_DURATION
+        }
+
         // Always recalculate based on real elapsed time from started_at
         const elapsed = Math.floor((Date.now() - new Date(activeSession.started_at).getTime()) / 1000)
-        const remaining = Math.max(0, POMODORO_DURATION - elapsed)
+        const remaining = Math.max(0, targetDuration - elapsed)
 
         setTimeRemaining(remaining)
 
@@ -172,7 +261,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, activeSession, POMODORO_DURATION, handleComplete, timeRemaining])
+  }, [isRunning, activeSession, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, handleComplete, timeRemaining])
 
   // Heartbeat to update Supabase every 30 seconds
   useEffect(() => {
@@ -202,9 +291,9 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   // Start timer
   const start = useCallback(async () => {
     try {
-      const session = await createTimeSession(taskId, userId)
+      const session = await createTimeSession(taskId, userId, 'work', pomodoroCount)
       setActiveSession(session)
-      setTimeRemaining(POMODORO_DURATION)
+      setTimeRemaining(WORK_DURATION)
       setIsRunning(true)
 
       const minutes = settings?.work_duration || 25
@@ -229,7 +318,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         })
       }
     }
-  }, [taskId, userId, POMODORO_DURATION, settings])
+  }, [taskId, userId, WORK_DURATION, settings, pomodoroCount])
 
   // Pause timer
   const pause = useCallback(async () => {
@@ -279,6 +368,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     totalTimeSpent,
     totalTimeFormatted: formatTotalTime(totalTimeSpent),
     activeSession,
+    pomodoroCount,
+    sessionType,
+    isBreak,
+    currentDuration: getCurrentDuration(),
 
     // Actions
     start,

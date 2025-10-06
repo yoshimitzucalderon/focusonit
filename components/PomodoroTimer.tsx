@@ -17,16 +17,38 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
     isRunning,
     timeRemaining,
     timeRemainingFormatted,
-    totalTimeFormatted,
     start,
     pause,
+    sessionType,
+    isBreak,
+    pomodoroCount,
+    currentDuration,
   } = usePomodoroTimer({ taskId, userId, onComplete })
 
   const [showExpanded, setShowExpanded] = useState(false)
 
   // Calculate progress percentage (how much time has elapsed)
-  const POMODORO_DURATION = 25 * 60 // This should ideally come from settings
-  const progressPercentage = ((POMODORO_DURATION - timeRemaining) / POMODORO_DURATION) * 100
+  const progressPercentage = ((currentDuration - timeRemaining) / currentDuration) * 100
+
+  // Colors based on session type
+  const colors = {
+    work: {
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      text: 'text-blue-600 dark:text-blue-400',
+      hover: 'hover:bg-blue-100 dark:hover:bg-blue-900/30',
+      button: 'bg-red-500 hover:bg-red-600',
+      progress: '#3b82f6', // blue-500
+    },
+    break: {
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      text: 'text-green-600 dark:text-green-400',
+      hover: 'hover:bg-green-100 dark:hover:bg-green-900/30',
+      button: 'bg-orange-500 hover:bg-orange-600',
+      progress: '#10b981', // green-500
+    },
+  }
+
+  const currentColors = isBreak ? colors.break : colors.work
 
   return (
     <>
@@ -44,11 +66,11 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
             group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md
             text-xs font-medium transition-all duration-200
             ${isRunning
-              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+              ? `${currentColors.bg} ${currentColors.text} ${currentColors.hover}`
               : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600'
             }
           `}
-          title={isRunning ? 'Ver timer expandido' : 'Iniciar Pomodoro'}
+          title={isRunning ? (isBreak ? 'Ver descanso' : 'Ver Pomodoro') : 'Iniciar Pomodoro'}
         >
           {/* Icon with animation */}
           <div className="relative">
@@ -119,9 +141,16 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
               {/* Timer Display */}
               <div className="flex flex-col items-center">
-                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-6 uppercase tracking-wide">
-                  Pomodoro en progreso
+                <h3 className={`text-sm font-semibold ${currentColors.text} mb-2 uppercase tracking-wide`}>
+                  {isBreak ? (sessionType === 'long_break' ? 'Descanso largo' : 'Descanso corto') : 'Pomodoro'}
                 </h3>
+
+                {/* Pomodoro Counter */}
+                {!isBreak && pomodoroCount > 0 && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    Pomodoro {pomodoroCount} completado{pomodoroCount !== 1 ? 's' : ''}
+                  </div>
+                )}
 
                 {/* Circular Progress */}
                 <div className="relative mb-6">
@@ -129,13 +158,18 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                     percentage={progressPercentage}
                     size={200}
                     strokeWidth={12}
-                    color="#3b82f6"
+                    color={currentColors.progress}
                   />
                   {/* Time in center */}
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center flex-col">
                     <span className="text-4xl font-bold text-gray-900 dark:text-white font-mono">
                       {timeRemainingFormatted}
                     </span>
+                    {isBreak && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        ☕ Relájate
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -145,18 +179,11 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                     pause()
                     setShowExpanded(false)
                   }}
-                  className="w-full px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                  className={`w-full px-6 py-3 ${currentColors.button} text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2`}
                 >
                   <Pause className="w-5 h-5" />
-                  Pausar Pomodoro
+                  {isBreak ? 'Pausar descanso' : 'Pausar Pomodoro'}
                 </button>
-
-                {/* Total Time */}
-                {totalTimeFormatted !== '0m' && (
-                  <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                    Tiempo total: <span className="font-semibold">{totalTimeFormatted}</span>
-                  </div>
-                )}
               </div>
             </motion.div>
           </motion.div>

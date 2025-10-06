@@ -12,7 +12,8 @@ import { TimeSessionInsert, TimeSessionUpdate } from '@/types/database.types'
 export async function createTimeSession(
   taskId: string,
   userId: string,
-  sessionType: 'pomodoro_25' | 'custom' = 'pomodoro_25'
+  sessionType: 'work' | 'short_break' | 'long_break' | 'pomodoro_25' | 'custom' = 'work',
+  pomodoroCount: number = 0
 ): Promise<import('@/types/database.types').TimeSession> {
   const supabase = createClient()
 
@@ -24,6 +25,7 @@ export async function createTimeSession(
       task_id: taskId,
       user_id: userId,
       session_type: sessionType,
+      pomodoro_count: pomodoroCount,
       started_at: new Date().toISOString(),
       is_active: true,
       is_completed: false,
