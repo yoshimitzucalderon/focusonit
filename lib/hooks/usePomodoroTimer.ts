@@ -10,6 +10,7 @@ import {
   getTotalTimeForTask,
   heartbeatTimeSession,
 } from '@/lib/supabase/timeSessionQueries'
+import { usePomodoroSettings } from './usePomodoroSettings'
 import toast from 'react-hot-toast'
 
 interface UsePomodoroTimerProps {
@@ -19,6 +20,7 @@ interface UsePomodoroTimerProps {
 }
 
 export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTimerProps) {
+  const { settings } = usePomodoroSettings(userId)
   const [activeSession, setActiveSession] = useState<TimeSession | null>(null)
   const [timeRemaining, setTimeRemaining] = useState(0) // seconds
   const [isRunning, setIsRunning] = useState(false)
@@ -26,7 +28,8 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null)
 
-  const POMODORO_DURATION = 25 * 60 // 25 minutes in seconds
+  // Get duration from settings or use default
+  const POMODORO_DURATION = (settings?.work_duration || 25) * 60 // Convert minutes to seconds
   const HEARTBEAT_INTERVAL = 30 * 1000 // 30 seconds
 
   // Load total time spent on this task
@@ -57,12 +60,26 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       const total = await getTotalTimeForTask(taskId)
       setTotalTimeSpent(total)
 
-      // Play success sound (optional)
-      const audio = new Audio('/sounds/pomodoro-complete.mp3')
-      audio.volume = 0.3
-      audio.play().catch(() => {
-        // Ignore if sound doesn't exist or autoplay is blocked
-      })
+      // Play success sound if enabled
+      if (settings?.sound_enabled) {
+        const audio = new Audio('/sounds/pomodoro-complete.mp3')
+        audio.volume = (settings.sound_volume || 50) / 100
+        audio.play().catch(() => {
+          // Ignore if sound doesn't exist or autoplay is blocked
+        })
+      }
+
+      // Show notification if enabled
+      if (settings?.notifications_enabled && 'Notification' in window) {
+        if (Notification.permission === 'granted') {
+          new Notification('¡Pomodoro completado! 🍅', {
+            body: 'Tiempo de tomar un descanso',
+            icon: '/icon-192x192.png',
+          })
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission()
+        }
+      }
 
       toast.success('¡Pomodoro completado! 🍅', {
         duration: 4000,
@@ -78,7 +95,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       console.error('Error completing timer:', error)
       toast.error('Error al completar timer')
     }
-  }, [activeSession, taskId, onComplete])
+  }, [activeSession, taskId, onComplete, settings])
 
   // Sync timer based on real elapsed time
   const syncTimerFromSession = useCallback((session: TimeSession) => {
@@ -190,7 +207,8 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       setTimeRemaining(POMODORO_DURATION)
       setIsRunning(true)
 
-      toast.success('Timer iniciado - 25 minutos')
+      const minutes = settings?.work_duration || 25
+      toast.success(`Timer iniciado - ${minutes} minutos`)
     } catch (error: any) {
       console.error('Error starting timer:', error)
 
@@ -211,7 +229,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         })
       }
     }
-  }, [taskId, userId, POMODORO_DURATION])
+  }, [taskId, userId, POMODORO_DURATION, settings])
 
   // Pause timer
   const pause = useCallback(async () => {

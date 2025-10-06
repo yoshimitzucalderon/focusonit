@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, CalendarDays, List, CheckCircle, BarChart3 } from 'lucide-react'
+import { Calendar, CalendarDays, List, CheckCircle, BarChart3, Settings } from 'lucide-react'
 import { SidebarLink } from './SidebarLink'
 
 export function DashboardSidebar() {
@@ -36,6 +36,20 @@ export function DashboardSidebar() {
             <SidebarLink href="/stats" icon={BarChart3}>
               Estadísticas
             </SidebarLink>
+          </div>
+
+          {/* Settings section */}
+          <div className="mt-6">
+            <div className="px-6 mb-2">
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                Configuración
+              </span>
+            </div>
+            <div className="px-4 space-y-1">
+              <SidebarLink href="/settings" icon={Settings}>
+                Pomodoro
+              </SidebarLink>
+            </div>
           </div>
         </nav>
       </div>

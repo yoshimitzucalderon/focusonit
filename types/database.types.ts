@@ -100,6 +100,53 @@ export interface Database {
           updated_at?: string
         }
       }
+      pomodoro_settings: {
+        Row: {
+          id: string
+          user_id: string
+          work_duration: number
+          short_break_duration: number
+          long_break_duration: number
+          pomodoros_until_long_break: number
+          auto_start_breaks: boolean
+          auto_start_pomodoros: boolean
+          notifications_enabled: boolean
+          sound_enabled: boolean
+          sound_volume: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          work_duration?: number
+          short_break_duration?: number
+          long_break_duration?: number
+          pomodoros_until_long_break?: number
+          auto_start_breaks?: boolean
+          auto_start_pomodoros?: boolean
+          notifications_enabled?: boolean
+          sound_enabled?: boolean
+          sound_volume?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          work_duration?: number
+          short_break_duration?: number
+          long_break_duration?: number
+          pomodoros_until_long_break?: number
+          auto_start_breaks?: boolean
+          auto_start_pomodoros?: boolean
+          notifications_enabled?: boolean
+          sound_enabled?: boolean
+          sound_volume?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -120,3 +167,7 @@ export type TaskUpdate = Database['public']['Tables']['tasks']['Update']
 export type TimeSession = Database['public']['Tables']['time_sessions']['Row']
 export type TimeSessionInsert = Database['public']['Tables']['time_sessions']['Insert']
 export type TimeSessionUpdate = Database['public']['Tables']['time_sessions']['Update']
+
+export type PomodoroSettings = Database['public']['Tables']['pomodoro_settings']['Row']
+export type PomodoroSettingsInsert = Database['public']['Tables']['pomodoro_settings']['Insert']
+export type PomodoroSettingsUpdate = Database['public']['Tables']['pomodoro_settings']['Update']
