@@ -122,7 +122,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 dark:bg-black/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm"
             onClick={() => setShowExpanded(false)}
           >
             <motion.div
@@ -130,7 +130,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative shadow-2xl"
+              className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full relative shadow-2xl z-[10000]"
             >
               {/* Close button */}
               <button
