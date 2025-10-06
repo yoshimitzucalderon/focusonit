@@ -44,6 +44,42 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
     loadTotalTime()
   }, [taskId])
 
+  // Complete timer (finished 25 minutes)
+  const handleComplete = useCallback(async () => {
+    if (!activeSession) return
+
+    try {
+      await completeTimeSession(activeSession.id)
+      setIsRunning(false)
+      setTimeRemaining(0)
+
+      // Reload total time
+      const total = await getTotalTimeForTask(taskId)
+      setTotalTimeSpent(total)
+
+      // Play success sound (optional)
+      const audio = new Audio('/sounds/pomodoro-complete.mp3')
+      audio.volume = 0.3
+      audio.play().catch(() => {
+        // Ignore if sound doesn't exist or autoplay is blocked
+      })
+
+      toast.success('¡Pomodoro completado! 🍅', {
+        duration: 4000,
+        icon: '🎉',
+      })
+
+      setActiveSession(null)
+
+      if (onComplete) {
+        onComplete()
+      }
+    } catch (error) {
+      console.error('Error completing timer:', error)
+      toast.error('Error al completar timer')
+    }
+  }, [activeSession, taskId, onComplete])
+
   // Sync timer based on real elapsed time
   const syncTimerFromSession = useCallback((session: TimeSession) => {
     const elapsed = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000)
@@ -196,42 +232,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       toast.error('Error al pausar timer')
     }
   }, [activeSession, taskId])
-
-  // Complete timer (finished 25 minutes)
-  const handleComplete = useCallback(async () => {
-    if (!activeSession) return
-
-    try {
-      await completeTimeSession(activeSession.id)
-      setIsRunning(false)
-      setTimeRemaining(0)
-
-      // Reload total time
-      const total = await getTotalTimeForTask(taskId)
-      setTotalTimeSpent(total)
-
-      // Play success sound (optional)
-      const audio = new Audio('/sounds/pomodoro-complete.mp3')
-      audio.volume = 0.3
-      audio.play().catch(() => {
-        // Ignore if sound doesn't exist or autoplay is blocked
-      })
-
-      toast.success('¡Pomodoro completado! 🍅', {
-        duration: 4000,
-        icon: '🎉',
-      })
-
-      setActiveSession(null)
-
-      if (onComplete) {
-        onComplete()
-      }
-    } catch (error) {
-      console.error('Error completing timer:', error)
-      toast.error('Error al completar timer')
-    }
-  }, [activeSession, taskId, onComplete])
 
   // Format time for display (MM:SS)
   const formatTime = useCallback((seconds: number): string => {
