@@ -98,15 +98,15 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
       }
 
       // Obtener la última posición para el usuario
-      const { data: lastTask } = await supabase
+      const { data: lastTask } = (await supabase
         .from('tasks')
         .select('position')
         .eq('user_id', userId)
         .order('position', { ascending: false })
         .limit(1)
-        .maybeSingle()
+        .maybeSingle()) as { data: { position: number } | null }
 
-      const nextPosition = ((lastTask?.position as number | undefined) ?? -1) + 1
+      const nextPosition = (lastTask?.position ?? -1) + 1
 
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
@@ -151,15 +151,15 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
     setLoading(true)
     try {
       // Obtener la última posición para el usuario
-      const { data: lastTask } = await supabase
+      const { data: lastTask } = (await supabase
         .from('tasks')
         .select('position')
         .eq('user_id', userId)
         .order('position', { ascending: false })
         .limit(1)
-        .maybeSingle()
+        .maybeSingle()) as { data: { position: number } | null }
 
-      const nextPosition = ((lastTask?.position as number | undefined) ?? -1) + 1
+      const nextPosition = (lastTask?.position ?? -1) + 1
 
       // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
