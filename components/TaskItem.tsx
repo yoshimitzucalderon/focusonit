@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2, Timer } from 'lucide-react'
+import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2, Timer, GripVertical, Copy, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { isPast, isToday, differenceInDays } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -196,16 +196,60 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   // Determinar color del borde izquierdo basado en prioridad
   const getPriorityColor = () => {
-    if (isOverdue) return 'border-l-red-500'
+    if (isOverdue) return 'border-l-red-500 dark:border-l-red-400'
     switch (task.priority) {
       case 'alta':
-        return 'border-l-red-400'
+        return 'border-l-red-400 dark:border-l-red-500'
       case 'media':
-        return 'border-l-yellow-400'
+        return 'border-l-yellow-400 dark:border-l-yellow-500'
       case 'baja':
-        return 'border-l-green-400'
+        return 'border-l-green-400 dark:border-l-green-500'
       default:
-        return 'border-l-gray-300'
+        return 'border-l-gray-300 dark:border-l-gray-600'
+    }
+  }
+
+  // Función para duplicar tarea
+  const duplicateTask = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        // @ts-ignore
+        .insert({
+          title: `${task.title} (copia)`,
+          description: task.description,
+          due_date: task.due_date,
+          priority: task.priority,
+          user_id: task.user_id,
+          created_at: getLocalTimestamp(),
+          updated_at: getLocalTimestamp()
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      toast.success('Tarea duplicada')
+    } catch (error) {
+      toast.error('Error al duplicar tarea')
+      console.error(error)
+    }
+  }
+
+  // Función para eliminar tarea
+  const deleteTask = async () => {
+    if (!confirm('¿Eliminar esta tarea?')) return
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', task.id)
+
+      if (error) throw error
+      toast.success('Tarea eliminada')
+    } catch (error) {
+      toast.error('Error al eliminar tarea')
+      console.error(error)
     }
   }
 
@@ -215,17 +259,56 @@ export default function TaskItem({ task }: TaskItemProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       transition={{ duration: 0.2 }}
-      className={`task-item group relative flex items-start gap-4 p-5 rounded-xl border border-l-4 transition-all duration-300
+      className={`task-item group relative flex items-start gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300
         ${task.completed
-          ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300'
-          : `bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700
-             hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/20
-             hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-slate-750
+          ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300 dark:border-l-gray-600'
+          : `bg-white dark:bg-slate-800/90 border-gray-200 dark:border-slate-700/60
+             hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/30 dark:hover:shadow-lg
+             hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-slate-700/90
              ${getPriorityColor()}`
         }
-        ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-md' : ''}
+        ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-md' : ''}
       `}
     >
+      {/* Drag Handle - visible solo en hover */}
+      {!task.completed && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0 cursor-grab active:cursor-grabbing mt-0.5"
+        >
+          <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+        </motion.div>
+      )}
+
+      {/* Quick Actions - visible solo en hover */}
+      {!task.completed && (
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 0, x: 10 }}
+          className="opacity-0 group-hover:opacity-100 absolute top-3 right-3 flex items-center gap-1.5 transition-all duration-200 z-10"
+        >
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={duplicateTask}
+            className="p-1.5 rounded-md bg-white/80 dark:bg-slate-600/80 hover:bg-blue-50 dark:hover:bg-blue-900/50 border border-gray-200 dark:border-gray-600 shadow-sm backdrop-blur-sm transition-colors"
+            title="Duplicar tarea"
+          >
+            <Copy className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={deleteTask}
+            className="p-1.5 rounded-md bg-white/80 dark:bg-slate-600/80 hover:bg-red-50 dark:hover:bg-red-900/50 border border-gray-200 dark:border-gray-600 shadow-sm backdrop-blur-sm transition-colors"
+            title="Eliminar tarea"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400" />
+          </motion.button>
+        </motion.div>
+      )}
       {/* Checkbox mejorado con animación */}
       <motion.button
         onClick={(e) => {
@@ -323,10 +406,14 @@ export default function TaskItem({ task }: TaskItemProps) {
             )}
             {/* Badge de días atrasados */}
             {isOverdue && daysOverdue > 0 && (
-              <span className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded-full">
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 text-white text-xs font-semibold rounded-full shadow-sm"
+              >
                 <Clock className="w-3 h-3" />
                 {daysOverdue}d
-              </span>
+              </motion.span>
             )}
           </div>
         )}
@@ -467,7 +554,8 @@ export default function TaskItem({ task }: TaskItemProps) {
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full border border-blue-200 dark:border-blue-700"
+              whileHover={{ scale: 1.05 }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50 via-blue-100 to-indigo-100 dark:from-blue-900/40 dark:via-blue-800/40 dark:to-indigo-900/40 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full border border-blue-200 dark:border-blue-700/50 shadow-sm backdrop-blur-sm"
             >
               <Timer className="w-3.5 h-3.5" />
               <span>{formatTotalTime(totalTimeSeconds)}</span>

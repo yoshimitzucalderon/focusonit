@@ -6,6 +6,7 @@ import { Calendar as CalendarIcon, X } from 'lucide-react'
 import { DayPicker } from 'react-day-picker'
 import { format, addDays, addWeeks, startOfWeek } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { motion, AnimatePresence } from 'framer-motion'
 import 'react-day-picker/dist/style.css'
 
 interface DatePickerProps {
@@ -94,7 +95,7 @@ export function DatePicker({
   return (
     <>
       {/* Trigger Button */}
-      <button
+      <motion.button
         ref={buttonRef}
         type="button"
         onClick={() => {
@@ -107,6 +108,8 @@ export function DatePicker({
           }
           setIsOpen(!isOpen)
         }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
           value
             ? 'text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20'
@@ -117,56 +120,73 @@ export function DatePicker({
         <span className="font-medium">
           {value ? format(value, "d 'de' MMM", { locale: es }) : placeholder}
         </span>
-      </button>
+      </motion.button>
 
       {/* Popover con Portal */}
       {isOpen && buttonPosition && isMounted && createPortal(
         <div>
           {/* Backdrop */}
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
             style={{ backgroundColor: 'transparent' }}
           />
 
           {/* Calendar Popover */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             style={{
               position: 'fixed',
               top: `${buttonPosition.top}px`,
               left: `${buttonPosition.left}px`,
               zIndex: 9999
             }}
-            className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 animate-fade-in"
+            className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-gray-200 dark:border-slate-700 backdrop-blur-sm"
           >
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleToday}
                 className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-md transition-colors"
               >
                 Hoy
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleTomorrow}
                 className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-md transition-colors"
               >
                 Mañana
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleNextWeek}
                 className="px-3 py-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-md transition-colors"
               >
                 Próx. semana
-              </button>
+              </motion.button>
               {value && (
-                <button
+                <motion.button
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleClear}
                   className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors ml-auto flex items-center gap-1"
                 >
                   <X className="w-3 h-3" />
                   Quitar
-                </button>
+                </motion.button>
               )}
             </div>
 
@@ -184,7 +204,7 @@ export function DatePicker({
                 today: 'rdp-day_today'
               }}
             />
-          </div>
+          </motion.div>
         </div>,
         document.body
       )}
