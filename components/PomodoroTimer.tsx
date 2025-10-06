@@ -258,7 +258,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
             {isBreak ? (
               /* Breathing Circle for Break Mode */
-              <div className="relative w-[240px] h-[240px] flex items-center justify-center">
+              <div className="relative w-[280px] h-[280px] flex items-center justify-center">
                 {/* Concentric ripples */}
                 {[1, 2, 3].map((ring) => (
                   <motion.div
@@ -266,11 +266,11 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                     className="absolute rounded-full border-2"
                     style={{
                       borderColor: 'rgba(20, 184, 166, 0.2)',
-                      width: '180px',
-                      height: '180px',
+                      width: '220px',
+                      height: '220px',
                     }}
                     animate={{
-                      scale: breathPhase === 'inhale' ? [1, 1.3] : breathPhase === 'exhale' ? [1.3, 1] : 1.3,
+                      scale: breathPhase === 'inhale' ? [1, 1.2] : breathPhase === 'exhale' ? [1.2, 1] : 1.2,
                       opacity: breathPhase === 'hold' ? 0.3 : [0.4, 0.1],
                     }}
                     transition={{
@@ -288,11 +288,11 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                   className="absolute rounded-full"
                   style={{
                     background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
-                    width: '120px',
-                    height: '120px',
+                    width: '150px',
+                    height: '150px',
                   }}
                   animate={{
-                    scale: breathPhase === 'inhale' ? [1.0, 1.3] : breathPhase === 'exhale' ? [1.3, 1.0] : 1.3,
+                    scale: breathPhase === 'inhale' ? [1.0, 1.2] : breathPhase === 'exhale' ? [1.2, 1.0] : 1.2,
                     boxShadow: breathPhase === 'hold'
                       ? '0 0 60px rgba(20, 184, 166, 0.7)'
                       : ['0 0 40px rgba(20, 184, 166, 0.5)', '0 0 60px rgba(20, 184, 166, 0.7)', '0 0 40px rgba(20, 184, 166, 0.5)']
@@ -305,14 +305,47 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                   }}
                 />
 
-                {/* Wind icon in center */}
-                <Wind className="absolute w-12 h-12 text-white" />
+                {/* Wind icon behind white circle */}
+                <Wind className="absolute w-12 h-12 text-teal-400 opacity-20" style={{ zIndex: 1 }} />
+
+                {/* Círculo blanco central sólido con timer */}
+                <div
+                  className="absolute w-48 h-48 rounded-full bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 -2px 8px rgba(0, 0, 0, 0.05)',
+                    zIndex: 2
+                  }}
+                >
+                  {/* Texto de respiración arriba - MÁS PEQUEÑO */}
+                  <AnimatePresence mode="wait">
+                    <motion.p
+                      key={breathPhase}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-sm text-gray-600 mb-2"
+                    >
+                      {breathPhase === 'inhale' && 'Inhala...'}
+                      {breathPhase === 'hold' && 'Sostén...'}
+                      {breathPhase === 'exhale' && 'Exhala...'}
+                    </motion.p>
+                  </AnimatePresence>
+
+                  {/* Timer grande y visible */}
+                  <div
+                    className="text-7xl font-black text-gray-900 font-mono tabular-nums"
+                    style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    {timeRemainingFormatted}
+                  </div>
+                </div>
               </div>
             ) : (
               /* Energetic Circle for Work Mode */
-              <div className="relative w-[240px] h-[240px] flex items-center justify-center">
+              <div className="relative w-[280px] h-[280px] flex items-center justify-center">
                 {/* SVG Circle with Progress */}
-                <svg width="240" height="240" className="absolute transform -rotate-90">
+                <svg width="280" height="280" className="absolute transform -rotate-90">
                   <defs>
                     <linearGradient id="gradient-work" x1="0%" y1="0%" x2="100%" y2="100%">
                       <stop offset="0%" stopColor="#3B82F6" />
@@ -323,9 +356,9 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
                   {/* Background circle */}
                   <circle
-                    cx="120"
-                    cy="120"
-                    r="100"
+                    cx="140"
+                    cy="140"
+                    r="110"
                     fill="none"
                     stroke="rgba(203, 213, 225, 0.25)"
                     strokeWidth="12"
@@ -333,29 +366,30 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
                   {/* Progress circle */}
                   <motion.circle
-                    cx="120"
-                    cy="120"
-                    r="100"
+                    cx="140"
+                    cy="140"
+                    r="110"
                     fill="none"
                     stroke="url(#gradient-work)"
                     strokeWidth="12"
                     strokeLinecap="round"
-                    strokeDasharray={628}
-                    initial={{ strokeDashoffset: 628 }}
+                    strokeDasharray={691}
+                    initial={{ strokeDashoffset: 691 }}
                     animate={{
-                      strokeDashoffset: 628 - (628 * progressPercentage) / 100
+                      strokeDashoffset: 691 - (691 * progressPercentage) / 100
                     }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                   />
                 </svg>
 
-                {/* Central energetic circle with Zap icon */}
+                {/* Central energetic circle with Zap icon - DETRÁS */}
                 <motion.div
                   className="absolute rounded-full flex items-center justify-center"
                   style={{
                     background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-                    width: '140px',
-                    height: '140px',
+                    width: '160px',
+                    height: '160px',
+                    zIndex: 1
                   }}
                   animate={{
                     scale: [1, 1.05, 1],
@@ -371,66 +405,27 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                     ease: "easeInOut"
                   }}
                 >
-                  <Zap className="w-16 h-16 text-white fill-white" />
+                  <Zap className="w-16 h-16 text-purple-300 opacity-30" />
                 </motion.div>
+
+                {/* Círculo blanco central sólido con timer - ADELANTE */}
+                <div
+                  className="absolute w-48 h-48 rounded-full bg-white shadow-inner flex items-center justify-center"
+                  style={{
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), inset 0 -2px 8px rgba(0, 0, 0, 0.05)',
+                    zIndex: 2
+                  }}
+                >
+                  {/* Timer grande y visible */}
+                  <div
+                    className="text-7xl font-black text-gray-900 font-mono tabular-nums"
+                    style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
+                  >
+                    {timeRemainingFormatted}
+                  </div>
+                </div>
               </div>
             )}
-
-            {/* Time or Breathing Instructions in center */}
-            <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-              {isBreak ? (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className="text-center"
-                >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={breathPhase}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.5 }}
-                      className="text-lg font-medium text-gray-600 dark:text-gray-300"
-                    >
-                      {breathPhase === 'inhale' && 'Inhala profundo...'}
-                      {breathPhase === 'hold' && 'Sostén el aire...'}
-                      {breathPhase === 'exhale' && 'Exhala lentamente...'}
-                    </motion.div>
-                  </AnimatePresence>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8 }}
-                    className="mt-6 text-6xl font-bold text-gray-800 dark:text-gray-100 font-mono tabular-nums"
-                  >
-                    {timeRemainingFormatted}
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="mt-2 text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    min
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                  className="text-center"
-                >
-                  <span className="text-7xl font-black font-mono tabular-nums text-purple-900">
-                    {timeRemainingFormatted}
-                  </span>
-                </motion.div>
-              )}
-            </div>
           </motion.div>
 
           {/* Pause Button */}
