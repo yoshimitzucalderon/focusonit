@@ -11,6 +11,7 @@ import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
 import { getLocalTimestamp, toDateOnlyString, parseDateString, getTimezoneOffset } from '@/lib/utils/timezone'
+import VoiceEditButton from './VoiceEditButton'
 
 interface TaskItemProps {
   task: Task
@@ -105,6 +106,45 @@ export default function TaskItem({ task }: TaskItemProps) {
   const cancelEditDescription = () => {
     setDescriptionValue(task.description || '')
     setIsEditingDescription(false)
+  }
+
+  // Handler para edición por voz
+  const handleVoiceEdit = async (changes: Partial<Task>) => {
+    try {
+      const updateData: any = {
+        updated_at: getLocalTimestamp()
+      }
+
+      // Mapear campos del cambio a formato de DB
+      if (changes.title !== undefined) {
+        updateData.title = changes.title
+        setTitle(changes.title)
+      }
+      if (changes.description !== undefined) {
+        updateData.description = changes.description
+        setDescriptionValue(changes.description || '')
+      }
+      if (changes.dueDate !== undefined) {
+        updateData.due_date = changes.dueDate
+        updateData.timezone_offset = getTimezoneOffset()
+      }
+      if (changes.priority !== undefined) {
+        updateData.priority = changes.priority
+      }
+
+      const { error } = await supabase
+        .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .update(updateData)
+        .eq('id', task.id)
+
+      if (error) throw error
+
+      toast.success('Tarea actualizada por voz')
+    } catch (error: any) {
+      toast.error('Error al actualizar tarea')
+      console.error(error)
+    }
   }
 
 
@@ -325,6 +365,20 @@ export default function TaskItem({ task }: TaskItemProps) {
             <PomodoroTimer
               taskId={task.id}
               userId={task.user_id}
+            />
+          )}
+
+          {/* Voice Edit Button - visible en todas las resoluciones */}
+          {!task.completed && (
+            <VoiceEditButton
+              taskId={task.id}
+              currentTask={{
+                title: task.title,
+                dueDate: task.due_date,
+                description: task.description,
+                priority: (task.priority as 'low' | 'medium' | 'high') || 'medium'
+              }}
+              onEditConfirmed={handleVoiceEdit}
             />
           )}
         </div>
