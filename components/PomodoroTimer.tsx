@@ -153,21 +153,17 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
         {/* Timer Display */}
         <div className="flex flex-col items-center">
           {isBreak ? (
-            <motion.h3
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-2xl font-bold mb-2"
-              style={{
-                background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
-              }}
-            >
-              {randomMessage}
-            </motion.h3>
+            <>
+              {/* Título principal del descanso */}
+              <motion.h3
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-8"
+              >
+                {randomMessage}
+              </motion.h3>
+            </>
           ) : (
             <motion.h3
               initial={{ opacity: 0, y: -10 }}
@@ -227,26 +223,28 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
           >
             {isBreak && (
               <>
-                {/* Floating particles for break mode */}
-                {[...Array(8)].map((_, i) => (
+                {/* Floating particles for break mode - more subtle */}
+                {[...Array(6)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute w-2 h-2 rounded-full"
+                    className="absolute rounded-full"
                     style={{
                       background: 'linear-gradient(135deg, #14B8A6, #3B82F6)',
+                      width: `${4 + Math.random() * 4}px`,
+                      height: `${4 + Math.random() * 4}px`,
                       left: `${Math.random() * 100}%`,
                       top: `${Math.random() * 100}%`,
                     }}
                     animate={{
-                      y: [0, -30, 0],
-                      x: [0, Math.random() * 20 - 10, 0],
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [1, 1.5, 1],
+                      y: [0, -40, 0],
+                      x: [0, Math.random() * 30 - 15, 0],
+                      opacity: [0.2, 0.5, 0.2],
+                      scale: [1, 1.3, 1],
                     }}
                     transition={{
-                      duration: 6 + Math.random() * 4,
+                      duration: 15 + Math.random() * 10,
                       repeat: Infinity,
-                      delay: i * 0.8,
+                      delay: i * 1.5,
                       ease: "easeInOut"
                     }}
                   />
@@ -291,17 +289,19 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                   />
                 ))}
 
-                {/* Central breathing circle */}
+                {/* Central breathing circle with enhanced scale */}
                 <motion.div
                   className="absolute rounded-full"
                   style={{
                     background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
-                    boxShadow: '0 0 40px rgba(20, 184, 166, 0.5)',
                     width: '120px',
                     height: '120px',
                   }}
                   animate={{
-                    scale: breathPhase === 'inhale' ? [0.8, 1.2] : breathPhase === 'exhale' ? [1.2, 0.8] : 1.2,
+                    scale: breathPhase === 'inhale' ? [1.0, 1.3] : breathPhase === 'exhale' ? [1.3, 1.0] : 1.3,
+                    boxShadow: breathPhase === 'hold'
+                      ? '0 0 60px rgba(20, 184, 166, 0.7)'
+                      : ['0 0 40px rgba(20, 184, 166, 0.5)', '0 0 60px rgba(20, 184, 166, 0.7)', '0 0 40px rgba(20, 184, 166, 0.5)']
                   }}
                   transition={{
                     duration: breathPhase === 'inhale' ? 4 : breathPhase === 'exhale' ? 8 : 7,
@@ -374,31 +374,37 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
                   transition={{ delay: 0.5, type: "spring" }}
                   className="text-center"
                 >
-                  <motion.div
-                    key={breathPhase}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="text-3xl font-bold"
-                    style={{
-                      background: 'linear-gradient(135deg, #14B8A6 0%, #3B82F6 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                      fontFamily: 'system-ui, -apple-system, sans-serif'
-                    }}
-                  >
-                    {breathPhase === 'inhale' && 'Inhala...'}
-                    {breathPhase === 'hold' && 'Sostén...'}
-                    {breathPhase === 'exhale' && 'Exhala...'}
-                  </motion.div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={breathPhase}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-lg font-medium text-gray-600 dark:text-gray-300"
+                    >
+                      {breathPhase === 'inhale' && 'Inhala profundo...'}
+                      {breathPhase === 'hold' && 'Sostén el aire...'}
+                      {breathPhase === 'exhale' && 'Exhala lentamente...'}
+                    </motion.div>
+                  </AnimatePresence>
+
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8 }}
-                    className="mt-4 text-gray-600 text-sm"
+                    className="mt-6 text-6xl font-bold text-gray-800 dark:text-gray-100 font-mono tabular-nums"
                   >
                     {timeRemainingFormatted}
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="mt-2 text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    min
                   </motion.div>
                 </motion.div>
               ) : (
