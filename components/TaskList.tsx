@@ -61,24 +61,51 @@ function SortableTaskWrapper({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="relative">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${
+        isDragging
+          ? 'scale-105 shadow-2xl ring-2 ring-purple-400 dark:ring-purple-500 rounded-lg z-50'
+          : ''
+      } transition-all duration-200`}
+    >
       <div className="flex items-stretch gap-2">
-        {/* Drag Handle - Desktop (≥1024px) */}
+        {/* Contenido de la tarea */}
+        <div className="flex-1 min-w-0">
+          {children}
+        </div>
+
+        {/* Drag Handle - Tablet/iPad (md a lg) a la DERECHA */}
         <div
           {...attributes}
           {...listeners}
-          className="hidden lg:flex items-center justify-center w-8 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+          className="hidden md:flex lg:hidden items-center justify-center w-10 cursor-grab active:cursor-grabbing hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all group/handle"
+          title="Mantén presionado para arrastrar"
+        >
+          <div className="flex flex-col items-center gap-0.5">
+            <GripVertical className="w-5 h-5 text-purple-400 dark:text-purple-500 group-hover/handle:text-purple-600 dark:group-hover/handle:text-purple-400 transition-colors" />
+            <span className="text-[10px] text-purple-400 dark:text-purple-500 font-medium opacity-0 group-hover/handle:opacity-100 transition-opacity">
+              Mover
+            </span>
+          </div>
+        </div>
+
+        {/* Drag Handle - Desktop (≥lg) a la IZQUIERDA como antes */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="hidden lg:flex items-center justify-center w-8 cursor-grab active:cursor-grabbing hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors order-first"
           title="Arrastrar para reordenar"
         >
           <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
         </div>
 
-        {/* Botones ↑↓ - Tablet/Móvil (<1024px) */}
-        <div className="lg:hidden flex flex-col gap-1 justify-center py-1">
+        {/* Botones ↑↓ - Solo Móvil (<md) */}
+        <div className="md:hidden flex flex-col gap-1 justify-center py-1 order-first">
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -101,11 +128,6 @@ function SortableTaskWrapper({
           >
             <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
-        </div>
-
-        {/* Contenido de la tarea */}
-        <div className="flex-1 min-w-0">
-          {children}
         </div>
       </div>
     </div>
