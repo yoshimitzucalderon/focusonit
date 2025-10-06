@@ -61,72 +61,104 @@ export default function ConfirmChangesModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
       onClick={onCancel}
       style={{ isolation: 'isolate' }}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl my-8 max-h-[90vh] overflow-y-auto relative z-[10000]"
+        className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-2xl my-8 max-h-[85vh] overflow-hidden flex flex-col relative z-[10000] border border-gray-200 dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold mb-4 dark:text-white">
-          📝 Cambios sugeridos
-        </h3>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-base font-semibold dark:text-white flex items-center gap-2">
+            <span className="text-blue-500">✏️</span> Cambios sugeridos
+          </h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
 
-        <div className="space-y-3 mb-6">
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
           {changedFields.title && (
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Título:</p>
-              <p className="text-red-600 line-through text-sm break-words">{original.title}</p>
-              <p className="text-green-600 font-medium break-words">{changedFields.title}</p>
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Título</p>
+              <p className="text-red-500/80 line-through text-sm break-words mb-1">{original.title}</p>
+              <p className="text-green-600 dark:text-green-500 font-medium break-words">{changedFields.title}</p>
             </div>
           )}
 
           {changedFields.dueDate && (
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fecha:</p>
-              <p className="text-red-600 line-through text-sm">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Fecha</p>
+              <p className="text-red-500/80 line-through text-sm mb-1">
                 {original.dueDate || 'Sin fecha'}
               </p>
-              <p className="text-green-600 font-medium">{changedFields.dueDate}</p>
+              <p className="text-green-600 dark:text-green-500 font-medium">{changedFields.dueDate}</p>
             </div>
           )}
 
           {changedFields.description && (
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Descripción:</p>
-              <p className="text-red-600 line-through text-sm break-words whitespace-pre-wrap max-h-32 overflow-y-auto">
-                {original.description || 'Sin descripción'}
-              </p>
-              <p className="text-green-600 font-medium break-words whitespace-pre-wrap max-h-48 overflow-y-auto">
-                {changedFields.description}
-              </p>
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Descripción</p>
+
+              {/* Old description - scrollable with visual indicator */}
+              <div className="relative mb-3">
+                <div className="text-red-500/80 line-through text-sm break-words whitespace-pre-wrap max-h-32 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-red-300 dark:scrollbar-thumb-red-700 scrollbar-track-red-50 dark:scrollbar-track-gray-800 rounded border border-red-200 dark:border-red-900 bg-red-50/30 dark:bg-red-950/20 p-2">
+                  {original.description || 'Sin descripción'}
+                </div>
+                {/* Scroll indicator */}
+                {(original.description?.length || 0) > 150 && (
+                  <div className="text-xs text-red-400 dark:text-red-500 mt-1 flex items-center gap-1">
+                    <span>⤓</span> Desliza para ver más
+                  </div>
+                )}
+              </div>
+
+              {/* New description - scrollable with visual indicator */}
+              <div className="relative">
+                <div className="text-green-600 dark:text-green-500 font-medium text-sm break-words whitespace-pre-wrap max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-green-400 dark:scrollbar-thumb-green-700 scrollbar-track-green-50 dark:scrollbar-track-gray-800 rounded border border-green-200 dark:border-green-900 bg-green-50/30 dark:bg-green-950/20 p-2">
+                  {changedFields.description}
+                </div>
+                {/* Scroll indicator */}
+                {(changedFields.description?.length || 0) > 150 && (
+                  <div className="text-xs text-green-500 dark:text-green-400 mt-1 flex items-center gap-1">
+                    <span>⤓</span> Desliza para ver más
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {changedFields.priority && (
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Prioridad:</p>
-              <p className="text-red-600 line-through text-sm">
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Prioridad</p>
+              <p className="text-red-500/80 line-through text-sm mb-1">
                 {priorityLabels[original.priority as keyof typeof priorityLabels]}
               </p>
-              <p className="text-green-600 font-medium">
+              <p className="text-green-600 dark:text-green-500 font-medium">
                 {priorityLabels[changedFields.priority as keyof typeof priorityLabels]}
               </p>
             </div>
           )}
         </div>
 
-        <div className="flex gap-3 sticky bottom-0 bg-white dark:bg-gray-800 pt-2">
+        {/* Footer - Sticky buttons */}
+        <div className="flex gap-3 pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={onConfirm}
-            className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors font-medium min-h-[48px]"
+            className="flex-1 bg-blue-500 text-white py-3 rounded-xl hover:bg-blue-600 active:bg-blue-700 transition-all font-medium min-h-[48px] shadow-lg shadow-blue-500/20"
           >
-            Aplicar cambios
+            Aplicar
           </button>
           <button
             onClick={onCancel}
-            className="flex-1 border border-gray-300 dark:border-gray-600 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 transition-colors dark:text-white min-h-[48px]"
+            className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 active:bg-gray-300 transition-all font-medium min-h-[48px]"
           >
             Cancelar
           </button>
