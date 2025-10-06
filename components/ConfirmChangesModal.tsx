@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ConfirmChangesModalProps {
   changes: {
@@ -79,11 +80,11 @@ export default function ConfirmChangesModal({
     alta: 'Alta'
   }
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onCancel}
-      style={{ isolation: 'isolate' }}
+      style={{ zIndex: 999999, isolation: 'isolate' }}
     >
       <div
         className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-md w-full shadow-2xl my-8 max-h-[85vh] overflow-hidden flex flex-col relative z-[10000] border border-gray-200 dark:border-gray-700"
@@ -186,4 +187,11 @@ export default function ConfirmChangesModal({
       </div>
     </div>
   )
+
+  // Usar portal para renderizar en el root del DOM, fuera del flujo normal
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+
+  return null
 }
