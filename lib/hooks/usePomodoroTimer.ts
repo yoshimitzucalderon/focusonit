@@ -29,6 +29,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null)
   const isCompletingRef = useRef(false) // Prevent multiple completions
+  const hasNotifiedRef = useRef(false) // Prevent duplicate notifications
 
   // Get durations from settings or use defaults
   const WORK_DURATION = (settings?.work_duration || 25) * 60
@@ -160,8 +161,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
               setIsRunning(true)
               console.log('✅ Break session started')
 
-              // Reset completion flag AFTER starting new session
+              // Reset flags AFTER starting new session
               isCompletingRef.current = false
+              hasNotifiedRef.current = false
+              console.log('🔄 Reset flags for new break session')
             } catch (error) {
               console.error('Error auto-starting break:', error)
               isCompletingRef.current = false
@@ -188,8 +191,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
               setIsRunning(true)
               console.log('✅ Work session started')
 
-              // Reset completion flag AFTER starting new session
+              // Reset flags AFTER starting new session
               isCompletingRef.current = false
+              hasNotifiedRef.current = false
+              console.log('🔄 Reset flags for new work session')
             } catch (error) {
               console.error('Error auto-starting work:', error)
               isCompletingRef.current = false
@@ -280,7 +285,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
 
   // Timer countdown - recalculate based on real time every second
   useEffect(() => {
-    if (isRunning && activeSession && timeRemaining > 0) {
+    if (isRunning && activeSession) {
       intervalRef.current = setInterval(() => {
         // Get correct duration for this session type
         let targetDuration = WORK_DURATION
@@ -296,7 +301,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
 
         setTimeRemaining(remaining)
 
-        if (remaining <= 0) {
+        // Trigger completion EXACTLY when reaching 0
+        if (remaining === 0 && !hasNotifiedRef.current) {
+          console.log('⏰ Timer reached 0 - triggering completion')
+          hasNotifiedRef.current = true
           handleComplete()
         }
       }, 1000)
@@ -312,7 +320,7 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, activeSession, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, handleComplete, timeRemaining])
+  }, [isRunning, activeSession, WORK_DURATION, SHORT_BREAK_DURATION, LONG_BREAK_DURATION, handleComplete])
 
   // Heartbeat to update Supabase every 30 seconds
   useEffect(() => {
@@ -374,6 +382,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
 
       setActiveSession(session)
       setIsRunning(true)
+
+      // Reset notification flag when starting new session
+      hasNotifiedRef.current = false
+      console.log('🔄 Reset hasNotifiedRef for new session')
     } catch (error: any) {
       console.error('Error starting timer:', error)
 
@@ -407,6 +419,10 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       // Reload total time
       const total = await getTotalTimeForTask(taskId)
       setTotalTimeSpent(total)
+
+      // Reset notification flag when pausing
+      hasNotifiedRef.current = false
+      console.log('🔄 Reset hasNotifiedRef on pause')
 
       toast.success('Timer pausado')
       setActiveSession(null)
