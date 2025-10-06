@@ -194,39 +194,89 @@ export default function TaskItem({ task }: TaskItemProps) {
     ? differenceInDays(new Date(), taskDueDate)
     : 0
 
+  // Determinar color del borde izquierdo basado en prioridad
+  const getPriorityColor = () => {
+    if (isOverdue) return 'border-l-red-500'
+    switch (task.priority) {
+      case 'alta':
+        return 'border-l-red-400'
+      case 'media':
+        return 'border-l-yellow-400'
+      case 'baja':
+        return 'border-l-green-400'
+      default:
+        return 'border-l-gray-300'
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -100 }}
       transition={{ duration: 0.2 }}
-      className={`task-item group relative flex items-start gap-3 p-3 sm:p-4 rounded-lg border transition-colors duration-200 ${
-          task.completed
-            ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
-            : 'bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 hover:border-l-4'
-        } ${
-          isOverdue
-            ? 'border-red-300 dark:border-red-800 border-l-4 border-l-red-500'
-            : 'border-gray-200 dark:border-gray-700 hover:border-l-primary-500'
-        } ${
-          isSelected ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''
-        }`}
+      className={`task-item group relative flex items-start gap-4 p-5 rounded-xl border border-l-4 transition-all duration-300
+        ${task.completed
+          ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300'
+          : `bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700
+             hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/20
+             hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-slate-750
+             ${getPriorityColor()}`
+        }
+        ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-md' : ''}
+      `}
     >
-      {/* Checkbox de SELECCIÓN (círculo) - único checkbox */}
-      <button
+      {/* Checkbox mejorado con animación */}
+      <motion.button
         onClick={(e) => {
           e.stopPropagation()
           toggleSelection(task.id)
         }}
-        className="flex-shrink-0 mt-0.5"
+        className="flex-shrink-0 mt-0.5 relative w-6 h-6"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         aria-label={isSelected ? 'Deseleccionar tarea' : 'Seleccionar tarea'}
       >
-        {isSelected ? (
-          <CheckCircle2 size={20} className="text-primary-600 dark:text-primary-400" />
-        ) : (
-          <Circle size={20} className="text-gray-300 dark:text-gray-600 hover:text-gray-400 dark:hover:text-gray-500" />
-        )}
-      </button>
+        <AnimatePresence mode="wait">
+          {isSelected ? (
+            <motion.div
+              key="checked"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, rotate: 180 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+                <motion.svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  <motion.path
+                    d="M2 7L5.5 10.5L12 3.5"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </motion.svg>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="unchecked"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+            />
+          )}
+        </AnimatePresence>
+      </motion.button>
 
       {/* Contenido */}
       <div className="flex-1 min-w-0">
@@ -412,12 +462,16 @@ export default function TaskItem({ task }: TaskItemProps) {
             />
           )}
 
-          {/* Tiempo total acumulado */}
+          {/* Tiempo total acumulado con badge mejorado */}
           {totalTimeSeconds > 0 && (
-            <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded-md">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full border border-blue-200 dark:border-blue-700"
+            >
               <Timer className="w-3.5 h-3.5" />
               <span>{formatTotalTime(totalTimeSeconds)}</span>
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
