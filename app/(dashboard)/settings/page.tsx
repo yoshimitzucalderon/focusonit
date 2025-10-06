@@ -97,9 +97,9 @@ export default function SettingsPage() {
                 max="120"
                 value={settings.work_duration}
                 onChange={(e) => updateSetting('work_duration', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-blue-500"
               />
-              <span className="text-2xl font-bold text-primary-600 dark:text-primary-400 w-16 text-center">
+              <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 w-14 text-center">
                 {settings.work_duration}
               </span>
             </div>
@@ -117,9 +117,9 @@ export default function SettingsPage() {
                 max="30"
                 value={settings.short_break_duration}
                 onChange={(e) => updateSetting('short_break_duration', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-emerald-500"
               />
-              <span className="text-2xl font-bold text-green-600 dark:text-green-400 w-16 text-center">
+              <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 w-14 text-center">
                 {settings.short_break_duration}
               </span>
             </div>
@@ -137,9 +137,9 @@ export default function SettingsPage() {
                 max="60"
                 value={settings.long_break_duration}
                 onChange={(e) => updateSetting('long_break_duration', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-500"
               />
-              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 w-16 text-center">
+              <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 w-14 text-center">
                 {settings.long_break_duration}
               </span>
             </div>
@@ -157,9 +157,9 @@ export default function SettingsPage() {
                 max="10"
                 value={settings.pomodoros_until_long_break}
                 onChange={(e) => updateSetting('pomodoros_until_long_break', parseInt(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-amber-500"
               />
-              <span className="text-2xl font-bold text-orange-600 dark:text-orange-400 w-16 text-center">
+              <span className="text-lg font-semibold text-gray-700 dark:text-gray-200 w-14 text-center">
                 {settings.pomodoros_until_long_break}
               </span>
             </div>
@@ -175,8 +175,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-3">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
+          <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div className="flex-1">
               <p className="font-medium text-gray-900 dark:text-white">Auto-iniciar descansos</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Iniciar descansos automáticamente al completar un Pomodoro
@@ -186,12 +186,12 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.auto_start_breaks}
               onChange={(e) => updateSetting('auto_start_breaks', e.target.checked)}
-              className="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 accent-primary-600 cursor-pointer ml-3"
             />
           </label>
 
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
+          <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div className="flex-1">
               <p className="font-medium text-gray-900 dark:text-white">Auto-iniciar Pomodoros</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Iniciar siguiente Pomodoro automáticamente al terminar descanso
@@ -201,7 +201,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.auto_start_pomodoros}
               onChange={(e) => updateSetting('auto_start_pomodoros', e.target.checked)}
-              className="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 accent-primary-600 cursor-pointer ml-3"
             />
           </label>
         </div>
@@ -214,9 +214,9 @@ export default function SettingsPage() {
           <h3 className="text-lg font-semibold dark:text-white">Notificaciones y Sonido</h3>
         </div>
 
-        <div className="space-y-4">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
+        <div className="space-y-3">
+          <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div className="flex-1">
               <p className="font-medium text-gray-900 dark:text-white">Activar notificaciones</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Mostrar notificaciones del navegador al completar sesiones
@@ -226,12 +226,12 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.notifications_enabled}
               onChange={(e) => updateSetting('notifications_enabled', e.target.checked)}
-              className="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 accent-primary-600 cursor-pointer ml-3"
             />
           </label>
 
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
+          <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+            <div className="flex-1">
               <p className="font-medium text-gray-900 dark:text-white">Activar sonido</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Reproducir sonido al completar sesiones
@@ -241,7 +241,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.sound_enabled}
               onChange={(e) => updateSetting('sound_enabled', e.target.checked)}
-              className="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 accent-primary-600 cursor-pointer ml-3"
             />
           </label>
 

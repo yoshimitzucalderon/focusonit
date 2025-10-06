@@ -60,6 +60,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
               setShowExpanded(!showExpanded)
             } else {
               start()
+              setShowExpanded(true)
             }
           }}
           className={`

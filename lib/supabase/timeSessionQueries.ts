@@ -299,6 +299,48 @@ export async function getTimeSessionsWithTasks(userId: string) {
 }
 
 /**
+ * Get completed tasks without any Pomodoro sessions
+ */
+export async function getCompletedTasksWithoutPomodoro(userId: string) {
+  const supabase = createClient()
+
+  // Get all completed tasks
+  const { data: completedTasks, error: tasksError } = await supabase
+    .from('tasks')
+    .select('id, title, completed_at')
+    .eq('user_id', userId)
+    .eq('completed', true)
+    .order('completed_at', { ascending: false })
+
+  if (tasksError) {
+    console.error('Error fetching completed tasks:', tasksError)
+    return []
+  }
+
+  if (!completedTasks || completedTasks.length === 0) return []
+
+  // Get all task IDs that have sessions
+  const { data: sessionsData, error: sessionsError } = await supabase
+    .from('time_sessions')
+    .select('task_id')
+    .eq('user_id', userId)
+
+  if (sessionsError) {
+    console.error('Error fetching sessions:', sessionsError)
+    return []
+  }
+
+  // Create a Set of task IDs that have sessions
+  const taskIdsWithSessions = new Set(
+    (sessionsData || []).map((s: { task_id: string }) => s.task_id)
+  )
+
+  // Filter tasks that don't have any sessions
+  return (completedTasks as { id: string; title: string; completed_at: string | null }[])
+    .filter(task => !taskIdsWithSessions.has(task.id))
+}
+
+/**
  * Delete a time session
  */
 export async function deleteTimeSession(sessionId: string) {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { getTimeSessionsWithTasks } from '@/lib/supabase/timeSessionQueries'
-import { BarChart3, Clock, Timer, TrendingUp } from 'lucide-react'
+import { getTimeSessionsWithTasks, getCompletedTasksWithoutPomodoro } from '@/lib/supabase/timeSessionQueries'
+import { BarChart3, Clock, Timer, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -21,26 +21,37 @@ interface TimeSessionWithTask {
   }
 }
 
+interface CompletedTaskWithoutPomodoro {
+  id: string
+  title: string
+  completed_at: string | null
+}
+
 export default function StatsPage() {
   const { user } = useAuth()
   const [sessions, setSessions] = useState<TimeSessionWithTask[]>([])
+  const [tasksWithoutPomodoro, setTasksWithoutPomodoro] = useState<CompletedTaskWithoutPomodoro[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadSessions = async () => {
+    const loadData = async () => {
       if (!user) return
 
       try {
-        const data = await getTimeSessionsWithTasks(user.id)
-        setSessions(data as TimeSessionWithTask[])
+        const [sessionsData, tasksData] = await Promise.all([
+          getTimeSessionsWithTasks(user.id),
+          getCompletedTasksWithoutPomodoro(user.id)
+        ])
+        setSessions(sessionsData as TimeSessionWithTask[])
+        setTasksWithoutPomodoro(tasksData as CompletedTaskWithoutPomodoro[])
       } catch (error) {
-        console.error('Error loading sessions:', error)
+        console.error('Error loading data:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadSessions()
+    loadData()
   }, [user])
 
   // Calcular estadísticas
@@ -220,6 +231,46 @@ export default function StatsPage() {
           </div>
         )}
       </div>
+
+      {/* Tareas completadas sin Pomodoro */}
+      {tasksWithoutPomodoro.length > 0 && (
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="text-lg font-semibold dark:text-white">Tareas Completadas sin Pomodoro</h3>
+            <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full font-medium">
+              {tasksWithoutPomodoro.length}
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Estas tareas fueron completadas sin usar el temporizador Pomodoro
+          </p>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {tasksWithoutPomodoro.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-700/50"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium dark:text-white truncate">
+                    {task.title}
+                  </p>
+                  {task.completed_at && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Completada: {format(new Date(task.completed_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                    </p>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  <span className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full">
+                    Sin timer
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
