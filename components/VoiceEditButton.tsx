@@ -98,6 +98,16 @@ export default function VoiceEditButton({
 
   const startVoiceEdit = async () => {
     try {
+      // Limpiar cualquier reconocimiento anterior
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+          recognitionRef.current.abort()
+        } catch (err) {
+          console.log('No hay reconocimiento previo que limpiar')
+        }
+      }
+
       // Verificar soporte del navegador
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
 
@@ -113,6 +123,7 @@ export default function VoiceEditButton({
       recognition.interimResults = false
 
       recognition.addEventListener('start', () => {
+        console.log('🎤 Recognition started')
         setIsListening(true)
         toast.success('Escuchando... Di tu comando')
       })
@@ -163,9 +174,9 @@ export default function VoiceEditButton({
       })
 
       recognition.addEventListener('error', (event: any) => {
+        console.log('🚨 Recognition error:', event.error)
         setIsListening(false)
         setIsProcessing(false)
-        console.error('Error:', event.error)
 
         if (event.error === 'no-speech') {
           toast.error('No se detectó voz. Intenta de nuevo.')
@@ -174,12 +185,27 @@ export default function VoiceEditButton({
         } else {
           toast.error('Error: ' + event.error)
         }
+
+        // Limpiar referencia
+        if (recognitionRef.current) {
+          recognitionRef.current = null
+        }
       })
 
       recognition.addEventListener('end', () => {
-        recognitionRef.current = null
+        console.log('🛑 Recognition ended')
+        setIsListening(false)
+        // NO limpiar la referencia aquí para que el interval pueda detectarla
+        // recognitionRef.current = null
       })
 
+      // Agregar event listener para cuando se detiene manualmente
+      recognition.addEventListener('audioend', () => {
+        console.log('🔇 Audio ended')
+        setIsListening(false)
+      })
+
+      console.log('🎬 Starting recognition...')
       recognition.start()
     } catch (err) {
       console.error(err)
