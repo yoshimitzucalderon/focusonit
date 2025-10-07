@@ -219,14 +219,14 @@ export default function StatsPage() {
                     )}
 
                     {/* Barra de progreso con % */}
-                    <div className="relative">
+                    <div className="relative pt-5">
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                         <div
                           className="bg-blue-500 dark:bg-blue-600 h-2.5 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className="absolute -top-6 right-0 text-xs font-semibold text-gray-600 dark:text-gray-400">
+                      <span className="absolute top-0 right-0 text-xs font-semibold text-gray-600 dark:text-gray-400">
                         {percentage.toFixed(1)}%
                       </span>
                     </div>
