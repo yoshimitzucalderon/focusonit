@@ -43,7 +43,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
 
   const randomMessage = useMemo(() =>
     breakMessages[Math.floor(Math.random() * breakMessages.length)],
-    [breakMessages, showExpanded]
+    [breakMessages]
   )
 
   useEffect(() => {

@@ -7,6 +7,7 @@ interface PriorityData {
   count: number
   percentage: number
   color: string
+  [key: string]: string | number // Index signature for Recharts compatibility
 }
 
 interface PriorityDonutChartProps {
@@ -79,7 +80,7 @@ export function PriorityDonutChart({ data }: PriorityDonutChartProps) {
               outerRadius={100}
               paddingAngle={2}
               dataKey="count"
-              label={({ percentage }) => `${percentage.toFixed(0)}%`}
+              label={({ percentage }: any) => `${percentage.toFixed(0)}%`}
               labelLine={false}
             >
               {data.map((entry, index) => (
