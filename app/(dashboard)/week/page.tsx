@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Clock, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import DatePicker from '@/components/DatePicker'
+import { DatePicker } from '@/components/DatePicker'
 
 function WeekPageContent() {
   const { user } = useAuth()
