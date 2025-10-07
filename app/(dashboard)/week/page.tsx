@@ -57,6 +57,7 @@ function WeekPageContent() {
           due_date: dueDate?.toISOString() || null,
           priority: priority,
           completed: false,
+          position: 0,
           created_at: getLocalTimestamp(),
           updated_at: getLocalTimestamp(),
           timezone_offset: getTimezoneOffset()
