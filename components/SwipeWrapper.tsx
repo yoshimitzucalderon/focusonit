@@ -95,7 +95,7 @@ export default function SwipeWrapper({
 
   return (
     <>
-      <div className="relative overflow-visible">
+      <div className="relative overflow-hidden">
         {/* Botones de acción - z-index ALTO cuando están visibles Y NO se está arrastrando */}
         <div
           className="absolute inset-y-0 right-0 flex"

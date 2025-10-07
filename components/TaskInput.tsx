@@ -261,7 +261,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col"
+              className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[75vh] sm:max-h-[85vh] flex flex-col"
             >
               {/* Header con gradiente */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5 flex items-center justify-between">
