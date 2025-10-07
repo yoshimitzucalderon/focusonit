@@ -1,16 +1,17 @@
 'use client'
 
-import { Trash2, CheckCircle, X } from 'lucide-react'
+import { Trash2, CheckCircle, X, Edit3 } from 'lucide-react'
 import { useSelection } from '@/context/SelectionContext'
 import { memo } from 'react'
 
 interface BulkActionsBarProps {
   onBulkComplete: () => void
   onBulkDelete: () => void
+  onBulkEdit?: () => void
   completeButtonText?: string
 }
 
-function BulkActionsBarComponent({ onBulkComplete, onBulkDelete, completeButtonText = 'Completar' }: BulkActionsBarProps) {
+function BulkActionsBarComponent({ onBulkComplete, onBulkDelete, onBulkEdit, completeButtonText = 'Completar' }: BulkActionsBarProps) {
   const { selectedIds, clearSelection, hasSelection } = useSelection()
 
   // Solo mostrar si hay tareas seleccionadas
@@ -35,12 +36,22 @@ function BulkActionsBarComponent({ onBulkComplete, onBulkDelete, completeButtonT
 
         {/* Botones de acción */}
         <div className="flex gap-2">
+          {selectedIds.size === 1 && onBulkEdit && (
+            <button
+              onClick={onBulkEdit}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors"
+            >
+              <Edit3 size={18} />
+              <span className="text-sm font-medium hidden sm:inline">Editar</span>
+            </button>
+          )}
+
           <button
             onClick={onBulkComplete}
             className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 active:bg-green-700 transition-colors"
           >
             <CheckCircle size={18} />
-            <span className="text-sm font-medium">{completeButtonText}</span>
+            <span className="text-sm font-medium hidden sm:inline">{completeButtonText}</span>
           </button>
 
           <button
@@ -48,7 +59,7 @@ function BulkActionsBarComponent({ onBulkComplete, onBulkDelete, completeButtonT
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors"
           >
             <Trash2 size={18} />
-            <span className="text-sm font-medium">Eliminar</span>
+            <span className="text-sm font-medium hidden sm:inline">Eliminar</span>
           </button>
         </div>
       </div>
