@@ -47,17 +47,20 @@ function WeekPageContent() {
 
     setCreating(true)
     try {
-      const { error } = await supabase.from('tasks').insert({
-        user_id: user.id,
-        title: title.trim(),
-        description: description.trim() || null,
-        due_date: dueDate?.toISOString() || null,
-        priority: priority,
-        completed: false,
-        created_at: getLocalTimestamp(),
-        updated_at: getLocalTimestamp(),
-        timezone_offset: getTimezoneOffset()
-      })
+      const { error } = await supabase
+        .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .insert({
+          user_id: user.id,
+          title: title.trim(),
+          description: description.trim() || null,
+          due_date: dueDate?.toISOString() || null,
+          priority: priority,
+          completed: false,
+          created_at: getLocalTimestamp(),
+          updated_at: getLocalTimestamp(),
+          timezone_offset: getTimezoneOffset()
+        })
 
       if (error) throw error
 
