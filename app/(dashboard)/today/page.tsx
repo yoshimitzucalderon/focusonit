@@ -255,7 +255,7 @@ function TodayPageContent() {
             </div>
 
             {/* Lista de tareas atrasadas */}
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 overflow-visible">
               <TaskList
                 tasks={overdueTasks}
                 emptyMessage=""

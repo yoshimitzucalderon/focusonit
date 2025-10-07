@@ -94,7 +94,7 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[65vh] sm:max-h-[85vh] flex flex-col"
+            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[50vh] sm:max-h-[85vh] flex flex-col"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">

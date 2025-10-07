@@ -250,7 +250,7 @@ function WeekPageContent() {
 
               {/* Tareas del día */}
               {group.tasks.length > 0 ? (
-                <div className="task-list space-y-3 px-4 -mx-4">
+                <div className="task-list space-y-3 px-4 -mx-4 overflow-visible">
                   <TaskList tasks={group.tasks} onEditTask={handleEditTask} />
                 </div>
               ) : (

@@ -319,7 +319,7 @@ export default function TaskList({
   }
 
   const content = (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-visible">
       <AnimatePresence mode="popLayout">
         {items.map((task, index) => {
           const taskElement = (
