@@ -21,12 +21,31 @@ export default function SwipeWrapper({
   const [dragX, setDragX] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [isSwipeOpen, setIsSwipeOpen] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const startX = useRef(0)
   const currentX = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const SWIPE_THRESHOLD = -100
   const MAX_SWIPE = -240
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'))
+    }
+
+    checkDarkMode()
+
+    // Watch for theme changes
+    const observer = new MutationObserver(checkDarkMode)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -164,11 +183,13 @@ export default function SwipeWrapper({
 
       {/* CONTENIDO QUE SE DESLIZA - Estilo iOS */}
       <div
-        className="relative bg-white dark:bg-gray-800 transition-transform"
+        className="relative transition-transform"
         style={{
           transform: `translateX(${dragX}px)`,
           transitionDuration: isDragging ? '0ms' : '200ms',
           zIndex: 10,
+          width: '100%',
+          backgroundColor: isDarkMode ? '#1f2937' : 'white',
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={isDragging ? handleMouseMove : undefined}
