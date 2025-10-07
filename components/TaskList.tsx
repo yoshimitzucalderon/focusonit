@@ -329,7 +329,6 @@ export default function TaskList({
               onComplete={() => handleComplete(task)}
               onDelete={() => handleDelete(task.id)}
               onEdit={onEditTask ? () => onEditTask(task) : undefined}
-              isCompleted={task.completed}
             >
               <TaskItem task={task} />
             </SwipeWrapper>
@@ -378,7 +377,6 @@ export default function TaskList({
               taskId={activeTask.id}
               onComplete={() => {}}
               onDelete={() => {}}
-              isCompleted={activeTask.completed}
             >
               <TaskItem task={activeTask} />
             </SwipeWrapper>
