@@ -145,24 +145,44 @@ export function PresetButtons({ currentSettings, onPresetSelect }: PresetButtons
         {/* Custom Indicator */}
         <motion.div
           whileHover={{ scale: isCustom ? 1.02 : 1 }}
+          animate={isCustom ? {
+            boxShadow: [
+              '0 0 0 0 rgba(168, 85, 247, 0)',
+              '0 0 0 6px rgba(168, 85, 247, 0.1)',
+              '0 0 0 0 rgba(168, 85, 247, 0)'
+            ]
+          } : {}}
+          transition={isCustom ? { repeat: Infinity, duration: 2 } : {}}
           className={`
-            p-3 rounded-lg border-2 transition-all duration-200
+            relative p-3 rounded-lg border-2 transition-all duration-200
             ${isCustom
               ? 'border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/20'
               : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800/50'
             }
           `}
         >
-          <div className="flex flex-col items-center gap-2">
-            <div className={`
-              p-2 rounded-lg
-              ${isCustom
-                ? 'bg-purple-500 text-white'
-                : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
-              }
-            `}>
-              <Wrench className="w-5 h-5" />
+          {isCustom && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
+          )}
+
+          <div className="flex flex-col items-center gap-2">
+            <motion.div
+              animate={isCustom ? { rotate: [0, 5, -5, 0] } : {}}
+              transition={isCustom ? { repeat: Infinity, duration: 3, ease: 'easeInOut' } : {}}
+              className={`
+                p-2 rounded-lg
+                ${isCustom
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500'
+                }
+              `}
+            >
+              <Wrench className="w-5 h-5" />
+            </motion.div>
             <div className="text-center">
               <p className={`font-semibold text-sm ${
                 isCustom

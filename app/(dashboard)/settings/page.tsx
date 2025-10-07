@@ -112,18 +112,18 @@ export default function SettingsPage() {
 
   return (
     <>
-      <div className="space-y-6 max-w-4xl pb-32">
+      <div className="space-y-8 max-w-4xl pb-32 animate-in fade-in duration-500">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-xl p-6 border border-blue-100 dark:border-blue-900/50">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-xl p-6 sm:p-8 border border-blue-100 dark:border-blue-900/50 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-500 dark:bg-blue-600 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-xl shadow-lg">
               <Settings className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 Configuración del Pomodoro
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                 Personaliza tu experiencia de trabajo y descanso
               </p>
             </div>
@@ -131,7 +131,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Presets */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
           <PresetButtons
             currentSettings={{
               work_duration: settings.work_duration,
@@ -152,7 +152,7 @@ export default function SettingsPage() {
         />
 
         {/* Timer Durations */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 mb-6">
             <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -167,13 +167,13 @@ export default function SettingsPage() {
               min={1}
               max={120}
               onChange={(val) => updateSetting('work_duration', val)}
-              icon="🕐"
+              icon="🍅"
               color="blue"
               warningThreshold={{
                 min: 10,
                 message: "⚠️ Muy corto: Pomodoros menores a 10 minutos pueden afectar tu concentración profunda"
               }}
-              helpText="El método Pomodoro tradicional recomienda 25 minutos de trabajo enfocado"
+              helpText="⏱️ Tiempo de concentración profunda. Recomendado: 25 min (técnica Pomodoro tradicional). Para trabajos creativos considera 50 min, para tareas rápidas 15 min."
             />
 
             <SliderWithInput
@@ -184,7 +184,7 @@ export default function SettingsPage() {
               onChange={(val) => updateSetting('short_break_duration', val)}
               icon="☕"
               color="green"
-              helpText="Tiempo para estirarte, tomar agua o descansar la vista"
+              helpText="☕ Pausa breve entre Pomodoros. Recomendado: 5 min para estirar, descansar la vista y tomar agua. Aprovecha para levantarte de la silla."
             />
 
             <SliderWithInput
@@ -195,7 +195,7 @@ export default function SettingsPage() {
               onChange={(val) => updateSetting('long_break_duration', val)}
               icon="🛋️"
               color="purple"
-              helpText="Descanso más largo después de completar varios Pomodoros"
+              helpText="🛋️ Descanso más largo después de completar el ciclo. Recomendado: 15-30 min para desconectar completamente. Sal a caminar o haz una actividad diferente."
             />
 
             <SliderWithInput
@@ -207,13 +207,13 @@ export default function SettingsPage() {
               icon="🔄"
               color="amber"
               unit=""
-              helpText="Número de Pomodoros antes de tomar un descanso largo"
+              helpText="🔄 Número de Pomodoros antes de tomar un descanso largo. Recomendado: 4 ciclos. Ajusta según tu nivel de energía y tipo de trabajo."
             />
           </div>
         </div>
 
         {/* Auto-start Settings */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 mb-6">
             <Play className="w-6 h-6 text-purple-600 dark:text-purple-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -265,7 +265,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Notifications & Sound */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 mb-6">
             <Bell className="w-6 h-6 text-green-600 dark:text-green-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
