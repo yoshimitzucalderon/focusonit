@@ -2,7 +2,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Calendar, Sparkles } from 'lucide-react'
+import { Plus, Calendar, Sparkles, CalendarPlus, Type, FileText, Clock, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -10,6 +10,7 @@ import { parseNaturalDate, containsNaturalDate } from '@/lib/utils/parseNaturalD
 import { DatePicker } from './DatePicker'
 import VoiceTaskButton from './VoiceTaskButton'
 import { getLocalTimestamp, parseDateString, toDateOnlyString, getTimezoneOffset } from '@/lib/utils/timezone'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface TaskInputProps {
   userId: string
@@ -23,6 +24,11 @@ export default function TaskInput({ userId }: TaskInputProps) {
   const [loading, setLoading] = useState(false)
   const [naturalDateSuggestion, setNaturalDateSuggestion] = useState<string | null>(null)
   const [voiceCreatedAt, setVoiceCreatedAt] = useState<string | null>(null) // Para guardar createdAt de voz
+  const [priority, setPriority] = useState<'alta' | 'media' | 'baja' | null>(null)
+  const [timeEstimate, setTimeEstimate] = useState<number | null>(null)
+  const [tags, setTags] = useState<string>('')
+  const [reminder, setReminder] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -116,7 +122,12 @@ export default function TaskInput({ userId }: TaskInputProps) {
       setTitle('')
       setDescription('')
       setDueDate(null)
+      setPriority(null)
+      setTimeEstimate(null)
+      setTags('')
+      setReminder(false)
       setShowModal(false)
+      setShowAdvanced(false)
       setNaturalDateSuggestion(null)
       setVoiceCreatedAt(null) // Limpiar
       toast.success('Tarea creada')
@@ -240,77 +251,283 @@ export default function TaskInput({ userId }: TaskInputProps) {
       </div>
 
       {/* Modal para tarea completa */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-lg w-full p-6">
-            <h3 className="text-xl font-semibold mb-4 dark:text-white">
-              Nueva tarea
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Título *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-white"
-                  placeholder="Ej: Llamar al cliente"
-                  autoFocus
-                />
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden"
+            >
+              {/* Header con gradiente */}
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <CalendarPlus className="text-white" size={20} />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">
+                    Nueva tarea
+                  </h3>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    setShowModal(false)
+                    setDescription('')
+                    setDueDate(null)
+                    setPriority(null)
+                    setTimeEstimate(null)
+                    setTags('')
+                    setReminder(false)
+                    setShowAdvanced(false)
+                  }}
+                  disabled={loading}
+                  className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors disabled:opacity-50"
+                >
+                  <X className="text-white" size={18} />
+                </motion.button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Descripción
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-white"
-                  placeholder="Detalles adicionales..."
-                  rows={3}
-                />
+              {/* Body */}
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                {/* Título */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Título *
+                  </label>
+                  <div className="relative">
+                    <Type className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                    <input
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all"
+                      placeholder="Ej: Llamar al cliente"
+                      autoFocus
+                    />
+                    {!title.trim() && (
+                      <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400" size={18} />
+                    )}
+                  </div>
+                </div>
+
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Descripción
+                  </label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={18} />
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all resize-none"
+                      placeholder="Detalles adicionales..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Grid: Fecha y Tiempo */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Fecha */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Fecha de vencimiento
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none z-10" size={18} />
+                      <DatePicker
+                        value={dueDate}
+                        onChange={(date) => setDueDate(date)}
+                        placeholder="Seleccionar fecha"
+                        buttonClassName="w-full pl-11 justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tiempo estimado */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Tiempo estimado
+                    </label>
+                    <div className="relative">
+                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10" size={18} />
+                      <select
+                        value={timeEstimate || ''}
+                        onChange={(e) => setTimeEstimate(e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all appearance-none bg-white dark:bg-slate-700"
+                      >
+                        <option value="">Sin estimación</option>
+                        <option value="15">15 minutos</option>
+                        <option value="25">25 minutos (1 Pomodoro)</option>
+                        <option value="30">30 minutos</option>
+                        <option value="50">50 minutos (2 Pomodoros)</option>
+                        <option value="60">1 hora</option>
+                        <option value="90">1.5 horas</option>
+                        <option value="120">2 horas</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prioridad */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Prioridad
+                  </label>
+                  <div className="flex gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPriority(priority === 'alta' ? null : 'alta')}
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all ${
+                        priority === 'alta'
+                          ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-200 dark:shadow-red-900/30'
+                          : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-red-300 dark:hover:border-red-700'
+                      }`}
+                    >
+                      <Flag className="inline mr-2" size={16} />
+                      Alta
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPriority(priority === 'media' ? null : 'media')}
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all ${
+                        priority === 'media'
+                          ? 'bg-yellow-500 border-yellow-500 text-white shadow-lg shadow-yellow-200 dark:shadow-yellow-900/30'
+                          : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-yellow-300 dark:hover:border-yellow-700'
+                      }`}
+                    >
+                      <Flag className="inline mr-2" size={16} />
+                      Media
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setPriority(priority === 'baja' ? null : 'baja')}
+                      className={`flex-1 py-3 px-4 rounded-xl border-2 font-semibold transition-all ${
+                        priority === 'baja'
+                          ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-200 dark:shadow-green-900/30'
+                          : 'border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-green-300 dark:hover:border-green-700'
+                      }`}
+                    >
+                      <Flag className="inline mr-2" size={16} />
+                      Baja
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Opciones avanzadas (colapsable) */}
+                <div className="border-t-2 border-gray-100 dark:border-gray-700 pt-4">
+                  <motion.button
+                    whileHover={{ x: 4 }}
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  >
+                    {showAdvanced ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    Opciones avanzadas
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {showAdvanced && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-4 mt-4 overflow-hidden"
+                      >
+                        {/* Etiquetas */}
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                            Etiquetas
+                          </label>
+                          <div className="relative">
+                            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                            <input
+                              type="text"
+                              value={tags}
+                              onChange={(e) => setTags(e.target.value)}
+                              className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all"
+                              placeholder="trabajo, urgente, reunión (separadas por coma)"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Recordatorio */}
+                        <div>
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={reminder}
+                                onChange={(e) => setReminder(e.target.checked)}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                              <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Bell className="text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" size={18} />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                Activar recordatorio
+                              </span>
+                            </div>
+                          </label>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Fecha
-                </label>
-                <DatePicker
-                  value={dueDate}
-                  onChange={(date) => setDueDate(date)}
-                  placeholder="Seleccionar fecha"
-                  buttonClassName="w-full justify-start border border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 px-4 py-2"
-                />
+              {/* Footer */}
+              <div className="px-6 py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-gray-700 flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={createFullTask}
+                  disabled={loading || !title.trim()}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl disabled:shadow-none"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Creando...
+                    </span>
+                  ) : (
+                    'Crear tarea'
+                  )}
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setShowModal(false)
+                    setDescription('')
+                    setDueDate(null)
+                    setPriority(null)
+                    setTimeEstimate(null)
+                    setTags('')
+                    setReminder(false)
+                    setShowAdvanced(false)
+                  }}
+                  disabled={loading}
+                  className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold transition-all disabled:opacity-50"
+                >
+                  Cancelar
+                </motion.button>
               </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={createFullTask}
-                disabled={loading || !title.trim()}
-                className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creando...' : 'Crear tarea'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowModal(false)
-                  setDescription('')
-                  setDueDate(null)
-                }}
-                disabled={loading}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   )
 }
