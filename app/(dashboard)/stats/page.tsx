@@ -3,9 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { getTimeSessionsWithTasks, getCompletedTasksWithoutPomodoro } from '@/lib/supabase/timeSessionQueries'
-import { BarChart3, Clock, Timer, TrendingUp, CheckCircle2 } from 'lucide-react'
+import { BarChart3, Clock, Timer, TrendingUp, CheckCircle2, Flame, Target } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { useStatsFilters } from '@/lib/hooks/useStatsFilters'
+import { useStatsCalculations } from '@/lib/hooks/useStatsCalculations'
+import { FilterBar } from '@/components/stats/FilterBar'
+import { MetricCard } from '@/components/stats/MetricCard'
+import { ProductivityChart } from '@/components/stats/ProductivityChart'
 
 interface TimeSessionWithTask {
   id: string
@@ -32,6 +37,8 @@ export default function StatsPage() {
   const [sessions, setSessions] = useState<TimeSessionWithTask[]>([])
   const [tasksWithoutPomodoro, setTasksWithoutPomodoro] = useState<CompletedTaskWithoutPomodoro[]>([])
   const [loading, setLoading] = useState(true)
+  const { filter, setPeriod } = useStatsFilters()
+  const stats = useStatsCalculations(sessions as any, filter.dateRange, filter.previousPeriodRange)
 
   useEffect(() => {
     const loadData = async () => {
@@ -53,30 +60,6 @@ export default function StatsPage() {
 
     loadData()
   }, [user])
-
-  // Calcular estadísticas
-  const totalTimeSeconds = sessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
-  const completedSessions = sessions.filter(s => s.is_completed).length
-  const totalSessions = sessions.length
-
-  // Agrupar por tarea
-  const taskStats = sessions.reduce((acc, session) => {
-    const taskId = session.task_id
-    if (!acc[taskId]) {
-      acc[taskId] = {
-        title: session.tasks.title,
-        totalSeconds: 0,
-        sessionCount: 0
-      }
-    }
-    acc[taskId].totalSeconds += session.duration_seconds || 0
-    acc[taskId].sessionCount += 1
-    return acc
-  }, {} as Record<string, { title: string; totalSeconds: number; sessionCount: number }>)
-
-  const sortedTasks = Object.entries(taskStats)
-    .sort((a, b) => b[1].totalSeconds - a[1].totalSeconds)
-    .slice(0, 10)
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
@@ -113,70 +96,91 @@ export default function StatsPage() {
         </p>
       </div>
 
+      {/* Filter Bar */}
+      <FilterBar selectedPeriod={filter.period} onPeriodChange={setPeriod} />
+
       {/* Cards de estadísticas generales */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Tiempo Total</p>
-              <p className="text-2xl font-bold dark:text-white">{formatTime(totalTimeSeconds)}</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          title="Tiempo Total"
+          value={formatTime(stats.metrics.totalTime)}
+          subtitle="horas trabajadas"
+          icon={Clock}
+          iconBgColor="bg-blue-100 dark:bg-blue-900/30"
+          iconColor="text-blue-600 dark:text-blue-400"
+          change={stats.comparison.timeChange}
+        />
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Timer className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Sesiones</p>
-              <p className="text-2xl font-bold dark:text-white">{totalSessions}</p>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Sesiones"
+          value={stats.metrics.totalSessions.toString()}
+          subtitle="sesiones iniciadas"
+          icon={Timer}
+          iconBgColor="bg-green-100 dark:bg-green-900/30"
+          iconColor="text-green-600 dark:text-green-400"
+          change={stats.comparison.sessionsChange}
+        />
 
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Completadas</p>
-              <p className="text-2xl font-bold dark:text-white">{completedSessions}</p>
-            </div>
-          </div>
-        </div>
+        <MetricCard
+          title="Completadas"
+          value={stats.metrics.completedSessions.toString()}
+          subtitle="sesiones finalizadas"
+          icon={CheckCircle2}
+          iconBgColor="bg-purple-100 dark:bg-purple-900/30"
+          iconColor="text-purple-600 dark:text-purple-400"
+          change={stats.comparison.completedChange}
+        />
+
+        <MetricCard
+          title="Racha Actual"
+          value={stats.metrics.currentStreak.toString()}
+          subtitle={`Mejor: ${stats.metrics.longestStreak} días`}
+          icon={Flame}
+          iconBgColor="bg-orange-100 dark:bg-orange-900/30"
+          iconColor="text-orange-600 dark:text-orange-400"
+        />
       </div>
 
+      {/* Productivity Chart */}
+      <ProductivityChart data={stats.productivityData} />
+
       {/* Top 10 Tareas por Tiempo */}
-      {sortedTasks.length > 0 && (
+      {stats.tasksWithStats.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-            <h3 className="text-lg font-semibold dark:text-white">Top 10 Tareas</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              <h3 className="text-lg font-semibold dark:text-white">Top 10 Tareas</h3>
+            </div>
           </div>
           <div className="space-y-3">
-            {sortedTasks.map(([taskId, stats], index) => {
-              const percentage = (stats.totalSeconds / totalTimeSeconds) * 100
+            {stats.tasksWithStats.slice(0, 10).map((task, index) => {
+              const percentage = (task.totalSeconds / stats.metrics.totalTime) * 100
+              const priorityColors = {
+                alta: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+                media: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+                baja: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              }
               return (
-                <div key={taskId} className="space-y-1">
+                <div key={task.taskId} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <span className="text-gray-500 dark:text-gray-400 font-medium">
                         #{index + 1}
                       </span>
-                      <span className="dark:text-white truncate">{stats.title}</span>
+                      <span className="dark:text-white truncate">{task.title}</span>
+                      {task.priority && (
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${priorityColors[task.priority]}`}>
+                          {task.priority}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {stats.sessionCount} {stats.sessionCount === 1 ? 'sesión' : 'sesiones'}
+                        {task.sessionCount} {task.sessionCount === 1 ? 'sesión' : 'sesiones'}
                       </span>
                       <span className="font-semibold dark:text-white">
-                        {formatTime(stats.totalSeconds)}
+                        {formatTime(task.totalSeconds)}
                       </span>
                     </div>
                   </div>
@@ -195,39 +199,50 @@ export default function StatsPage() {
 
       {/* Historial de Sesiones */}
       <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-lg font-semibold dark:text-white mb-4">Historial de Sesiones</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <h3 className="text-lg font-semibold dark:text-white">Historial de Sesiones</h3>
+          <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full font-medium">
+            {stats.metrics.totalSessions}
+          </span>
+        </div>
 
-        {sessions.length === 0 ? (
+        {stats.metrics.totalSessions === 0 ? (
           <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-            No hay sesiones registradas todavía. ¡Empieza a trabajar en tus tareas!
+            No hay sesiones registradas en este período. ¡Empieza a trabajar en tus tareas!
           </p>
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium dark:text-white truncate">
-                    {session.tasks.title}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {format(new Date(session.started_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {session.is_completed && (
-                    <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                      Completada
+            {sessions
+              .filter(session => {
+                const sessionDate = new Date(session.started_at)
+                return sessionDate >= filter.dateRange.start && sessionDate <= filter.dateRange.end
+              })
+              .map((session) => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium dark:text-white truncate">
+                      {session.tasks.title}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {format(new Date(session.started_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {session.is_completed && (
+                      <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                        Completada
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold dark:text-white">
+                      {session.duration_seconds ? formatDuration(session.duration_seconds) : '-'}
                     </span>
-                  )}
-                  <span className="text-sm font-semibold dark:text-white">
-                    {session.duration_seconds ? formatDuration(session.duration_seconds) : '-'}
-                  </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </div>

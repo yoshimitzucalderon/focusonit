@@ -25,7 +25,8 @@
     "react-day-picker": "^9.11.0",
     "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
-    "react-swipeable": "^7.0.2"
+    "react-swipeable": "^7.0.2",
+    "recharts": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
