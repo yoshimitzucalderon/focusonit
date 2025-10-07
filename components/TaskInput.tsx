@@ -261,19 +261,19 @@ export default function TaskInput({ userId }: TaskInputProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[75vh] sm:max-h-[85vh] flex flex-col"
+              className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[65vh] sm:max-h-[85vh] flex flex-col"
             >
               {/* Header con gradiente */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5 flex items-center justify-between">
-                <div className="flex items-center gap-3 pr-8">
-                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                    <CalendarPlus className="text-white" size={24} />
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3 pr-8">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <CalendarPlus className="text-white" size={20} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">
+                    <h3 className="text-lg sm:text-xl font-bold text-white">
                       Nueva tarea
                     </h3>
-                    <p className="text-blue-100 text-sm">Agrega una tarea a tu día</p>
+                    <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">Agrega una tarea a tu día</p>
                   </div>
                 </div>
                 <motion.button
@@ -296,7 +296,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
               </div>
 
               {/* Body */}
-              <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
+              <div className="p-3 sm:p-6 space-y-3 sm:space-y-5 overflow-y-auto flex-1">
                 {/* Título */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">

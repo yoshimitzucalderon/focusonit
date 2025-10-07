@@ -27,7 +27,7 @@ export default function SwipeWrapper({
 
   // Snap points
   const SNAP_CLOSED = 0
-  const SNAP_FULL = -240 // 3 botones × 80px cada uno en móvil (w-20)
+  const SNAP_FULL = -210 // 3 botones × 70px cada uno en móvil (w-[70px])
   const SWIPE_THRESHOLD = 20 // Mínimo 20px para activar
 
   // Handler para swipe estilo iOS
@@ -123,13 +123,13 @@ export default function SwipeWrapper({
                 handleActionClick(onComplete)
               }
             }}
-            className="w-20 sm:w-28 flex flex-col items-center justify-center bg-green-500 text-white
+            className="w-[70px] sm:w-28 flex flex-col items-center justify-center bg-green-500 text-white
                        hover:bg-green-600 hover:shadow-lg
                        active:bg-green-700 active:scale-95 active:shadow-inner
                        transition-all duration-150 touch-manipulation"
           >
-            <CheckCircle size={26} className="mb-1" />
-            <span className="text-sm font-semibold">
+            <CheckCircle size={22} className="mb-0.5 sm:mb-1" />
+            <span className="text-xs sm:text-sm font-semibold">
               {isCompleted ? 'Reabrir' : 'Hecho'}
             </span>
           </button>
@@ -150,13 +150,13 @@ export default function SwipeWrapper({
                 e.stopPropagation()
                 handleActionClick(onEdit)
               }}
-              className="w-20 sm:w-28 flex flex-col items-center justify-center bg-blue-500 text-white
+              className="w-[70px] sm:w-28 flex flex-col items-center justify-center bg-blue-500 text-white
                          hover:bg-blue-600 hover:shadow-lg
                          active:bg-blue-700 active:scale-95 active:shadow-inner
                          transition-all duration-150 touch-manipulation"
             >
-              <Edit3 size={26} className="mb-1" />
-              <span className="text-sm font-semibold">Editar</span>
+              <Edit3 size={22} className="mb-0.5 sm:mb-1" />
+              <span className="text-xs sm:text-sm font-semibold">Editar</span>
             </button>
           )}
 
@@ -185,13 +185,13 @@ export default function SwipeWrapper({
                 closeSwipe()
               }
             }}
-            className="w-20 sm:w-28 flex flex-col items-center justify-center bg-red-500 text-white
+            className="w-[70px] sm:w-28 flex flex-col items-center justify-center bg-red-500 text-white
                        hover:bg-red-600 hover:shadow-lg
                        active:bg-red-700 active:scale-95 active:shadow-inner
                        transition-all duration-150 touch-manipulation"
           >
-            <Trash2 size={26} className="mb-1" />
-            <span className="text-sm font-semibold">Borrar</span>
+            <Trash2 size={22} className="mb-0.5 sm:mb-1" />
+            <span className="text-xs sm:text-sm font-semibold">Borrar</span>
           </button>
         </div>
 
