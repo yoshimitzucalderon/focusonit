@@ -98,9 +98,10 @@ export default function SwipeWrapper({
       <div className="relative overflow-hidden">
         {/* Botones de acción - COMPLETAMENTE FUERA DE LA PANTALLA cuando están cerrados */}
         <div
-          className="absolute inset-y-0 right-0 flex transition-all duration-200"
+          className="absolute top-0 bottom-0 flex transition-all duration-200"
           style={{
-            transform: isSwipeOpen ? 'translateX(0)' : 'translateX(100%)',
+            right: isSwipeOpen ? 0 : -240,
+            width: '240px',
             zIndex: isSwipeOpen && !isDragging ? 40 : 0,
             pointerEvents: isSwipeOpen && !isDragging ? 'auto' : 'none'
           }}
