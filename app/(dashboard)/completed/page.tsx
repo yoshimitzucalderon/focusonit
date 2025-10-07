@@ -105,7 +105,7 @@ function CompletedPageContent() {
       <div className="space-y-6">
         {/* Header */}
           <div>
-            <h2 className="text-2xl font-bold dark:text-white">Tareas Completadas</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Tareas Completadas</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {completedTasks.length}{' '}
               {completedTasks.length === 1 ? 'tarea completada' : 'tareas completadas'} en los

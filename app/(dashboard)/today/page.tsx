@@ -177,7 +177,7 @@ function TodayPageContent() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold dark:text-white">Hoy</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Hoy</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {pendingCount} {pendingCount === 1 ? 'tarea pendiente' : 'tareas pendientes'}
             </p>

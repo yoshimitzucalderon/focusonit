@@ -206,7 +206,7 @@ function WeekPageContent() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h2 className="text-2xl font-bold dark:text-white">Esta Semana</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Esta Semana</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             {totalPending} {totalPending === 1 ? 'tarea pendiente' : 'tareas pendientes'} en los
             próximos 7 días
