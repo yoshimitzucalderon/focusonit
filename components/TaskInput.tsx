@@ -111,6 +111,11 @@ export default function TaskInput({ userId }: TaskInputProps) {
         title: title.trim(),
         description: description.trim() || null,
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
+        priority: priority,
+        time_estimate: timeEstimate,
+        tags: tags.trim() ? tags.split(',').map(t => t.trim()) : null,
+        reminder_enabled: reminder,
+        reminder_at: reminder && dueDate ? dueDate.toISOString() : null,
         // Usar createdAt de voz si existe, sino generar nuevo con hora local
         created_at: voiceCreatedAt || getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),

@@ -22,9 +22,13 @@ export interface Database {
           updated_at: string
           google_event_id: string | null
           synced_with_calendar: boolean
-          priority: 'baja' | 'media' | 'alta'
+          priority: 'baja' | 'media' | 'alta' | null
           timezone_offset: number | null
           position: number
+          time_estimate: number | null
+          tags: string[] | null
+          reminder_enabled: boolean
+          reminder_at: string | null
         }
         Insert: {
           id?: string
@@ -38,9 +42,13 @@ export interface Database {
           updated_at?: string
           google_event_id?: string | null
           synced_with_calendar?: boolean
-          priority?: 'baja' | 'media' | 'alta'
+          priority?: 'baja' | 'media' | 'alta' | null
           timezone_offset?: number | null
           position?: number
+          time_estimate?: number | null
+          tags?: string[] | null
+          reminder_enabled?: boolean
+          reminder_at?: string | null
         }
         Update: {
           id?: string
@@ -54,9 +62,13 @@ export interface Database {
           updated_at?: string
           google_event_id?: string | null
           synced_with_calendar?: boolean
-          priority?: 'baja' | 'media' | 'alta'
+          priority?: 'baja' | 'media' | 'alta' | null
           timezone_offset?: number | null
           position?: number
+          time_estimate?: number | null
+          tags?: string[] | null
+          reminder_enabled?: boolean
+          reminder_at?: string | null
         }
       }
       time_sessions: {
