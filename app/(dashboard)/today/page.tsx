@@ -11,12 +11,14 @@ import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
+import { FAB } from '@/components/FAB'
 
 function TodayPageContent() {
   const { user } = useAuth()
   const { tasks, loading } = useTasks()
   const [hideCompleted, setHideCompleted] = useState(false)
   const [movingAll, setMovingAll] = useState(false)
+  const [showTaskModal, setShowTaskModal] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -247,6 +249,9 @@ function TodayPageContent() {
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
       />
+
+      {/* FAB para agregar tareas */}
+      <FAB onClick={() => setShowTaskModal(true)} />
     </>
   )
 }

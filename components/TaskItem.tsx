@@ -3,16 +3,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2, Timer, GripVertical, Copy, Trash2 } from 'lucide-react'
+import { Edit3, Clock, FileText, ChevronDown, ChevronUp, Circle, CheckCircle2, Timer, GripVertical, Copy, Trash2, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { isPast, isToday, differenceInDays } from 'date-fns'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { useSelection } from '@/context/SelectionContext'
 import { PomodoroTimer } from './PomodoroTimer'
 import { getLocalTimestamp, toDateOnlyString, parseDateString, getTimezoneOffset } from '@/lib/utils/timezone'
 import VoiceEditButton from './VoiceEditButton'
 import { getTotalTimeForTask } from '@/lib/supabase/timeSessionQueries'
+import { useSwipeable } from 'react-swipeable'
 
 interface TaskItemProps {
   task: Task
@@ -34,8 +35,48 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [descriptionValue, setDescriptionValue] = useState(task.description || '')
   const [totalTimeSeconds, setTotalTimeSeconds] = useState<number>(0)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  // Swipe handlers
+  const handlers = useSwipeable({
+    onSwiping: (eventData) => {
+      if (task.completed) return
+      const offset = eventData.deltaX
+      setSwipeOffset(offset)
+
+      if (offset > 50) {
+        setSwipeDirection('right')
+      } else if (offset < -50) {
+        setSwipeDirection('left')
+      } else {
+        setSwipeDirection(null)
+      }
+    },
+    onSwipedRight: async () => {
+      if (task.completed) return
+      // Completar tarea al swipe derecha
+      await toggleComplete()
+      setSwipeOffset(0)
+      setSwipeDirection(null)
+    },
+    onSwipedLeft: () => {
+      if (task.completed) return
+      // Mostrar acciones al swipe izquierda (mantener estado)
+      setSwipeOffset(-120)
+      setSwipeDirection('left')
+    },
+    onSwiped: () => {
+      if (swipeDirection !== 'left') {
+        setSwipeOffset(0)
+        setSwipeDirection(null)
+      }
+    },
+    trackMouse: false,
+    preventScrollOnSwipe: true,
+  })
 
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
@@ -254,22 +295,76 @@ export default function TaskItem({ task }: TaskItemProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      transition={{ duration: 0.2 }}
-      className={`task-item group relative flex items-start gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300
-        ${task.completed
-          ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300 dark:border-l-gray-600'
-          : `bg-white dark:bg-slate-800/90 border-gray-200 dark:border-slate-700/60
-             hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/30 dark:hover:shadow-lg
-             hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-slate-700/90
-             ${getPriorityColor()}`
-        }
-        ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-md' : ''}
-      `}
-    >
+    <div className="relative overflow-hidden rounded-xl">
+      {/* Swipe Actions Background - Right (Complete) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: swipeDirection === 'right' ? 1 : 0 }}
+        className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-start px-6 rounded-xl"
+      >
+        <Check size={32} className="text-white" strokeWidth={3} />
+        <span className="ml-3 text-white font-bold text-lg">Completar</span>
+      </motion.div>
+
+      {/* Swipe Actions Background - Left (Delete/Edit) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: swipeDirection === 'left' ? 1 : 0 }}
+        className="absolute inset-0 bg-gradient-to-l from-red-500 to-rose-500 flex items-center justify-end px-6 rounded-xl"
+      >
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.stopPropagation()
+              deleteTask()
+              setSwipeOffset(0)
+              setSwipeDirection(null)
+            }}
+            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-xl flex items-center justify-center backdrop-blur-sm transition-colors"
+          >
+            <Trash2 size={22} className="text-white" strokeWidth={2.5} />
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setEditing(true)
+              setSwipeOffset(0)
+              setSwipeDirection(null)
+            }}
+            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-xl flex items-center justify-center backdrop-blur-sm transition-colors"
+          >
+            <Edit3 size={22} className="text-white" strokeWidth={2.5} />
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Main Task Card */}
+      <motion.div
+        {...handlers}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          x: swipeOffset
+        }}
+        exit={{ opacity: 0, x: -100 }}
+        transition={{
+          duration: 0.2,
+          x: { type: "spring", stiffness: 300, damping: 30 }
+        }}
+        className={`task-item group relative flex items-start gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300 touch-pan-y
+          ${task.completed
+            ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300 dark:border-l-gray-600'
+            : `bg-white dark:bg-slate-800/90 border-gray-200 dark:border-slate-700/60
+               hover:shadow-lg hover:shadow-gray-200/50 dark:hover:shadow-black/30 dark:hover:shadow-lg
+               md:hover:-translate-y-0.5 md:hover:bg-gray-50 dark:md:hover:bg-slate-700/90
+               ${getPriorityColor()}`
+          }
+          ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-md' : ''}
+        `}
+      >
       {/* Drag Handle - visible solo en hover */}
       {!task.completed && (
         <motion.div
@@ -309,13 +404,13 @@ export default function TaskItem({ task }: TaskItemProps) {
           </motion.button>
         </motion.div>
       )}
-      {/* Checkbox mejorado con animación */}
+      {/* Checkbox mejorado con animación - Optimizado para mobile */}
       <motion.button
         onClick={(e) => {
           e.stopPropagation()
           toggleSelection(task.id)
         }}
-        className="flex-shrink-0 mt-0.5 relative w-6 h-6"
+        className="flex-shrink-0 mt-0.5 relative w-8 h-8 md:w-6 md:h-6 flex items-center justify-center"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         aria-label={isSelected ? 'Deseleccionar tarea' : 'Seleccionar tarea'}
@@ -564,5 +659,6 @@ export default function TaskItem({ task }: TaskItemProps) {
         </div>
       </div>
     </motion.div>
+    </div>
   )
 }
