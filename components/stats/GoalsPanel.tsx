@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Settings } from 'lucide-react'
+import { GoalsConfigModal } from './GoalsConfigModal'
 
 interface Goal {
   id: string
@@ -23,8 +24,16 @@ interface GoalsPanelProps {
   periodFilter: 'today' | 'week' | 'month' | 'year'
 }
 
+interface GoalsConfig {
+  weeklyHours: number
+  monthlyHours: number
+  weeklyTasks: number
+  monthlyTasks: number
+  streakDays: number
+}
+
 // Targets configurables (pueden venir de settings en el futuro)
-const DEFAULT_TARGETS = {
+const DEFAULT_TARGETS: GoalsConfig = {
   weeklyHours: 20,
   monthlyHours: 80,
   weeklyTasks: 15,
@@ -32,11 +41,37 @@ const DEFAULT_TARGETS = {
   streakDays: 7
 }
 
+const STORAGE_KEY = 'focusonit_goals_config'
+
 export function GoalsPanel({ sessions, tasks, periodFilter }: GoalsPanelProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [goalsConfig, setGoalsConfig] = useState<GoalsConfig>(DEFAULT_TARGETS)
+
+  // Cargar configuración desde localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        setGoalsConfig(JSON.parse(saved))
+      }
+    } catch (error) {
+      console.error('Error loading goals config:', error)
+    }
+  }, [])
+
   const goals = useMemo(() =>
-    calculateGoals(sessions, tasks, periodFilter),
-    [sessions, tasks, periodFilter]
+    calculateGoals(sessions, tasks, periodFilter, goalsConfig),
+    [sessions, tasks, periodFilter, goalsConfig]
   )
+
+  const handleSaveConfig = (newConfig: GoalsConfig) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConfig))
+      setGoalsConfig(newConfig)
+    } catch (error) {
+      console.error('Error saving goals config:', error)
+    }
+  }
 
   const periodLabel = periodFilter === 'week' ? 'Semanales' :
                       periodFilter === 'month' ? 'Mensuales' :
@@ -62,7 +97,11 @@ export function GoalsPanel({ sessions, tasks, periodFilter }: GoalsPanelProps) {
             </p>
           </div>
         </div>
-        <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Configurar objetivos">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          title="Configurar objetivos"
+        >
           <Settings className="w-5 h-5" />
         </button>
       </div>
@@ -75,10 +114,21 @@ export function GoalsPanel({ sessions, tasks, periodFilter }: GoalsPanelProps) {
       </div>
 
       {/* Footer */}
-      <button className="w-full mt-6 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 transition font-medium text-sm flex items-center justify-center gap-2">
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className="w-full mt-6 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 transition font-medium text-sm flex items-center justify-center gap-2"
+      >
         <Settings className="w-4 h-4" />
         Configurar objetivos
       </button>
+
+      {/* Modal de configuración */}
+      <GoalsConfigModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentConfig={goalsConfig}
+        onSave={handleSaveConfig}
+      />
     </motion.div>
   )
 }
@@ -163,7 +213,8 @@ function GoalItem({ goal, index }: { goal: Goal; index: number }) {
 function calculateGoals(
   sessions: any[],
   tasks: any[],
-  period: string
+  period: string,
+  config: GoalsConfig = DEFAULT_TARGETS
 ): Goal[] {
   // Calcular totales actuales
   const totalMinutes = sessions.reduce((sum, s) => sum + Math.floor(s.duration / 60), 0)
@@ -174,13 +225,13 @@ function calculateGoals(
   const currentStreak = calculateStreak(sessions)
 
   // Determinar targets según el período
-  const hoursTarget = period === 'week' ? DEFAULT_TARGETS.weeklyHours :
-                      period === 'month' ? DEFAULT_TARGETS.monthlyHours :
-                      DEFAULT_TARGETS.weeklyHours
+  const hoursTarget = period === 'week' ? config.weeklyHours :
+                      period === 'month' ? config.monthlyHours :
+                      config.weeklyHours
 
-  const tasksTarget = period === 'week' ? DEFAULT_TARGETS.weeklyTasks :
-                      period === 'month' ? DEFAULT_TARGETS.monthlyTasks :
-                      DEFAULT_TARGETS.weeklyTasks
+  const tasksTarget = period === 'week' ? config.weeklyTasks :
+                      period === 'month' ? config.monthlyTasks :
+                      config.weeklyTasks
 
   // Construir array de objetivos
   return [
@@ -214,10 +265,10 @@ function calculateGoals(
       title: 'Racha de días',
       description: 'Días consecutivos trabajando',
       current: currentStreak,
-      target: DEFAULT_TARGETS.streakDays,
+      target: config.streakDays,
       unit: 'días',
-      percentage: Math.round((currentStreak / DEFAULT_TARGETS.streakDays) * 100),
-      status: currentStreak >= DEFAULT_TARGETS.streakDays ? 'completed' : currentStreak > 0 ? 'in-progress' : 'pending',
+      percentage: Math.round((currentStreak / config.streakDays) * 100),
+      status: currentStreak >= config.streakDays ? 'completed' : currentStreak > 0 ? 'in-progress' : 'pending',
       color: '#F59E0B'
     }
   ]
