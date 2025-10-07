@@ -81,6 +81,28 @@ export default function TaskItem({ task }: TaskItemProps) {
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
 
+  // Toggle completar tarea
+  const toggleComplete = async () => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .update({
+          completed: !task.completed,
+          completed_at: !task.completed ? getLocalTimestamp() : null,
+          updated_at: getLocalTimestamp()
+        })
+        .eq('id', task.id)
+
+      if (error) throw error
+
+      toast.success(task.completed ? 'Tarea marcada como pendiente' : 'Tarea completada')
+    } catch (error: any) {
+      toast.error('Error al actualizar tarea')
+      console.error(error)
+    }
+  }
+
   // Cargar tiempo total acumulado
   useEffect(() => {
     const loadTotalTime = async () => {
