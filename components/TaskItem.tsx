@@ -376,7 +376,7 @@ export default function TaskItem({ task }: TaskItemProps) {
           duration: 0.2,
           x: { type: "spring", stiffness: 300, damping: 30 }
         }}
-        className={`task-item group relative flex items-center gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300 touch-pan-y
+        className={`task-item group relative flex items-start gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300 touch-pan-y
           ${task.completed
             ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300 dark:border-l-gray-600'
             : `bg-white dark:bg-slate-800/90 border-gray-200 dark:border-slate-700/60
