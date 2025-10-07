@@ -679,18 +679,6 @@ export default function TaskItem({ task }: TaskItemProps) {
             </motion.div>
           )}
 
-          {/* Tiempo estimado */}
-          {task.time_estimate && (
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-medium rounded-full border border-purple-200 dark:border-purple-700/50"
-            >
-              <Clock className="w-3 h-3" />
-              <span>{task.time_estimate} min</span>
-            </motion.div>
-          )}
-
           {/* Etiquetas */}
           {task.tags && task.tags.length > 0 && (
             <>

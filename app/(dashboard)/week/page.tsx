@@ -11,7 +11,7 @@ import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
-import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Clock, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from '@/components/DatePicker'
 
@@ -28,7 +28,6 @@ function WeekPageContent() {
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<Date | null>(null)
   const [priority, setPriority] = useState<'alta' | 'media' | 'baja' | null>(null)
-  const [timeEstimate, setTimeEstimate] = useState<number | null>(null)
   const [tags, setTags] = useState<string>('')
   const [reminder, setReminder] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -56,7 +55,6 @@ function WeekPageContent() {
           description: description.trim() || null,
           due_date: dueDate?.toISOString() || null,
           priority: priority,
-          time_estimate: timeEstimate,
           tags: tags.trim() ? tags.split(',').map(t => t.trim()) : null,
           reminder_enabled: reminder,
           reminder_at: reminder && dueDate ? dueDate.toISOString() : null,
@@ -74,7 +72,6 @@ function WeekPageContent() {
       setDescription('')
       setDueDate(null)
       setPriority(null)
-      setTimeEstimate(null)
       setTags('')
       setReminder(false)
       setShowAdvanced(false)
@@ -411,47 +408,19 @@ function WeekPageContent() {
                   </div>
                 </div>
 
-                {/* Grid: Fecha y Tiempo */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Fecha */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                      Fecha de vencimiento
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none z-10" size={18} />
-                      <DatePicker
-                        value={dueDate}
-                        onChange={(date) => setDueDate(date)}
-                        placeholder="Seleccionar fecha"
-                        buttonClassName="w-full pl-11 justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tiempo estimado */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                      Tiempo estimado
-                    </label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10" size={18} />
-                      <select
-                        value={timeEstimate || ''}
-                        onChange={(e) => setTimeEstimate(e.target.value ? parseInt(e.target.value) : null)}
-                        className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all appearance-none bg-white dark:bg-slate-700"
-                      >
-                        <option value="">Sin estimación</option>
-                        <option value="15">15 minutos</option>
-                        <option value="25">25 minutos (1 Pomodoro)</option>
-                        <option value="30">30 minutos</option>
-                        <option value="50">50 minutos (2 Pomodoros)</option>
-                        <option value="60">1 hora</option>
-                        <option value="90">1.5 horas</option>
-                        <option value="120">2 horas</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" size={18} />
-                    </div>
+                {/* Fecha */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Fecha de vencimiento
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none z-10" size={18} />
+                    <DatePicker
+                      value={dueDate}
+                      onChange={(date) => setDueDate(date)}
+                      placeholder="Seleccionar fecha"
+                      buttonClassName="w-full pl-11 justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
+                    />
                   </div>
                 </div>
 
