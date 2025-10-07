@@ -5,7 +5,7 @@ import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
 import TaskList from '@/components/TaskList'
 import { startOfDay, endOfDay, isPast, isToday } from 'date-fns'
-import { Eye, EyeOff, AlertTriangle, ArrowRight, Edit3 } from 'lucide-react'
+import { Eye, EyeOff, AlertTriangle, ArrowRight, Edit3, Clock, Calendar } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
@@ -215,47 +215,66 @@ function TodayPageContent() {
           </div>
         </div>
 
-        {/* Sección de Tareas Atrasadas */}
+        {/* Sección de Tareas Atrasadas - Diseño Mejorado */}
         {overdueCount > 0 && (
-          <div className="bg-red-50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-800 rounded-lg p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-white" />
+          <div className="relative bg-gradient-to-br from-red-50 via-orange-50 to-white dark:from-red-950/20 dark:via-orange-950/10 dark:to-slate-900 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 shadow-lg animate-in fade-in duration-300">
+            {/* Header con iconos duales */}
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-start gap-4">
+                {/* Icono dual: Reloj + Advertencia */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 rounded-full flex items-center justify-center">
+                    <AlertTriangle className="w-3 h-3 text-white" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 flex items-center gap-2">
-                    Tareas Atrasadas
-                    <span className="px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">
+
+                {/* Contenido principal */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-red-900 dark:text-red-200">
+                      Tareas Vencidas
+                    </h3>
+                    {/* Badge numérico prominente con animación */}
+                    <span className="relative px-3 py-1.5 text-lg font-bold bg-red-600 text-white rounded-full shadow-lg animate-pulse">
                       {overdueCount}
+                      <span className="absolute inset-0 rounded-full bg-red-600 opacity-75 animate-ping" />
                     </span>
-                  </h3>
-                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                    Tienes {overdueCount} {overdueCount === 1 ? 'tarea atrasada' : 'tareas atrasadas'} que necesitan atención
+                  </div>
+                  <p className="text-base font-medium text-red-800 dark:text-red-300">
+                    ⚠️ {overdueCount} {overdueCount === 1 ? 'tarea vencida' : 'tareas vencidas'} - Revisa y prioriza ahora
                   </p>
                 </div>
               </div>
-              <button
-                onClick={moveAllToToday}
-                disabled={movingAll}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {movingAll ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Moviendo...
-                  </>
-                ) : (
-                  <>
-                    Mover todas a hoy
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+
+              {/* Botones de acción mejorados */}
+              <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                <button
+                  onClick={moveAllToToday}
+                  disabled={movingAll}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                >
+                  {movingAll ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="hidden sm:inline">Moviendo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Calendar className="w-4 h-4" />
+                      <span className="hidden sm:inline">Ver tareas atrasadas</span>
+                      <span className="sm:hidden">Ver tareas</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Lista de tareas atrasadas */}
-            <div className="mt-4 space-y-3 overflow-visible">
+            <div className="space-y-3 overflow-visible animate-in slide-in-from-top-4 duration-500">
               <TaskList
                 tasks={overdueTasks}
                 emptyMessage=""
