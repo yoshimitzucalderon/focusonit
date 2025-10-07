@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
 import TaskList from '@/components/TaskList'
@@ -9,10 +9,14 @@ import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
+import EditTaskModal from '@/components/EditTaskModal'
+import { Task } from '@/types/database.types'
 
 function AllPageContent() {
   const { user } = useAuth()
   const { tasks, loading } = useTasks()
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -85,6 +89,15 @@ function AllPageContent() {
     }
   }
 
+  const handleBulkEdit = () => {
+    const taskId = Array.from(selectedIds)[0]
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      setEditingTask(task)
+      setShowEditModal(true)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -118,6 +131,18 @@ function AllPageContent() {
       <BulkActionsBar
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
+        onBulkEdit={handleBulkEdit}
+      />
+
+      {/* Modal de edición */}
+      <EditTaskModal
+        task={editingTask}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingTask(null)
+          clearSelection()
+        }}
       />
     </>
   )
