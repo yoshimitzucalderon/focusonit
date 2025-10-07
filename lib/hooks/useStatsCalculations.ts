@@ -128,22 +128,31 @@ export function useStatsCalculations(
     }
   }, [filteredSessions])
 
-  // Comparación con período anterior
-  const comparison = useMemo<ComparisonMetrics>(() => {
+  // Métricas del período anterior
+  const previousMetrics = useMemo(() => {
     const prevTotalTime = previousSessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0)
     const prevTotalSessions = previousSessions.length
     const prevCompletedSessions = previousSessions.filter(s => s.is_completed).length
 
-    const timeChange = prevTotalTime > 0
-      ? ((metrics.totalTime - prevTotalTime) / prevTotalTime) * 100
+    return {
+      totalTime: prevTotalTime,
+      totalSessions: prevTotalSessions,
+      completedSessions: prevCompletedSessions
+    }
+  }, [previousSessions])
+
+  // Comparación con período anterior
+  const comparison = useMemo<ComparisonMetrics>(() => {
+    const timeChange = previousMetrics.totalTime > 0
+      ? ((metrics.totalTime - previousMetrics.totalTime) / previousMetrics.totalTime) * 100
       : metrics.totalTime > 0 ? 100 : 0
 
-    const sessionsChange = prevTotalSessions > 0
-      ? ((metrics.totalSessions - prevTotalSessions) / prevTotalSessions) * 100
+    const sessionsChange = previousMetrics.totalSessions > 0
+      ? ((metrics.totalSessions - previousMetrics.totalSessions) / previousMetrics.totalSessions) * 100
       : metrics.totalSessions > 0 ? 100 : 0
 
-    const completedChange = prevCompletedSessions > 0
-      ? ((metrics.completedSessions - prevCompletedSessions) / prevCompletedSessions) * 100
+    const completedChange = previousMetrics.completedSessions > 0
+      ? ((metrics.completedSessions - previousMetrics.completedSessions) / previousMetrics.completedSessions) * 100
       : metrics.completedSessions > 0 ? 100 : 0
 
     return {
@@ -151,7 +160,7 @@ export function useStatsCalculations(
       sessionsChange,
       completedChange
     }
-  }, [metrics, previousSessions])
+  }, [metrics, previousMetrics])
 
   // Distribución por día de la semana
   const dayDistribution = useMemo<DayDistribution[]>(() => {
@@ -290,6 +299,7 @@ export function useStatsCalculations(
 
   return {
     metrics,
+    previousMetrics,
     comparison,
     dayDistribution,
     priorityDistribution,

@@ -181,9 +181,9 @@ export default function StatsPage() {
           label: filter.period === 'week' ? 'Semana anterior' :
                  filter.period === 'month' ? 'Mes anterior' :
                  filter.period === 'year' ? 'Año anterior' : 'Ayer',
-          totalMinutes: Math.floor((stats.metrics.totalTime / 60) / (1 + (stats.comparison.timeChange || 0) / 100)),
-          sessionsCount: Math.round(stats.metrics.totalSessions / (1 + (stats.comparison.sessionsChange || 0) / 100)),
-          completedTasks: Math.round(stats.metrics.completedSessions / (1 + (stats.comparison.completedChange || 0) / 100))
+          totalMinutes: Math.floor(stats.previousMetrics.totalTime / 60),
+          sessionsCount: stats.previousMetrics.totalSessions,
+          completedTasks: stats.previousMetrics.completedSessions
         }}
       />
 
