@@ -255,13 +255,13 @@ export default function TaskInput({ userId }: TaskInputProps) {
       {/* Modal para tarea completa */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[90vh] sm:max-h-[85vh] flex flex-col"
             >
               {/* Header con gradiente */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5 flex items-center justify-between">
@@ -296,7 +296,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
               </div>
 
               {/* Body */}
-              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1">
                 {/* Título */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">

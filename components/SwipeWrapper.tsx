@@ -27,7 +27,7 @@ export default function SwipeWrapper({
 
   // Snap points
   const SNAP_CLOSED = 0
-  const SNAP_FULL = -336 // 3 botones × 112px cada uno (w-28)
+  const SNAP_FULL = -240 // 3 botones × 80px cada uno en móvil (w-20)
   const SWIPE_THRESHOLD = 20 // Mínimo 20px para activar
 
   // Handler para swipe estilo iOS
@@ -123,7 +123,7 @@ export default function SwipeWrapper({
                 handleActionClick(onComplete)
               }
             }}
-            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-green-500 text-white
+            className="w-20 sm:w-28 flex flex-col items-center justify-center bg-green-500 text-white
                        hover:bg-green-600 hover:shadow-lg
                        active:bg-green-700 active:scale-95 active:shadow-inner
                        transition-all duration-150 touch-manipulation"
@@ -150,7 +150,7 @@ export default function SwipeWrapper({
                 e.stopPropagation()
                 handleActionClick(onEdit)
               }}
-              className="w-28 sm:w-32 flex flex-col items-center justify-center bg-blue-500 text-white
+              className="w-20 sm:w-28 flex flex-col items-center justify-center bg-blue-500 text-white
                          hover:bg-blue-600 hover:shadow-lg
                          active:bg-blue-700 active:scale-95 active:shadow-inner
                          transition-all duration-150 touch-manipulation"
@@ -185,7 +185,7 @@ export default function SwipeWrapper({
                 closeSwipe()
               }
             }}
-            className="w-28 sm:w-32 flex flex-col items-center justify-center bg-red-500 text-white
+            className="w-20 sm:w-28 flex flex-col items-center justify-center bg-red-500 text-white
                        hover:bg-red-600 hover:shadow-lg
                        active:bg-red-700 active:scale-95 active:shadow-inner
                        transition-all duration-150 touch-manipulation"

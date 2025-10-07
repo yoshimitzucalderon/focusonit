@@ -11,9 +11,11 @@ import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
-import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react'
+import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Flag, Tag, Bell, X, ChevronDown, ChevronUp, AlertCircle, Edit3 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from '@/components/DatePicker'
+import EditTaskModal from '@/components/EditTaskModal'
+import { Task } from '@/types/database.types'
 
 function WeekPageContent() {
   const { user } = useAuth()
@@ -32,6 +34,8 @@ function WeekPageContent() {
   const [reminder, setReminder] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // Abrir modal con fecha preseleccionada
   const openModalWithDate = (date: Date) => {
@@ -173,6 +177,20 @@ function WeekPageContent() {
     }
   }
 
+  const handleBulkEdit = () => {
+    const taskId = Array.from(selectedIds)[0]
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      setEditingTask(task)
+      setShowEditModal(true)
+    }
+  }
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setShowEditModal(true)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -233,7 +251,7 @@ function WeekPageContent() {
               {/* Tareas del día */}
               {group.tasks.length > 0 ? (
                 <div className="task-list space-y-3 px-4 -mx-4">
-                  <TaskList tasks={group.tasks} />
+                  <TaskList tasks={group.tasks} onEditTask={handleEditTask} />
                 </div>
               ) : (
                 /* Día vacío atractivo */
@@ -323,6 +341,18 @@ function WeekPageContent() {
       <BulkActionsBar
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
+        onBulkEdit={handleBulkEdit}
+      />
+
+      {/* Modal de edición */}
+      <EditTaskModal
+        task={editingTask}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingTask(null)
+          clearSelection()
+        }}
       />
 
       {/* Modal para crear tarea */}
