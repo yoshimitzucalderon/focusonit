@@ -264,8 +264,8 @@ function TodayPageContent() {
                   ) : (
                     <>
                       <Calendar className="w-4 h-4" />
-                      <span className="hidden sm:inline">Ver tareas atrasadas</span>
-                      <span className="sm:hidden">Ver tareas</span>
+                      <span className="hidden sm:inline">Mover todas a hoy</span>
+                      <span className="sm:hidden">Mover a hoy</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
