@@ -98,6 +98,11 @@ function AllPageContent() {
     }
   }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setShowEditModal(true)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -124,6 +129,7 @@ function AllPageContent() {
         <TaskList
           tasks={allPendingTasks}
           emptyMessage="¡Felicitaciones! No tienes tareas pendientes"
+          onEditTask={handleEditTask}
         />
       </div>
 

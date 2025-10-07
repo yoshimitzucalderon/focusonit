@@ -35,6 +35,7 @@ interface TaskListProps {
   tasks: Task[]
   emptyMessage?: string
   enableReorder?: boolean
+  onEditTask?: (task: Task) => void
 }
 
 // Componente sortable para cada tarea
@@ -132,7 +133,8 @@ function SortableTaskWrapper({
 export default function TaskList({
   tasks,
   emptyMessage = 'No hay tareas',
-  enableReorder = true
+  enableReorder = true,
+  onEditTask
 }: TaskListProps) {
   const [items, setItems] = useState(tasks)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -326,6 +328,7 @@ export default function TaskList({
               taskId={task.id}
               onComplete={() => handleComplete(task)}
               onDelete={() => handleDelete(task.id)}
+              onEdit={onEditTask ? () => onEditTask(task) : undefined}
               isCompleted={task.completed}
             >
               <TaskItem task={task} />

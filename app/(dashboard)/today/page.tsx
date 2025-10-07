@@ -156,6 +156,11 @@ function TodayPageContent() {
     }
   }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setShowEditModal(true)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -251,7 +256,11 @@ function TodayPageContent() {
 
             {/* Lista de tareas atrasadas */}
             <div className="mt-4 space-y-3">
-              <TaskList tasks={overdueTasks} emptyMessage="" />
+              <TaskList
+                tasks={overdueTasks}
+                emptyMessage=""
+                onEditTask={handleEditTask}
+              />
             </div>
           </div>
         )}
@@ -266,6 +275,7 @@ function TodayPageContent() {
           <TaskList
             tasks={todayTasks}
             emptyMessage={overdueCount > 0 ? 'No hay tareas programadas para hoy' : '¡Todo listo! No hay tareas pendientes para hoy'}
+            onEditTask={handleEditTask}
           />
         </div>
       </div>

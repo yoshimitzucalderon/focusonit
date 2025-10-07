@@ -2,13 +2,14 @@
 
 import { useState, ReactNode } from 'react'
 import { motion, useMotionValue, PanInfo } from 'framer-motion'
-import { CheckCircle, Trash2 } from 'lucide-react'
+import { CheckCircle, Trash2, Edit3 } from 'lucide-react'
 
 interface SwipeWrapperProps {
   children: ReactNode
   taskId: string
   onComplete?: () => void
   onDelete?: () => void
+  onEdit?: () => void
   isCompleted?: boolean
 }
 
@@ -17,6 +18,7 @@ export default function SwipeWrapper({
   taskId,
   onComplete,
   onDelete,
+  onEdit,
   isCompleted = false,
 }: SwipeWrapperProps) {
   const [isSwipeOpen, setIsSwipeOpen] = useState(false)
@@ -25,7 +27,7 @@ export default function SwipeWrapper({
 
   // Snap points
   const SNAP_CLOSED = 0
-  const SNAP_FULL = -224 // 2 botones × 112px cada uno (w-28)
+  const SNAP_FULL = -336 // 3 botones × 112px cada uno (w-28)
   const SWIPE_THRESHOLD = 20 // Mínimo 20px para activar
 
   // Handler para swipe estilo iOS
@@ -131,6 +133,32 @@ export default function SwipeWrapper({
               {isCompleted ? 'Reabrir' : 'Hecho'}
             </span>
           </button>
+
+          {/* Botón Editar */}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                console.log('🔵 BOTÓN EDITAR CLICKED!')
+                e.preventDefault()
+                e.stopPropagation()
+                handleActionClick(onEdit)
+              }}
+              onTouchEnd={(e) => {
+                console.log('🔵 BOTÓN EDITAR TOUCHED!')
+                e.preventDefault()
+                e.stopPropagation()
+                handleActionClick(onEdit)
+              }}
+              className="w-28 sm:w-32 flex flex-col items-center justify-center bg-blue-500 text-white
+                         hover:bg-blue-600 hover:shadow-lg
+                         active:bg-blue-700 active:scale-95 active:shadow-inner
+                         transition-all duration-150 touch-manipulation"
+            >
+              <Edit3 size={26} className="mb-1" />
+              <span className="text-sm font-semibold">Editar</span>
+            </button>
+          )}
 
           {/* Botón Borrar - MÁS ANCHO */}
           <button
