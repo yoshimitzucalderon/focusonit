@@ -8,9 +8,16 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useStatsFilters } from '@/lib/hooks/useStatsFilters'
 import { useStatsCalculations } from '@/lib/hooks/useStatsCalculations'
+import { useInsights } from '@/lib/hooks/useInsights'
+import { useTopTasks } from '@/lib/hooks/useTopTasks'
 import { FilterBar } from '@/components/stats/FilterBar'
 import { MetricCard } from '@/components/stats/MetricCard'
 import { ProductivityChart } from '@/components/stats/ProductivityChart'
+import { WeeklyDistributionChart } from '@/components/stats/WeeklyDistributionChart'
+import { PriorityDonutChart } from '@/components/stats/PriorityDonutChart'
+import { InsightsPanel } from '@/components/stats/InsightsPanel'
+import { TopTasksControls } from '@/components/stats/TopTasksControls'
+import { PriorityBadge } from '@/components/stats/PriorityBadge'
 
 interface TimeSessionWithTask {
   id: string
@@ -39,6 +46,8 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true)
   const { filter, setPeriod } = useStatsFilters()
   const stats = useStatsCalculations(sessions as any, filter.dateRange, filter.previousPeriodRange)
+  const insights = useInsights(sessions as any, stats.metrics, stats.comparison)
+  const topTasks = useTopTasks(stats.tasksWithStats)
 
   useEffect(() => {
     const loadData = async () => {
@@ -141,54 +150,96 @@ export default function StatsPage() {
         />
       </div>
 
-      {/* Productivity Chart */}
-      <ProductivityChart data={stats.productivityData} />
+      {/* Insights Panel */}
+      <InsightsPanel insights={insights} />
 
-      {/* Top 10 Tareas por Tiempo */}
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ProductivityChart data={stats.productivityData} />
+        <WeeklyDistributionChart data={stats.dayDistribution} />
+      </div>
+
+      {/* Priority Donut Chart */}
+      <PriorityDonutChart data={stats.priorityDistribution} />
+
+      {/* Top 10 Tareas Mejorado */}
       {stats.tasksWithStats.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-              <h3 className="text-lg font-semibold dark:text-white">Top 10 Tareas</h3>
-            </div>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Target className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <h3 className="text-lg font-semibold dark:text-white">Top 10 Tareas</h3>
           </div>
-          <div className="space-y-3">
-            {stats.tasksWithStats.slice(0, 10).map((task, index) => {
-              const percentage = (task.totalSeconds / stats.metrics.totalTime) * 100
-              const priorityColors = {
-                alta: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
-                media: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-                baja: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-              }
+
+          {/* Controles */}
+          <TopTasksControls
+            sortBy={topTasks.sortBy}
+            setSortBy={topTasks.setSortBy}
+            filter={topTasks.filter}
+            setFilter={topTasks.setFilter}
+          />
+
+          {/* Lista de tareas */}
+          <div className="space-y-4">
+            {topTasks.tasks.map((task, index) => {
+              const percentage = stats.metrics.totalTime > 0
+                ? (task.totalSeconds / stats.metrics.totalTime) * 100
+                : 0
+
               return (
-                <div key={task.taskId} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className="text-gray-500 dark:text-gray-400 font-medium">
-                        #{index + 1}
-                      </span>
-                      <span className="dark:text-white truncate">{task.title}</span>
-                      {task.priority && (
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${priorityColors[task.priority]}`}>
-                          {task.priority}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {task.sessionCount} {task.sessionCount === 1 ? 'sesión' : 'sesiones'}
-                      </span>
-                      <span className="font-semibold dark:text-white">
-                        {formatTime(task.totalSeconds)}
+                <div
+                  key={task.taskId}
+                  className="flex flex-col sm:flex-row items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                >
+                  {/* Número e indicador */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-gray-400 dark:text-gray-500 font-mono font-semibold text-lg w-8">
+                      #{index + 1}
+                    </span>
+                    {task.priority && <PriorityBadge priority={task.priority} />}
+                  </div>
+
+                  {/* Contenido principal */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 truncate">
+                      {task.title}
+                    </h4>
+
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {task.tags.map((tag, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-xs font-medium"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Barra de progreso con % */}
+                    <div className="relative">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                        <div
+                          className="bg-blue-500 dark:bg-blue-600 h-2.5 rounded-full transition-all"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="absolute -top-6 right-0 text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        {percentage.toFixed(1)}%
                       </span>
                     </div>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-primary-600 dark:bg-primary-500 h-2 rounded-full transition-all"
-                      style={{ width: `${percentage}%` }}
-                    />
+
+                  {/* Stats a la derecha */}
+                  <div className="text-right sm:ml-4">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      {task.sessionCount} {task.sessionCount === 1 ? 'sesión' : 'sesiones'}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formatTime(task.totalSeconds)}
+                    </div>
                   </div>
                 </div>
               )
