@@ -5,13 +5,15 @@ import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
 import TaskList from '@/components/TaskList'
 import { startOfDay, endOfDay, isPast, isToday } from 'date-fns'
-import { Eye, EyeOff, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, AlertTriangle, ArrowRight, Edit3 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { SelectionProvider, useSelection } from '@/context/SelectionContext'
 import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 import { FAB } from '@/components/FAB'
+import EditTaskModal from '@/components/EditTaskModal'
+import { Task } from '@/types/database.types'
 
 function TodayPageContent() {
   const { user } = useAuth()
@@ -19,6 +21,8 @@ function TodayPageContent() {
   const [hideCompleted, setHideCompleted] = useState(false)
   const [movingAll, setMovingAll] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -143,6 +147,15 @@ function TodayPageContent() {
     }
   }
 
+  const handleBulkEdit = () => {
+    const taskId = Array.from(selectedIds)[0]
+    const task = tasks.find(t => t.id === taskId)
+    if (task) {
+      setEditingTask(task)
+      setShowEditModal(true)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -165,23 +178,36 @@ function TodayPageContent() {
             </p>
           </div>
 
-          {/* Toggle para ocultar completadas */}
-          <button
-            onClick={() => setHideCompleted(!hideCompleted)}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
-          >
-            {hideCompleted ? (
-              <>
-                <EyeOff className="w-4 h-4" />
-                <span className="hidden sm:inline">Mostrar completadas</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                <span className="hidden sm:inline">Ocultar completadas</span>
-              </>
+          <div className="flex items-center gap-2">
+            {/* Botón de editar (solo cuando hay 1 tarea seleccionada) */}
+            {selectedIds.size === 1 && (
+              <button
+                onClick={handleBulkEdit}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
             )}
-          </button>
+
+            {/* Toggle para ocultar completadas */}
+            <button
+              onClick={() => setHideCompleted(!hideCompleted)}
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
+            >
+              {hideCompleted ? (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  <span className="hidden sm:inline">Mostrar completadas</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden sm:inline">Ocultar completadas</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Sección de Tareas Atrasadas */}
@@ -248,6 +274,18 @@ function TodayPageContent() {
       <BulkActionsBar
         onBulkComplete={handleBulkComplete}
         onBulkDelete={handleBulkDelete}
+        onBulkEdit={handleBulkEdit}
+      />
+
+      {/* Modal de edición */}
+      <EditTaskModal
+        task={editingTask}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingTask(null)
+          clearSelection()
+        }}
       />
 
       {/* FAB para agregar tareas */}
