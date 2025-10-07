@@ -98,10 +98,12 @@ export default function SwipeWrapper({
       <div className="relative overflow-hidden">
         {/* Botones de acción - z-index ALTO cuando están visibles Y NO se está arrastrando */}
         <div
-          className="absolute inset-y-0 right-0 flex"
+          className="absolute inset-y-0 right-0 flex transition-opacity duration-200"
           style={{
             zIndex: isSwipeOpen && !isDragging ? 40 : 0,
-            pointerEvents: isSwipeOpen && !isDragging ? 'auto' : 'none'
+            pointerEvents: isSwipeOpen && !isDragging ? 'auto' : 'none',
+            opacity: isSwipeOpen ? 1 : 0,
+            visibility: isSwipeOpen ? 'visible' : 'hidden'
           }}
         >
           {/* Botón Completado - MÁS ANCHO */}

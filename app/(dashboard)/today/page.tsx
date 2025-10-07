@@ -198,16 +198,16 @@ function TodayPageContent() {
             {/* Toggle para ocultar completadas */}
             <button
               onClick={() => setHideCompleted(!hideCompleted)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
             >
               {hideCompleted ? (
                 <>
-                  <EyeOff className="w-4 h-4" />
+                  <EyeOff className="w-4 h-4 text-gray-700 dark:text-gray-200" />
                   <span className="hidden sm:inline">Mostrar completadas</span>
                 </>
               ) : (
                 <>
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-4 h-4 text-gray-700 dark:text-gray-200" />
                   <span className="hidden sm:inline">Ocultar completadas</span>
                 </>
               )}
