@@ -100,8 +100,8 @@ export default function SwipeWrapper({
         <div
           className="absolute top-0 bottom-0 flex transition-all duration-200"
           style={{
-            right: isSwipeOpen ? 0 : -240,
-            width: '240px',
+            right: isSwipeOpen ? 0 : -210,
+            width: '210px',
             zIndex: isSwipeOpen && !isDragging ? 40 : 0,
             pointerEvents: isSwipeOpen && !isDragging ? 'auto' : 'none'
           }}

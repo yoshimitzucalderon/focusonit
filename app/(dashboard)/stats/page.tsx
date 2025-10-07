@@ -188,7 +188,7 @@ export default function StatsPage() {
               return (
                 <div
                   key={task.taskId}
-                  className="flex flex-col sm:flex-row items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="flex flex-col sm:flex-row items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors overflow-hidden"
                 >
                   {/* Número e indicador */}
                   <div className="flex items-center gap-3">
@@ -199,8 +199,8 @@ export default function StatsPage() {
                   </div>
 
                   {/* Contenido principal */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 truncate">
+                  <div className="flex-1 min-w-0 w-full sm:w-auto">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 break-words">
                       {task.title}
                     </h4>
 
