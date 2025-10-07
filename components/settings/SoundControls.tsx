@@ -21,9 +21,32 @@ export function SoundControls({
   onVolumeChange
 }: SoundControlsProps) {
   const playTestSound = () => {
-    const audio = new Audio('/sounds/notification.mp3')
-    audio.volume = volume / 100
-    audio.play().catch(err => console.log('Error playing sound:', err))
+    try {
+      // Create Web Audio API context
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+      // Create oscillator (generates the tone)
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      // Connect nodes
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      // Configure the sound
+      oscillator.frequency.value = 800 // Frequency in Hz (higher = higher pitch)
+      oscillator.type = 'sine' // Sine wave for smooth sound
+
+      // Set volume
+      gainNode.gain.setValueAtTime(volume / 100, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+      // Play sound
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.5) // Duration: 0.5 seconds
+    } catch (err) {
+      console.log('Error playing sound:', err)
+    }
   }
 
   const testNotification = () => {
