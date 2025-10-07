@@ -18,6 +18,9 @@ import { PriorityDonutChart } from '@/components/stats/PriorityDonutChart'
 import { InsightsPanel } from '@/components/stats/InsightsPanel'
 import { TopTasksControls } from '@/components/stats/TopTasksControls'
 import { PriorityBadge } from '@/components/stats/PriorityBadge'
+import { PeriodComparison } from '@/components/stats/PeriodComparison'
+import { TagDistribution } from '@/components/stats/TagDistribution'
+import { GoalsPanel } from '@/components/stats/GoalsPanel'
 
 interface TimeSessionWithTask {
   id: string
@@ -118,6 +121,10 @@ export default function StatsPage() {
           iconBgColor="bg-blue-100 dark:bg-blue-900/30"
           iconColor="text-blue-600 dark:text-blue-400"
           change={stats.comparison.timeChange}
+          additionalInfo={[
+            { label: "Promedio por sesión", value: formatTime(stats.metrics.averageSessionTime) },
+            { label: "Total sesiones", value: stats.metrics.totalSessions.toString() }
+          ]}
         />
 
         <MetricCard
@@ -128,6 +135,10 @@ export default function StatsPage() {
           iconBgColor="bg-green-100 dark:bg-green-900/30"
           iconColor="text-green-600 dark:text-green-400"
           change={stats.comparison.sessionsChange}
+          additionalInfo={[
+            { label: "Completadas", value: `${stats.metrics.completedSessions} (${stats.metrics.totalSessions > 0 ? Math.round((stats.metrics.completedSessions / stats.metrics.totalSessions) * 100) : 0}%)` },
+            { label: "Duración promedio", value: formatTime(stats.metrics.totalSessions > 0 ? Math.floor(stats.metrics.totalTime / stats.metrics.totalSessions) : 0) }
+          ]}
         />
 
         <MetricCard
@@ -138,6 +149,9 @@ export default function StatsPage() {
           iconBgColor="bg-purple-100 dark:bg-purple-900/30"
           iconColor="text-purple-600 dark:text-purple-400"
           change={stats.comparison.completedChange}
+          additionalInfo={[
+            { label: "Tasa completitud", value: `${stats.metrics.totalSessions > 0 ? Math.round((stats.metrics.completedSessions / stats.metrics.totalSessions) * 100) : 0}%` }
+          ]}
         />
 
         <MetricCard
@@ -147,8 +161,31 @@ export default function StatsPage() {
           icon={Flame}
           iconBgColor="bg-orange-100 dark:bg-orange-900/30"
           iconColor="text-orange-600 dark:text-orange-400"
+          additionalInfo={[
+            { label: "Mejor racha", value: `${stats.metrics.longestStreak} días` }
+          ]}
         />
       </div>
+
+      {/* Period Comparison */}
+      <PeriodComparison
+        currentPeriod={{
+          label: filter.period === 'week' ? 'Esta semana' :
+                 filter.period === 'month' ? 'Este mes' :
+                 filter.period === 'year' ? 'Este año' : 'Hoy',
+          totalMinutes: Math.floor(stats.metrics.totalTime / 60),
+          sessionsCount: stats.metrics.totalSessions,
+          completedTasks: stats.metrics.completedSessions
+        }}
+        previousPeriod={{
+          label: filter.period === 'week' ? 'Semana anterior' :
+                 filter.period === 'month' ? 'Mes anterior' :
+                 filter.period === 'year' ? 'Año anterior' : 'Ayer',
+          totalMinutes: Math.floor((stats.metrics.totalTime / 60) / (1 + (stats.comparison.timeChange || 0) / 100)),
+          sessionsCount: Math.round(stats.metrics.totalSessions / (1 + (stats.comparison.sessionsChange || 0) / 100)),
+          completedTasks: Math.round(stats.metrics.completedSessions / (1 + (stats.comparison.completedChange || 0) / 100))
+        }}
+      />
 
       {/* Insights Panel */}
       <InsightsPanel insights={insights} />
@@ -161,6 +198,19 @@ export default function StatsPage() {
 
       {/* Priority Donut Chart */}
       <PriorityDonutChart data={stats.priorityDistribution} />
+
+      {/* Tag Distribution */}
+      <TagDistribution
+        sessions={sessions as any}
+        tasks={stats.tasksWithStats}
+      />
+
+      {/* Goals Panel */}
+      <GoalsPanel
+        sessions={sessions as any}
+        tasks={stats.tasksWithStats}
+        periodFilter={filter.period === 'custom' ? 'week' : filter.period as 'today' | 'week' | 'month' | 'year'}
+      />
 
       {/* Top 10 Tareas Mejorado */}
       {stats.tasksWithStats.length > 0 && (

@@ -12,6 +12,10 @@ interface MetricCardProps {
   iconBgColor: string
   change?: number
   changeLabel?: string
+  additionalInfo?: {
+    label: string
+    value: string
+  }[]
 }
 
 export function MetricCard({
@@ -22,7 +26,8 @@ export function MetricCard({
   iconColor,
   iconBgColor,
   change,
-  changeLabel = 'vs período anterior'
+  changeLabel = 'vs período anterior',
+  additionalInfo
 }: MetricCardProps) {
   const isPositive = change !== undefined && change >= 0
   const hasChange = change !== undefined && change !== 0
@@ -66,6 +71,17 @@ export function MetricCard({
               {changeLabel}
             </span>
           </div>
+        </div>
+      )}
+
+      {additionalInfo && additionalInfo.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2">
+          {additionalInfo.map((info, idx) => (
+            <div key={idx} className="flex items-center justify-between text-xs">
+              <span className="text-gray-500 dark:text-gray-400">{info.label}</span>
+              <span className="font-semibold text-gray-700 dark:text-gray-300">{info.value}</span>
+            </div>
+          ))}
         </div>
       )}
     </motion.div>
