@@ -268,14 +268,14 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
 
             {/* Body - SCROLLABLE */}
             <div
-              className="overflow-y-scroll overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8"
+              className="overflow-y-scroll overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-20"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain',
                 flex: '1 1 0',
                 minHeight: 0,
-                maxHeight: 'calc(90vh - 180px)'
+                maxHeight: 'calc(90vh - 240px)'
               }}
             >
               {/* Voice status indicator */}
