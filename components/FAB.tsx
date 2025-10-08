@@ -3,6 +3,7 @@
 import { Plus, Mic, Keyboard, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { useSelection } from '@/context/SelectionContext'
 
 interface FABProps {
   onTextInput: () => void
@@ -12,6 +13,7 @@ interface FABProps {
 export function FAB({ onTextInput, onVoiceInput }: FABProps) {
   const [scrolled, setScrolled] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const { hasSelection } = useSelection()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +23,14 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Cerrar menú al hacer click fuera
+  // Cerrar menú cuando se activa la selección
+  useEffect(() => {
+    if (hasSelection && isExpanded) {
+      setIsExpanded(false)
+    }
+  }, [hasSelection, isExpanded])
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
@@ -58,6 +68,11 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
     })
   }
 
+  // No renderizar si hay selección activa
+  if (hasSelection) {
+    return null
+  }
+
   return (
     <>
       {/* Backdrop - Animación rápida optimizada */}
@@ -75,7 +90,13 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
       </AnimatePresence>
 
       {/* Speed Dial Container */}
-      <div className="fixed bottom-20 md:bottom-8 right-4 z-40 flex flex-col items-end gap-3">
+      <motion.div
+        initial={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.7, y: 20 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        className="fixed bottom-20 md:bottom-8 right-4 z-40 flex flex-col items-end gap-3"
+        style={{ pointerEvents: 'auto' }}
+      >
         {/* Options - Animaciones GPU-optimizadas */}
         <AnimatePresence>
           {isExpanded && (
@@ -171,7 +192,7 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
             }}
           />
         </motion.button>
-      </div>
+      </motion.div>
     </>
   )
 }
