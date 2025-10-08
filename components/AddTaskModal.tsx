@@ -1,0 +1,471 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Calendar, FileText, Flag, Tag, Bell, X, ChevronDown, ChevronUp, Plus, Mic, MicOff } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
+import { DatePicker } from './DatePicker'
+import { toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
+
+interface AddTaskModalProps {
+  isOpen: boolean
+  onClose: () => void
+  userId: string
+  mode?: 'text' | 'voice'
+}
+
+interface ProcessedTask {
+  title: string
+  description?: string
+  dueDate?: string
+}
+
+export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }: AddTaskModalProps) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [dueDate, setDueDate] = useState<Date | null>(null)
+  const [priority, setPriority] = useState<'alta' | 'media' | 'baja' | null>(null)
+  const [tags, setTags] = useState<string>('')
+  const [reminder, setReminder] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [creating, setCreating] = useState(false)
+
+  // Voice recording state
+  const [isListening, setIsListening] = useState(false)
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null)
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false)
+
+  const supabase = createClient()
+
+  // Initialize voice recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (SpeechRecognition) {
+        setIsVoiceSupported(true)
+        const recognitionInstance = new SpeechRecognition()
+        recognitionInstance.continuous = true
+        recognitionInstance.interimResults = true
+        recognitionInstance.lang = 'es-ES'
+        recognitionInstance.maxAlternatives = 1
+
+        recognitionInstance.addEventListener('result', async (event: any) => {
+          const lastResult = event.results[event.results.length - 1]
+          if (!lastResult.isFinal) return
+
+          const transcript = lastResult[0].transcript
+          recognitionInstance.stop()
+
+          const loadingToast = toast.loading('Procesando tu tarea...')
+
+          try {
+            const response = await fetch('/api/voice-to-task', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ transcript })
+            })
+
+            if (!response.ok) throw new Error('Error al procesar la voz')
+
+            const data: ProcessedTask = await response.json()
+            toast.dismiss(loadingToast)
+
+            if (data.title) {
+              setTitle(data.title)
+              setDescription(data.description || '')
+              if (data.dueDate) {
+                setDueDate(new Date(data.dueDate))
+              }
+              toast.success('Tarea procesada: ' + data.title)
+            } else {
+              throw new Error('No se pudo procesar la tarea')
+            }
+          } catch (error) {
+            console.error('Error:', error)
+            toast.dismiss(loadingToast)
+            toast.error('Error al procesar el audio')
+          }
+        })
+
+        recognitionInstance.addEventListener('start', () => {
+          setIsListening(true)
+          toast.success('Escuchando... Habla ahora')
+        })
+
+        recognitionInstance.addEventListener('error', (event: any) => {
+          setIsListening(false)
+          if (event.error === 'no-speech') {
+            toast.error('No se detectó ninguna voz')
+          } else if (event.error === 'not-allowed') {
+            toast.error('Permiso de micrófono denegado')
+          } else if (event.error !== 'aborted') {
+            toast.error('Error: ' + event.error)
+          }
+        })
+
+        recognitionInstance.addEventListener('end', () => {
+          setIsListening(false)
+        })
+
+        setRecognition(recognitionInstance)
+      }
+    }
+  }, [])
+
+  // Auto-start voice recording if mode is voice
+  useEffect(() => {
+    if (isOpen && mode === 'voice' && recognition && !isListening) {
+      setTimeout(() => {
+        toggleVoiceRecording()
+      }, 300)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mode])
+
+  const toggleVoiceRecording = () => {
+    if (!recognition) {
+      toast.error('Reconocimiento de voz no disponible')
+      return
+    }
+
+    if (isListening) {
+      recognition.stop()
+    } else {
+      try {
+        recognition.start()
+      } catch (error: any) {
+        if (error.message?.includes('not-allowed') || error.name === 'NotAllowedError') {
+          toast.error('Permiso de micrófono denegado')
+        } else {
+          toast.error('Error al iniciar reconocimiento de voz')
+        }
+      }
+    }
+  }
+
+  const handleCreate = async () => {
+    if (!title.trim()) {
+      toast.error('El título es requerido')
+      return
+    }
+
+    setCreating(true)
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
+        .insert({
+          user_id: userId,
+          title: title.trim(),
+          description: description.trim() || null,
+          due_date: dueDate ? toDateOnlyString(dueDate) : null,
+          priority: priority,
+          tags: tags.trim() ? tags.split(',').map(t => t.trim()) : null,
+          reminder_enabled: reminder,
+          reminder_at: reminder && dueDate ? dueDate.toISOString() : null,
+          completed: false,
+          created_at: getLocalTimestamp(),
+          updated_at: getLocalTimestamp(),
+          timezone_offset: getTimezoneOffset()
+        })
+
+      if (error) throw error
+
+      toast.success('✓ Tarea creada')
+      handleClose()
+    } catch (error: any) {
+      toast.error('Error al crear tarea')
+      console.error(error)
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleClose = () => {
+    if (isListening && recognition) {
+      recognition.stop()
+    }
+    setTitle('')
+    setDescription('')
+    setDueDate(null)
+    setPriority(null)
+    setTags('')
+    setReminder(false)
+    setShowAdvanced(false)
+    onClose()
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 sm:p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[85vh] flex flex-col"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3 pr-8">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Plus className="text-white" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                    {mode === 'voice' ? 'Grabar tarea' : 'Nueva tarea'}
+                  </h3>
+                  <p className="text-blue-100 text-xs sm:text-sm hidden sm:block">
+                    {mode === 'voice' ? 'Dicta tu tarea' : 'Agrega una nueva tarea'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Voice toggle button */}
+              {mode === 'voice' && isVoiceSupported && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleVoiceRecording}
+                  className={`mr-2 p-2 rounded-lg transition-colors ${
+                    isListening
+                      ? 'bg-red-500 hover:bg-red-600'
+                      : 'bg-white/20 hover:bg-white/30'
+                  }`}
+                >
+                  {isListening ? <MicOff className="text-white" size={18} /> : <Mic className="text-white" size={18} />}
+                </motion.button>
+              )}
+
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleClose}
+                disabled={creating}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors disabled:opacity-50"
+              >
+                <X className="text-white" size={18} />
+              </motion.button>
+            </div>
+
+            {/* Body */}
+            <div className="p-3 sm:p-6 space-y-3 sm:space-y-5 overflow-y-auto flex-1">
+              {/* Voice status indicator */}
+              {mode === 'voice' && isListening && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-3 flex items-center gap-3"
+                >
+                  <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                    Grabando... Habla ahora
+                  </span>
+                </motion.div>
+              )}
+
+              {/* Título */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Título *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all outline-none"
+                  placeholder="¿Qué necesitas hacer?"
+                  autoFocus={mode !== 'voice'}
+                />
+              </div>
+
+              {/* Descripción */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Descripción
+                  <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">(opcional)</span>
+                </label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 text-gray-400 dark:text-gray-500" size={18} />
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all resize-none outline-none"
+                    placeholder="Notas, contexto, detalles..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* Fecha */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Fecha de vencimiento
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none z-10" size={18} />
+                  <DatePicker
+                    value={dueDate}
+                    onChange={(date) => setDueDate(date)}
+                    placeholder="Seleccionar fecha"
+                    buttonClassName="w-full pl-11 justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Prioridad */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Prioridad
+                </label>
+                <div className="flex gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setPriority(priority === 'alta' ? null : 'alta')}
+                    type="button"
+                    className={`flex-1 py-2.5 px-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                      priority === 'alta'
+                        ? 'bg-red-50 border-red-500 text-red-700 dark:bg-red-900/20 dark:border-red-500 dark:text-red-300 shadow-sm'
+                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-red-300 dark:hover:border-red-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <Flag className="inline mr-1.5" size={16} />
+                    Alta
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setPriority(priority === 'media' ? null : 'media')}
+                    type="button"
+                    className={`flex-1 py-2.5 px-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                      priority === 'media'
+                        ? 'bg-yellow-50 border-yellow-500 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-500 dark:text-yellow-300 shadow-sm'
+                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-yellow-300 dark:hover:border-yellow-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <Flag className="inline mr-1.5" size={16} />
+                    Media
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setPriority(priority === 'baja' ? null : 'baja')}
+                    type="button"
+                    className={`flex-1 py-2.5 px-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                      priority === 'baja'
+                        ? 'bg-green-50 border-green-500 text-green-700 dark:bg-green-900/20 dark:border-green-500 dark:text-green-300 shadow-sm'
+                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-green-300 dark:hover:border-green-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <Flag className="inline mr-1.5" size={16} />
+                    Baja
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Opciones avanzadas */}
+              <div className="border-t-2 border-gray-100 dark:border-gray-700 pt-4">
+                <motion.button
+                  whileHover={{ x: 4 }}
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                >
+                  {showAdvanced ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  Opciones avanzadas
+                </motion.button>
+
+                <AnimatePresence>
+                  {showAdvanced && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4 mt-4 overflow-hidden"
+                    >
+                      {/* Etiquetas */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                          Etiquetas
+                        </label>
+                        <div className="relative">
+                          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                          <input
+                            type="text"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all"
+                            placeholder="trabajo, urgente, reunión (separadas por coma)"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Recordatorio */}
+                      <div>
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={reminder}
+                              onChange={(e) => setReminder(e.target.checked)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Bell className="text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" size={18} />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                              Activar recordatorio
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleClose}
+                disabled={creating}
+                className="px-5 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                type="button"
+              >
+                Cancelar
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCreate}
+                disabled={creating || !title.trim()}
+                className="px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                type="button"
+              >
+                {creating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creando...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={18} />
+                    Crear tarea
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
+}

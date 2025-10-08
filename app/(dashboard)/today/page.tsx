@@ -13,6 +13,7 @@ import { BulkActionsBar } from '@/components/BulkActionsBar'
 import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 import { FAB } from '@/components/FAB'
 import EditTaskModal from '@/components/EditTaskModal'
+import AddTaskModal from '@/components/AddTaskModal'
 import { Task } from '@/types/database.types'
 
 function TodayPageContent() {
@@ -20,7 +21,8 @@ function TodayPageContent() {
   const { tasks, loading } = useTasks()
   const [hideCompleted, setHideCompleted] = useState(false)
   const [movingAll, setMovingAll] = useState(false)
-  const [showTaskModal, setShowTaskModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addModalMode, setAddModalMode] = useState<'text' | 'voice'>('text')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const supabase = createClient()
@@ -306,10 +308,26 @@ function TodayPageContent() {
         }}
       />
 
+      {/* Modal para agregar tarea */}
+      {user && (
+        <AddTaskModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          userId={user.id}
+          mode={addModalMode}
+        />
+      )}
+
       {/* FAB Speed Dial para agregar tareas */}
       <FAB
-        onTextInput={() => setShowTaskModal(true)}
-        onVoiceInput={() => setShowTaskModal(true)} // TODO: Conectar con VoiceTaskButton
+        onTextInput={() => {
+          setAddModalMode('text')
+          setShowAddModal(true)
+        }}
+        onVoiceInput={() => {
+          setAddModalMode('voice')
+          setShowAddModal(true)
+        }}
       />
     </>
   )
