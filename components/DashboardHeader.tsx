@@ -1,7 +1,8 @@
 'use client'
 
-import { LogOut, Plus, Sparkles, Calendar } from 'lucide-react'
+import { LogOut, Plus, Sparkles, Calendar, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect, KeyboardEvent } from 'react'
 import toast from 'react-hot-toast'
@@ -282,13 +283,27 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
           <div className="flex-1" />
 
-          {/* Email, Theme Toggle y Logout alineados a la derecha */}
+          {/* Email, Settings, Theme Toggle y Logout alineados a la derecha */}
           <div className="flex items-center gap-3 pr-4 md:pr-6">
             {userEmail && (
               <span className="text-sm text-gray-600 dark:text-gray-300 hidden md:inline font-medium">
                 {userEmail}
               </span>
             )}
+
+            {/* Settings button - solo visible en móvil */}
+            <Link
+              href="/settings"
+              className="md:hidden group relative p-2.5 rounded-full transition-all duration-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:scale-110"
+              aria-label="Configuración"
+              title="Configuración"
+            >
+              <Settings
+                size={20}
+                className="text-blue-600 dark:text-blue-500 transition-all duration-300 group-hover:text-blue-700 dark:group-hover:text-blue-400 group-hover:rotate-45"
+              />
+            </Link>
+
             <ThemeToggle />
             <button
               onClick={handleLogout}
