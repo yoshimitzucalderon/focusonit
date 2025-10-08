@@ -221,7 +221,7 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full h-[90vh] flex flex-col overflow-hidden"
           >
             {/* Header - FIJO */}
             <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">
@@ -267,7 +267,15 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
             </div>
 
             {/* Body - SCROLLABLE */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div
+              className="flex-1 overflow-y-scroll overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain',
+                minHeight: 0
+              }}
+            >
               {/* Voice status indicator */}
               {mode === 'voice' && isListening && (
                 <motion.div
