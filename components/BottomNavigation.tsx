@@ -18,8 +18,8 @@ export function BottomNavigation() {
   const completedCount = tasks.filter(t => t.completed).length
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-safe" style={{ position: 'fixed' }}>
-      <div className="flex justify-around items-center h-16 max-w-4xl mx-auto">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-safe" style={{ position: 'fixed' }}>
+      <div className="flex justify-around items-center h-16 max-w-4xl mx-auto pointer-events-auto">
         {/* Hoy */}
         <Link
           href="/today"
