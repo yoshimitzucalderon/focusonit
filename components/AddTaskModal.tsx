@@ -268,12 +268,14 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
 
             {/* Body - SCROLLABLE */}
             <div
-              className="flex-1 overflow-y-scroll overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8"
+              className="overflow-y-scroll overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-y',
                 overscrollBehavior: 'contain',
-                minHeight: 0
+                flex: '1 1 0',
+                minHeight: 0,
+                maxHeight: 'calc(90vh - 180px)'
               }}
             >
               {/* Voice status indicator */}
@@ -458,7 +460,7 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
             </div>
 
             {/* Footer - FIJO */}
-            <div className="flex-shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+            <div className="flex-shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end shadow-[0_-2px_10px_rgba(0,0,0,0.05)]" style={{ minHeight: '70px' }}>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
