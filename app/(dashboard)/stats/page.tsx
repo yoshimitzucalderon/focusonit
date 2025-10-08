@@ -52,6 +52,29 @@ export default function StatsPage() {
   const insights = useInsights(sessions as any, stats.metrics, stats.comparison)
   const topTasks = useTopTasks(stats.tasksWithStats)
 
+  // Calculate completed tasks within the current filter period
+  const completedTasksCount = tasksWithoutPomodoro.filter(task => {
+    if (!task.completed_at) return false
+    const completedDate = new Date(task.completed_at)
+    return completedDate >= filter.dateRange.start && completedDate <= filter.dateRange.end
+  }).length
+
+  // Calculate completed tasks in previous period
+  const previousCompletedTasksCount = tasksWithoutPomodoro.filter(task => {
+    if (!task.completed_at) return false
+    const completedDate = new Date(task.completed_at)
+    return completedDate >= filter.previousPeriodRange.start && completedDate <= filter.previousPeriodRange.end
+  }).length
+
+  // Total completed tasks (sessions + tasks without pomodoro)
+  const totalCompleted = stats.metrics.completedSessions + completedTasksCount
+  const previousTotalCompleted = stats.previousMetrics.completedSessions + previousCompletedTasksCount
+
+  // Calculate change percentage for total completed tasks
+  const completedTasksChange = previousTotalCompleted > 0
+    ? ((totalCompleted - previousTotalCompleted) / previousTotalCompleted) * 100
+    : totalCompleted > 0 ? 100 : 0
+
   useEffect(() => {
     const loadData = async () => {
       if (!user) return
@@ -142,15 +165,16 @@ export default function StatsPage() {
         />
 
         <MetricCard
-          title="Completadas"
-          value={stats.metrics.completedSessions.toString()}
-          subtitle="sesiones finalizadas"
+          title="Tareas Completadas"
+          value={totalCompleted.toString()}
+          subtitle="tareas finalizadas"
           icon={CheckCircle2}
           iconBgColor="bg-purple-100 dark:bg-purple-900/30"
           iconColor="text-purple-600 dark:text-purple-400"
-          change={stats.comparison.completedChange}
+          change={completedTasksChange}
           additionalInfo={[
-            { label: "Tasa completitud", value: `${stats.metrics.totalSessions > 0 ? Math.round((stats.metrics.completedSessions / stats.metrics.totalSessions) * 100) : 0}%` }
+            { label: "Con Pomodoro", value: stats.metrics.completedSessions.toString() },
+            { label: "Sin Pomodoro", value: completedTasksCount.toString() }
           ]}
         />
 
@@ -175,7 +199,7 @@ export default function StatsPage() {
                  filter.period === 'year' ? 'Este año' : 'Hoy',
           totalMinutes: Math.floor(stats.metrics.totalTime / 60),
           sessionsCount: stats.metrics.totalSessions,
-          completedTasks: stats.metrics.completedSessions
+          completedTasks: totalCompleted
         }}
         previousPeriod={{
           label: filter.period === 'week' ? 'Semana anterior' :
@@ -183,7 +207,7 @@ export default function StatsPage() {
                  filter.period === 'year' ? 'Año anterior' : 'Ayer',
           totalMinutes: Math.floor(stats.previousMetrics.totalTime / 60),
           sessionsCount: stats.previousMetrics.totalSessions,
-          completedTasks: stats.previousMetrics.completedSessions
+          completedTasks: previousTotalCompleted
         }}
       />
 
@@ -349,41 +373,47 @@ export default function StatsPage() {
       </div>
 
       {/* Tareas completadas sin Pomodoro */}
-      {tasksWithoutPomodoro.length > 0 && (
+      {completedTasksCount > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             <h3 className="text-lg font-semibold dark:text-white">Tareas Completadas sin Pomodoro</h3>
             <span className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full font-medium">
-              {tasksWithoutPomodoro.length}
+              {completedTasksCount}
             </span>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Estas tareas fueron completadas sin usar el temporizador Pomodoro
+            Estas tareas fueron completadas sin usar el temporizador Pomodoro en el período seleccionado
           </p>
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {tasksWithoutPomodoro.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-700/50"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium dark:text-white truncate">
-                    {task.title}
-                  </p>
-                  {task.completed_at && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Completada: {format(new Date(task.completed_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+            {tasksWithoutPomodoro
+              .filter(task => {
+                if (!task.completed_at) return false
+                const completedDate = new Date(task.completed_at)
+                return completedDate >= filter.dateRange.start && completedDate <= filter.dateRange.end
+              })
+              .map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-slate-700/50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium dark:text-white truncate">
+                      {task.title}
                     </p>
-                  )}
+                    {task.completed_at && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Completada: {format(new Date(task.completed_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full">
+                      Sin timer
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-shrink-0">
-                  <span className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full">
-                    Sin timer
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
