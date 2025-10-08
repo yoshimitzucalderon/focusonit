@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import TaskItem from './TaskItem'
-import SwipeWrapper from './SwipeWrapper'
 import { CheckCircle2, GripVertical, ChevronUp, ChevronDown } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
@@ -323,15 +322,7 @@ export default function TaskList({
       <AnimatePresence mode="popLayout">
         {items.map((task, index) => {
           const taskElement = (
-            <SwipeWrapper
-              key={task.id}
-              taskId={task.id}
-              onComplete={() => handleComplete(task)}
-              onDelete={() => handleDelete(task.id)}
-              onEdit={onEditTask ? () => onEditTask(task) : undefined}
-            >
-              <TaskItem task={task} />
-            </SwipeWrapper>
+            <TaskItem key={task.id} task={task} />
           )
 
           return enableReorder ? (
@@ -373,13 +364,7 @@ export default function TaskList({
       <DragOverlay>
         {activeTask ? (
           <div className="opacity-90 shadow-2xl ring-4 ring-purple-500 dark:ring-purple-400 rounded-lg scale-105">
-            <SwipeWrapper
-              taskId={activeTask.id}
-              onComplete={() => {}}
-              onDelete={() => {}}
-            >
-              <TaskItem task={activeTask} />
-            </SwipeWrapper>
+            <TaskItem task={activeTask} />
           </div>
         ) : null}
       </DragOverlay>
