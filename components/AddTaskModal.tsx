@@ -168,31 +168,44 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
 
     setCreating(true)
     try {
+      // Build the insert object with only basic fields first
+      const taskData: any = {
+        user_id: userId,
+        title: title.trim(),
+        description: description.trim() || null,
+        due_date: dueDate ? toDateOnlyString(dueDate) : null,
+        completed: false,
+        created_at: getLocalTimestamp(),
+        updated_at: getLocalTimestamp()
+      }
+
+      // Add optional fields only if they have values
+      if (priority) taskData.priority = priority
+      if (tags.trim()) taskData.tags = tags.split(',').map(t => t.trim())
+      if (reminder) {
+        taskData.reminder_enabled = reminder
+        if (dueDate) taskData.reminder_at = dueDate.toISOString()
+      }
+
+      // Add timezone offset if available
+      const timezoneOffset = getTimezoneOffset()
+      if (timezoneOffset) taskData.timezone_offset = timezoneOffset
+
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
-        .insert({
-          user_id: userId,
-          title: title.trim(),
-          description: description.trim() || null,
-          due_date: dueDate ? toDateOnlyString(dueDate) : null,
-          priority: priority,
-          tags: tags.trim() ? tags.split(',').map(t => t.trim()) : null,
-          reminder_enabled: reminder,
-          reminder_at: reminder && dueDate ? dueDate.toISOString() : null,
-          completed: false,
-          created_at: getLocalTimestamp(),
-          updated_at: getLocalTimestamp(),
-          timezone_offset: getTimezoneOffset()
-        })
+        .insert(taskData)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error details:', error)
+        throw error
+      }
 
       toast.success('✓ Tarea creada')
       handleClose()
     } catch (error: any) {
-      toast.error('Error al crear tarea')
-      console.error(error)
+      console.error('Error creating task:', error)
+      toast.error('Error al crear tarea: ' + (error.message || 'Error desconocido'))
     } finally {
       setCreating(false)
     }
@@ -466,7 +479,7 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                 whileTap={{ scale: 0.98 }}
                 onClick={handleClose}
                 disabled={creating}
-                className="px-5 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 border-2 border-gray-300 dark:border-gray-600 transition-colors disabled:opacity-50"
                 type="button"
               >
                 Cancelar
