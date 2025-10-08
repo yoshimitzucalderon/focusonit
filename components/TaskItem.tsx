@@ -318,49 +318,72 @@ export default function TaskItem({ task }: TaskItemProps) {
 
   return (
     <div className="relative overflow-hidden rounded-xl">
-      {/* Swipe Actions Background - Right (Complete) */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: swipeDirection === 'right' ? 1 : 0 }}
-        className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-start px-6 rounded-xl"
-      >
-        <Check size={32} className="text-white" strokeWidth={3} />
-        <span className="ml-3 text-white font-bold text-lg">Completar</span>
-      </motion.div>
+      {/* Swipe Actions - Solo botones limpios */}
+      <AnimatePresence>
+        {/* Swipe Right - Completar (indicador sutil) */}
+        {swipeDirection === 'right' && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 z-0"
+          >
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+              <Check size={24} className="text-white" strokeWidth={3} />
+            </div>
+          </motion.div>
+        )}
 
-      {/* Swipe Actions Background - Left (Delete/Edit) */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: swipeDirection === 'left' ? 1 : 0 }}
-        className="absolute inset-0 bg-gradient-to-l from-red-500 to-rose-500 flex items-center justify-end px-6 rounded-xl"
-      >
-        <div className="flex items-center gap-3">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              deleteTask()
-              setSwipeOffset(0)
-              setSwipeDirection(null)
-            }}
-            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-xl flex items-center justify-center backdrop-blur-sm transition-colors"
+        {/* Swipe Left - Hecho/Editar/Borrar */}
+        {swipeDirection === 'left' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 z-0"
           >
-            <Trash2 size={22} className="text-white" strokeWidth={2.5} />
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              setEditing(true)
-              setSwipeOffset(0)
-              setSwipeDirection(null)
-            }}
-            className="w-12 h-12 bg-white/30 hover:bg-white/40 rounded-xl flex items-center justify-center backdrop-blur-sm transition-colors"
-          >
-            <Edit3 size={22} className="text-white" strokeWidth={2.5} />
-          </motion.button>
-        </div>
-      </motion.div>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleComplete()
+                setSwipeOffset(0)
+                setSwipeDirection(null)
+              }}
+              className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
+            >
+              <CheckCircle2 size={20} className="text-white" strokeWidth={2.5} />
+              <span className="text-white text-[10px] font-medium mt-1">Hecho</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setEditing(true)
+                setSwipeOffset(0)
+                setSwipeDirection(null)
+              }}
+              className="w-16 h-16 bg-blue-500 hover:bg-blue-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
+            >
+              <Edit3 size={20} className="text-white" strokeWidth={2.5} />
+              <span className="text-white text-[10px] font-medium mt-1">Editar</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                deleteTask()
+                setSwipeOffset(0)
+                setSwipeDirection(null)
+              }}
+              className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
+            >
+              <Trash2 size={20} className="text-white" strokeWidth={2.5} />
+              <span className="text-white text-[10px] font-medium mt-1">Borrar</span>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Task Card */}
       <motion.div
