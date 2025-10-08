@@ -168,6 +168,17 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
 
     setCreating(true)
     try {
+      // Get the last position to calculate the next one
+      const { data: lastTask } = (await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .maybeSingle()) as { data: { position: number } | null }
+
+      const nextPosition = (lastTask?.position ?? -1) + 1
+
       // Build the insert object with only basic fields first
       const taskData: any = {
         user_id: userId,
@@ -176,7 +187,8 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
         completed: false,
         created_at: getLocalTimestamp(),
-        updated_at: getLocalTimestamp()
+        updated_at: getLocalTimestamp(),
+        position: nextPosition
       }
 
       // Add optional fields only if they have values
