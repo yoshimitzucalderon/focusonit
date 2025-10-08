@@ -184,17 +184,6 @@ function TodayPageContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Botón de editar (solo cuando hay 1 tarea seleccionada) */}
-            {selectedIds.size === 1 && (
-              <button
-                onClick={handleBulkEdit}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
-              >
-                <Edit3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Editar</span>
-              </button>
-            )}
-
             {/* Toggle para ocultar completadas */}
             <button
               onClick={() => setHideCompleted(!hideCompleted)}
@@ -317,8 +306,11 @@ function TodayPageContent() {
         }}
       />
 
-      {/* FAB para agregar tareas */}
-      <FAB onClick={() => setShowTaskModal(true)} />
+      {/* FAB Speed Dial para agregar tareas */}
+      <FAB
+        onTextInput={() => setShowTaskModal(true)}
+        onVoiceInput={() => setShowTaskModal(true)} // TODO: Conectar con VoiceTaskButton
+      />
     </>
   )
 }
