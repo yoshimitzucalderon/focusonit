@@ -221,10 +221,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden max-h-[85vh] flex flex-col"
+            className="bg-white dark:bg-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">
+            {/* Header - FIJO */}
+            <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 sm:px-6 sm:py-5 flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3 pr-8">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <Plus className="text-white" size={20} />
@@ -266,8 +266,8 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
               </motion.button>
             </div>
 
-            {/* Body */}
-            <div className="p-3 sm:p-6 space-y-3 sm:space-y-5 overflow-y-auto flex-1">
+            {/* Body - SCROLLABLE */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3 sm:space-y-5 pb-8" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Voice status indicator */}
               {mode === 'voice' && isListening && (
                 <motion.div
@@ -415,8 +415,9 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                             type="text"
                             value={tags}
                             onChange={(e) => setTags(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all"
+                            className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all outline-none"
                             placeholder="trabajo, urgente, reunión (separadas por coma)"
+                            style={{ caretColor: '#3b82f6' }}
                           />
                         </div>
                       </div>
@@ -448,8 +449,8 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+            {/* Footer - FIJO */}
+            <div className="flex-shrink-0 px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
