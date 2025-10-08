@@ -37,36 +37,65 @@ export default function TaskItem({ task }: TaskItemProps) {
   const [totalTimeSeconds, setTotalTimeSeconds] = useState<number>(0)
   const [swipeOffset, setSwipeOffset] = useState(0)
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
+  const [isDragMode, setIsDragMode] = useState(false)
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
-  // Swipe handlers
+  // Haptic feedback helper
+  const triggerHaptic = () => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10) // 10ms vibration
+    }
+  }
+
+  // Long press handlers para activar modo drag
+  const handleLongPressStart = () => {
+    if (task.completed) return
+    const timer = setTimeout(() => {
+      setIsDragMode(true)
+      triggerHaptic()
+    }, 500) // 500ms para activar drag mode
+    setLongPressTimer(timer)
+  }
+
+  const handleLongPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer)
+      setLongPressTimer(null)
+    }
+  }
+
+  // Swipe handlers - solo si NO está en drag mode
   const handlers = useSwipeable({
     onSwiping: (eventData) => {
-      if (task.completed) return
+      if (task.completed || isDragMode) return
       const offset = eventData.deltaX
       setSwipeOffset(offset)
 
-      if (offset > 50) {
-        setSwipeDirection('right')
-      } else if (offset < -50) {
-        setSwipeDirection('left')
+      if (offset < -50) {
+        setSwipeDirection('left') // Swipe left = Completar (verde)
+      } else if (offset > 50) {
+        setSwipeDirection('right') // Swipe right = Eliminar (rojo)
       } else {
         setSwipeDirection(null)
       }
     },
-    onSwipedRight: async () => {
-      if (task.completed) return
-      // Completar tarea al swipe derecha
+    onSwipedLeft: async () => {
+      if (task.completed || isDragMode) return
+      // Completar tarea al swipe IZQUIERDA (verde)
+      triggerHaptic()
       await toggleComplete()
       setSwipeOffset(0)
       setSwipeDirection(null)
     },
-    onSwipedLeft: () => {
-      if (task.completed) return
-      // Mostrar acciones al swipe izquierda (mantener estado)
-      setSwipeOffset(-120)
-      setSwipeDirection('left')
+    onSwipedRight: async () => {
+      if (task.completed || isDragMode) return
+      // Eliminar tarea al swipe DERECHA (rojo)
+      triggerHaptic()
+      await deleteTask()
+      setSwipeOffset(0)
+      setSwipeDirection(null)
     },
     onSwiped: () => {
       if (swipeDirection !== 'left') {
@@ -75,7 +104,7 @@ export default function TaskItem({ task }: TaskItemProps) {
       }
     },
     trackMouse: false,
-    preventScrollOnSwipe: true,
+    preventScrollOnSwipe: isDragMode ? false : true, // Permitir scroll cuando está en drag mode
   })
 
   const hasDescription = task.description && task.description.trim().length > 0
@@ -111,6 +140,25 @@ export default function TaskItem({ task }: TaskItemProps) {
     }
     loadTotalTime()
   }, [task.id])
+
+  // Desactivar drag mode al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (isDragMode) {
+        setIsDragMode(false)
+      }
+    }
+
+    if (isDragMode) {
+      document.addEventListener('touchstart', handleClickOutside)
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isDragMode])
 
   // Formatear tiempo total
   const formatTotalTime = (seconds: number) => {
@@ -317,10 +365,31 @@ export default function TaskItem({ task }: TaskItemProps) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
-      {/* Swipe Actions - Solo botones limpios */}
+    <div
+      className="relative overflow-hidden rounded-xl"
+      onTouchStart={handleLongPressStart}
+      onTouchEnd={handleLongPressEnd}
+      onMouseDown={handleLongPressStart}
+      onMouseUp={handleLongPressEnd}
+      onMouseLeave={handleLongPressEnd}
+    >
+      {/* Swipe Actions - Minimalistas iOS-style */}
       <AnimatePresence>
-        {/* Swipe Right - Completar (indicador sutil) */}
+        {/* Swipe Left - Completar (verde) */}
+        {swipeDirection === 'left' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 z-0"
+          >
+            <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+              <CheckCircle2 size={28} className="text-white" strokeWidth={2.5} />
+            </div>
+          </motion.div>
+        )}
+
+        {/* Swipe Right - Eliminar (rojo) */}
         {swipeDirection === 'right' && (
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -328,59 +397,9 @@ export default function TaskItem({ task }: TaskItemProps) {
             exit={{ opacity: 0, x: -20 }}
             className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 z-0"
           >
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-              <Check size={24} className="text-white" strokeWidth={3} />
+            <div className="w-14 h-14 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+              <Trash2 size={28} className="text-white" strokeWidth={2.5} />
             </div>
-          </motion.div>
-        )}
-
-        {/* Swipe Left - Hecho/Editar/Borrar */}
-        {swipeDirection === 'left' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 z-0"
-          >
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                toggleComplete()
-                setSwipeOffset(0)
-                setSwipeDirection(null)
-              }}
-              className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
-            >
-              <CheckCircle2 size={20} className="text-white" strokeWidth={2.5} />
-              <span className="text-white text-[10px] font-medium mt-1">Hecho</span>
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                setEditing(true)
-                setSwipeOffset(0)
-                setSwipeDirection(null)
-              }}
-              className="w-16 h-16 bg-blue-500 hover:bg-blue-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
-            >
-              <Edit3 size={20} className="text-white" strokeWidth={2.5} />
-              <span className="text-white text-[10px] font-medium mt-1">Editar</span>
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                deleteTask()
-                setSwipeOffset(0)
-                setSwipeDirection(null)
-              }}
-              className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-xl flex flex-col items-center justify-center shadow-lg transition-colors"
-            >
-              <Trash2 size={20} className="text-white" strokeWidth={2.5} />
-              <span className="text-white text-[10px] font-medium mt-1">Borrar</span>
-            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -399,7 +418,7 @@ export default function TaskItem({ task }: TaskItemProps) {
           duration: 0.2,
           x: { type: "spring", stiffness: 300, damping: 30 }
         }}
-        className={`task-item group relative flex items-start gap-3 p-5 rounded-xl border border-l-4 transition-all duration-300 touch-pan-y
+        className={`task-item group relative flex items-start gap-2 p-3 rounded-xl border border-l-4 transition-all duration-300 touch-pan-y
           ${task.completed
             ? 'opacity-50 bg-gray-50/80 dark:bg-slate-800/30 border-gray-200 dark:border-gray-700 border-l-gray-300 dark:border-l-gray-600'
             : `bg-white dark:bg-slate-800/90 border-gray-200 dark:border-slate-700/60
@@ -408,17 +427,18 @@ export default function TaskItem({ task }: TaskItemProps) {
                ${getPriorityColor()}`
           }
           ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400 bg-blue-50/50 dark:bg-blue-900/20 shadow-md' : ''}
+          ${isDragMode ? 'ring-2 ring-purple-500 dark:ring-purple-400 shadow-xl' : ''}
         `}
       >
-      {/* Drag Handle - visible solo en hover */}
-      {!task.completed && (
+      {/* Drag Handle - solo visible en modo drag */}
+      {!task.completed && isDragMode && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0 }}
-          whileHover={{ opacity: 1 }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0 cursor-grab active:cursor-grabbing mt-0.5"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing mt-0.5"
         >
-          <GripVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+          <GripVertical className="w-5 h-5 text-purple-500 dark:text-purple-400" />
         </motion.div>
       )}
 
@@ -658,8 +678,8 @@ export default function TaskItem({ task }: TaskItemProps) {
           </button>
         )}
 
-        {/* Fecha y Timer en la misma fila */}
-        <div className="mt-2 flex items-center gap-3 flex-wrap">
+        {/* Fecha y Timer en la misma fila - Comprimidos */}
+        <div className="mt-1 flex items-center gap-2 flex-wrap scale-90 origin-left">
           {/* Fecha con DatePicker */}
           <DatePicker
             value={taskDueDate}
