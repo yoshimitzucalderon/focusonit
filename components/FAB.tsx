@@ -24,15 +24,24 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (isExpanded) setIsExpanded(false)
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (isExpanded) {
+        setIsExpanded(false)
+      }
     }
 
     if (isExpanded) {
-      document.addEventListener('click', handleClickOutside)
+      // Pequeño delay para evitar cerrar inmediatamente al abrir
+      setTimeout(() => {
+        document.addEventListener('click', handleClickOutside)
+        document.addEventListener('touchstart', handleClickOutside)
+      }, 100)
     }
 
-    return () => document.removeEventListener('click', handleClickOutside)
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [isExpanded])
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -40,40 +49,51 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
     setIsExpanded(!isExpanded)
   }
 
-  const handleOptionClick = (action: () => void, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleOptionClick = (action: () => void) => {
+    // Ejecutar acción inmediatamente
     action()
-    setIsExpanded(false)
+    // Cerrar menú después de un frame para mejor feedback visual
+    requestAnimationFrame(() => {
+      setIsExpanded(false)
+    })
   }
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - Animación rápida optimizada */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 z-[35] backdrop-blur-[1px]"
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/20 z-[35]"
+            style={{ WebkitBackdropFilter: 'blur(2px)', backdropFilter: 'blur(2px)' }}
           />
         )}
       </AnimatePresence>
 
       {/* Speed Dial Container */}
       <div className="fixed bottom-20 md:bottom-8 right-4 z-40 flex flex-col items-end gap-3">
-        {/* Options */}
+        {/* Options - Animaciones GPU-optimizadas */}
         <AnimatePresence>
           {isExpanded && (
             <>
               {/* Grabar con voz */}
               <motion.button
-                initial={{ scale: 0, opacity: 0, y: 20 }}
+                initial={{ scale: 0.8, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0, opacity: 0, y: 20 }}
-                transition={{ delay: 0.05 }}
-                onClick={(e) => handleOptionClick(onVoiceInput, e)}
-                className="flex items-center gap-3 bg-white dark:bg-slate-700 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all group"
+                exit={{ scale: 0.8, opacity: 0, y: 10 }}
+                transition={{
+                  duration: 0.15,
+                  delay: 0.05,
+                  ease: [0.4, 0, 0.2, 1] // cubic-bezier easing
+                }}
+                onClick={() => handleOptionClick(onVoiceInput)}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-3 bg-white dark:bg-slate-700 px-4 py-3 rounded-full shadow-lg active:shadow-md transition-shadow"
+                style={{ transform: 'translateZ(0)' }} // Force GPU
               >
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                   Grabar
@@ -85,12 +105,18 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
 
               {/* Escribir */}
               <motion.button
-                initial={{ scale: 0, opacity: 0, y: 20 }}
+                initial={{ scale: 0.8, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0, opacity: 0, y: 20 }}
-                transition={{ delay: 0 }}
-                onClick={(e) => handleOptionClick(onTextInput, e)}
-                className="flex items-center gap-3 bg-white dark:bg-slate-700 px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all group"
+                exit={{ scale: 0.8, opacity: 0, y: 10 }}
+                transition={{
+                  duration: 0.15,
+                  delay: 0,
+                  ease: [0.4, 0, 0.2, 1]
+                }}
+                onClick={() => handleOptionClick(onTextInput)}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-3 bg-white dark:bg-slate-700 px-4 py-3 rounded-full shadow-lg active:shadow-md transition-shadow"
+                style={{ transform: 'translateZ(0)' }}
               >
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                   Escribir
@@ -103,7 +129,7 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
           )}
         </AnimatePresence>
 
-        {/* Main FAB Button */}
+        {/* Main FAB Button - Optimizado para GPU */}
         <motion.button
           initial={{ scale: 0 }}
           animate={{
@@ -112,14 +138,20 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
           }}
           whileTap={{ scale: 0.85 }}
           onClick={handleToggle}
-          className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg active:shadow-xl transition-shadow flex items-center justify-center group hover:shadow-2xl"
+          className="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg active:shadow-xl flex items-center justify-center group"
           style={{
-            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4)'
+            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4)',
+            transform: 'translateZ(0)', // Force GPU
+            willChange: 'transform'
           }}
         >
           <motion.div
             animate={{ rotate: isExpanded ? 45 : 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{
+              duration: 0.2,
+              ease: [0.4, 0, 0.2, 1]
+            }}
+            style={{ transform: 'translateZ(0)' }}
           >
             {isExpanded ? (
               <X size={28} className="text-white" strokeWidth={2.5} />
@@ -128,8 +160,16 @@ export function FAB({ onTextInput, onVoiceInput }: FABProps) {
             )}
           </motion.div>
 
-          {/* Ripple effect */}
-          <span className="absolute inset-0 rounded-full bg-white opacity-0 group-active:opacity-20 group-active:animate-ping" />
+          {/* Ripple effect - Más rápido */}
+          <motion.span
+            className="absolute inset-0 rounded-full bg-white"
+            initial={{ opacity: 0, scale: 0 }}
+            whileTap={{
+              opacity: [0, 0.2, 0],
+              scale: [0, 1.5],
+              transition: { duration: 0.4 }
+            }}
+          />
         </motion.button>
       </div>
     </>
