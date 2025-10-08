@@ -64,10 +64,16 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
           const loadingToast = toast.loading('Procesando tu tarea...')
 
           try {
+            // Detectar zona horaria del usuario
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
             const response = await fetch('/api/voice-to-task', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ transcript })
+              body: JSON.stringify({
+                transcript,
+                timezone: userTimezone
+              })
             })
 
             if (!response.ok) throw new Error('Error al procesar la voz')
@@ -81,7 +87,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
               setTitle(data.title)
               setDescription(data.description || '')
               if (data.dueDate) {
-                setDueDate(new Date(data.dueDate))
+                // Parsear fecha como local, no UTC
+                // "2025-10-09" debe interpretarse como Oct 9 en hora local, no UTC
+                const [year, month, day] = data.dueDate.split('-').map(Number)
+                setDueDate(new Date(year, month - 1, day))
               }
 
               // Debug: Verificar que el valor se seteó

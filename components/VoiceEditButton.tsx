@@ -213,10 +213,17 @@ export default function VoiceEditButton({
           const loadingToast = toast.loading('Procesando comando...')
 
           try {
+            // Detectar zona horaria del usuario
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
             const response = await fetch('/api/voice-edit-task', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ transcript: finalText, currentTask })
+              body: JSON.stringify({
+                transcript: finalText,
+                currentTask,
+                timezone: userTimezone
+              })
             })
 
             if (!response.ok) throw new Error('Error al procesar')
