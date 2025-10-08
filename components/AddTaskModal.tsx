@@ -55,6 +55,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
           if (!lastResult.isFinal) return
 
           const transcript = lastResult[0].transcript
+          console.log('🎤 Transcripción recibida:', transcript)
+          console.log('🎤 Tipo:', typeof transcript)
+          console.log('🎤 Longitud:', transcript.length)
+
           recognitionInstance.stop()
 
           const loadingToast = toast.loading('Procesando tu tarea...')
@@ -69,14 +73,26 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
             if (!response.ok) throw new Error('Error al procesar la voz')
 
             const data: ProcessedTask = await response.json()
+            console.log('📦 Respuesta procesada:', data)
             toast.dismiss(loadingToast)
 
             if (data.title) {
+              console.log('✅ Seteando título:', data.title)
               setTitle(data.title)
               setDescription(data.description || '')
               if (data.dueDate) {
                 setDueDate(new Date(data.dueDate))
               }
+
+              // Debug: Verificar que el valor se seteó
+              setTimeout(() => {
+                const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement
+                if (inputElement) {
+                  console.log('📋 Valor en DOM:', inputElement.value)
+                  console.log('📋 Color computado:', window.getComputedStyle(inputElement).color)
+                }
+              }, 100)
+
               toast.success('Tarea procesada: ' + data.title)
             } else {
               throw new Error('No se pudo procesar la tarea')
@@ -275,9 +291,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all outline-none"
                   placeholder="¿Qué necesitas hacer?"
                   autoFocus={mode !== 'voice'}
+                  style={{ caretColor: '#3b82f6' }}
                 />
               </div>
 
@@ -292,9 +309,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all resize-none outline-none"
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all resize-none outline-none"
                     placeholder="Notas, contexto, detalles..."
                     rows={3}
+                    style={{ caretColor: '#3b82f6' }}
                   />
                 </div>
               </div>
