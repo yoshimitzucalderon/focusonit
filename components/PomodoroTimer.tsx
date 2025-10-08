@@ -499,7 +499,7 @@ export function PomodoroTimer({ taskId, userId, onComplete }: PomodoroTimerProps
               : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600'
             }
           `}
-          title={isRunning ? (isBreak ? 'Ver descanso' : 'Ver Pomodoro') : 'Iniciar Pomodoro'}
+          aria-label={isRunning ? (isBreak ? 'Ver descanso' : 'Ver Pomodoro') : 'Iniciar Pomodoro'}
         >
           {/* Icon with animation */}
           <div className="relative">
