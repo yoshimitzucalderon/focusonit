@@ -14,7 +14,6 @@ import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset
 import { FAB } from '@/components/FAB'
 import EditTaskModal from '@/components/EditTaskModal'
 import AddTaskModal from '@/components/AddTaskModal'
-import { ModalDebug } from '@/components/ModalDebug'
 import { Task } from '@/types/database.types'
 
 function TodayPageContent() {
@@ -330,9 +329,6 @@ function TodayPageContent() {
           setShowAddModal(true)
         }}
       />
-
-      {/* Debug temporal - ELIMINAR después de probar */}
-      {showAddModal && <ModalDebug />}
     </>
   )
 }
