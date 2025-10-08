@@ -560,10 +560,6 @@ export default function TaskItem({ task }: TaskItemProps) {
             >
               {task.title}
             </h3>
-            {/* Indicador de descripción */}
-            {hasDescription && !isExpanded && !isEditingDescription && (
-              <FileText className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5 sm:mt-0" />
-            )}
             {/* Badge de días atrasados */}
             {isOverdue && daysOverdue > 0 && (
               <motion.span
@@ -672,7 +668,7 @@ export default function TaskItem({ task }: TaskItemProps) {
         {!hasDescription && !isEditingDescription && (
           <button
             onClick={() => setIsEditingDescription(true)}
-            className="mt-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+            className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline decoration-1 underline-offset-2 flex items-center gap-1 font-medium transition-colors"
           >
             <FileText className="w-3 h-3" /> Agregar detalles
           </button>

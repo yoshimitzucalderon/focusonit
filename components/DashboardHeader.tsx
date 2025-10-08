@@ -268,19 +268,6 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
             </button>
           </div>
 
-          {/* Mobile plus button */}
-          <button
-            onClick={() => setShowMobileInput(!showMobileInput)}
-            className={`md:hidden p-2 rounded-lg transition-colors relative ${
-              showMobileInput
-                ? 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700 z-[60]'
-                : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 active:bg-gray-300 dark:active:bg-slate-500 z-[60]'
-            }`}
-            aria-label="Nueva tarea"
-          >
-            <Plus size={20} />
-          </button>
-
           <div className="flex-1" />
 
           {/* Email, Settings, Theme Toggle y Logout alineados a la derecha */}
