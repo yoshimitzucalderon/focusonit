@@ -15,6 +15,7 @@ import CalendarTaskBlock from './CalendarTaskBlock'
 import UnscheduledTasks from './UnscheduledTasks'
 import TimeScheduleModal from './TimeScheduleModal'
 import CalendarDropZone from './CalendarDropZone'
+import MobileCalendarView from './MobileCalendarView'
 
 interface CalendarViewProps {
   userId: string
@@ -28,6 +29,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const [loading, setLoading] = useState(true)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
@@ -97,6 +99,17 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   useEffect(() => {
     loadTasks()
   }, [loadTasks])
+
+  // Detectar dispositivo móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Navegar entre días
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1))
@@ -358,6 +371,35 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     }
   }
 
+  // Renderizar vista móvil en pantallas pequeñas
+  if (isMobile) {
+    return (
+      <>
+        <MobileCalendarView
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          scheduledTasks={scheduledTasks}
+          unscheduledTasks={unscheduledTasks}
+          onEditTask={setEditingTask}
+          onAddTask={() => {
+            // TODO: Implementar modal de agregar tarea
+            toast('Funcionalidad en desarrollo', { icon: '🚧' })
+          }}
+        />
+
+        {/* Modal de edición compartido */}
+        {editingTask && (
+          <TimeScheduleModal
+            task={editingTask}
+            onClose={() => setEditingTask(null)}
+            onSave={loadTasks}
+          />
+        )}
+      </>
+    )
+  }
+
+  // Vista desktop (original)
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
     <div className="h-full flex flex-col relative">
