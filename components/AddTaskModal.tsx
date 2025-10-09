@@ -19,6 +19,8 @@ interface ProcessedTask {
   title: string
   description?: string
   dueDate?: string
+  priority?: 'alta' | 'media' | 'baja'
+  tags?: string[]
 }
 
 export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }: AddTaskModalProps) {
@@ -91,6 +93,14 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                 // "2025-10-09" debe interpretarse como Oct 9 en hora local, no UTC
                 const [year, month, day] = data.dueDate.split('-').map(Number)
                 setDueDate(new Date(year, month - 1, day))
+              }
+
+              // Procesar priority y tags del n8n
+              if (data.priority) {
+                setPriority(data.priority)
+              }
+              if (data.tags && data.tags.length > 0) {
+                setTags(data.tags.join(', '))
               }
 
               // Debug: Verificar que el valor se seteó
