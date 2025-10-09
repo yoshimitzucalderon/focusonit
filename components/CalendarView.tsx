@@ -417,6 +417,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
         <UnscheduledTasks
           tasks={unscheduledTasks}
           onRefresh={loadTasks}
+          onScheduleTask={(task) => setEditingTask(task)}
         />
 
         {/* Vista de calendario */}

@@ -96,8 +96,27 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
   }
 
   // Manejador de doble click
-  const handleDoubleClick = () => {
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('🖱️ Doble click en tarea:', task.title)
+
     if (onSchedule) {
+      console.log('✅ Abriendo modal para programar tarea:', task.title)
+      onSchedule(task)
+    } else {
+      console.error('❌ ERROR: onSchedule no está definido como prop')
+    }
+  }
+
+  // Manejador para el botón de editar
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('✏️ Click en botón editar:', task.title)
+
+    if (onSchedule) {
+      console.log('✅ Abriendo modal desde botón editar:', task.title)
       onSchedule(task)
     }
   }
@@ -229,19 +248,17 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              handleDoubleClick()
-            }}
+            onClick={handleEditClick}
             className="
               p-1.5 bg-white dark:bg-gray-700
               rounded-md shadow-sm
-              hover:bg-gray-100 dark:hover:bg-gray-600
+              hover:bg-primary-100 dark:hover:bg-gray-600
               transition-colors
               flex-shrink-0
             "
+            title="Click para programar"
           >
-            <Edit3 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+            <Clock className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
           </motion.button>
         )}
       </div>
