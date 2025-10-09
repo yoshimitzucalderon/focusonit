@@ -29,6 +29,11 @@ export interface Database {
           tags: string[] | null
           reminder_enabled: boolean
           reminder_at: string | null
+          start_time: string | null
+          end_time: string | null
+          is_all_day: boolean
+          google_calendar_sync: boolean
+          last_synced_at: string | null
         }
         Insert: {
           id?: string
@@ -49,6 +54,11 @@ export interface Database {
           tags?: string[] | null
           reminder_enabled?: boolean
           reminder_at?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          is_all_day?: boolean
+          google_calendar_sync?: boolean
+          last_synced_at?: string | null
         }
         Update: {
           id?: string
@@ -69,6 +79,11 @@ export interface Database {
           tags?: string[] | null
           reminder_enabled?: boolean
           reminder_at?: string | null
+          start_time?: string | null
+          end_time?: string | null
+          is_all_day?: boolean
+          google_calendar_sync?: boolean
+          last_synced_at?: string | null
         }
       }
       time_sessions: {

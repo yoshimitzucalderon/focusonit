@@ -62,12 +62,12 @@ export function BottomNavigation() {
           <span className="text-xs">Hoy</span>
         </Link>
 
-        {/* Semana */}
+        {/* Calendario */}
         <Link
-          href="/week"
+          href="/calendar"
           className={`flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all
             ${
-              isActive('/week')
+              isActive('/calendar')
                 ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 font-semibold'
                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 active:bg-gray-100 dark:active:bg-slate-600'
             }`}
@@ -77,15 +77,20 @@ export function BottomNavigation() {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            strokeWidth={isActive('/week') ? 2.5 : 2}
+            strokeWidth={isActive('/calendar') ? 2.5 : 2}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 8v4l3 3"
+            />
           </svg>
-          <span className="text-xs">Semana</span>
+          <span className="text-xs">Calendario</span>
         </Link>
 
         {/* Todas */}

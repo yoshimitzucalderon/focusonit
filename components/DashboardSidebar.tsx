@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, CalendarDays, List, CheckCircle, BarChart3, Settings } from 'lucide-react'
+import { Calendar, CalendarDays, List, CheckCircle, BarChart3, Settings, CalendarClock } from 'lucide-react'
 import { SidebarLink } from './SidebarLink'
 
 export function DashboardSidebar() {
@@ -26,6 +26,9 @@ export function DashboardSidebar() {
             </SidebarLink>
             <SidebarLink href="/week" icon={CalendarDays}>
               Semana
+            </SidebarLink>
+            <SidebarLink href="/calendar" icon={CalendarClock}>
+              Calendario
             </SidebarLink>
             <SidebarLink href="/all" icon={List}>
               Todas
