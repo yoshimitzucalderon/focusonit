@@ -366,15 +366,12 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Fecha de vencimiento
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none z-10" size={18} />
-                  <DatePicker
-                    value={dueDate}
-                    onChange={(date) => setDueDate(date)}
-                    placeholder="Seleccionar fecha"
-                    buttonClassName="w-full pl-11 justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
-                  />
-                </div>
+                <DatePicker
+                  value={dueDate}
+                  onChange={(date) => setDueDate(date)}
+                  placeholder="Seleccionar fecha"
+                  buttonClassName="w-full justify-start border-2 border-gray-200 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 px-4 py-3 rounded-xl transition-all"
+                />
               </div>
 
               {/* Prioridad */}
