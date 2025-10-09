@@ -2,15 +2,15 @@
 
 import { Task } from '@/types/database.types'
 import { ListTodo, GripVertical, Clock } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 
 interface UnscheduledTasksProps {
   tasks: Task[]
-  onTaskSchedule: (task: Task, hour: number) => void
   onRefresh: () => void
 }
 
-export default function UnscheduledTasks({ tasks, onTaskSchedule, onRefresh }: UnscheduledTasksProps) {
+export default function UnscheduledTasks({ tasks, onRefresh }: UnscheduledTasksProps) {
   return (
     <div className="w-80 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
       {/* Header */}
@@ -45,7 +45,6 @@ export default function UnscheduledTasks({ tasks, onTaskSchedule, onRefresh }: U
             <UnscheduledTaskCard
               key={task.id}
               task={task}
-              onSchedule={onTaskSchedule}
             />
           ))
         )}
@@ -56,10 +55,17 @@ export default function UnscheduledTasks({ tasks, onTaskSchedule, onRefresh }: U
 
 interface UnscheduledTaskCardProps {
   task: Task
-  onSchedule: (task: Task, hour: number) => void
 }
 
-function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
+function UnscheduledTaskCard({ task }: UnscheduledTaskCardProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: task.id,
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  }
   // Color basado en prioridad
   const getPriorityStyles = () => {
     switch (task.priority) {
@@ -76,14 +82,13 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
 
   return (
     <div
-      draggable
-      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
-        e.dataTransfer.setData('taskId', task.id)
-        e.dataTransfer.effectAllowed = 'move'
-      }}
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
       className={`group relative border-l-4 ${getPriorityStyles()} rounded-lg p-3 cursor-move hover:shadow-md transition-shadow ${
         task.completed ? 'opacity-50' : ''
-      }`}
+      } ${isDragging ? 'z-50' : ''}`}
     >
       <div className="flex items-start gap-2">
         <GripVertical

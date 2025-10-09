@@ -8,9 +8,11 @@ import { format, addDays, subDays, isToday as isTodayFn, startOfDay } from 'date
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import CalendarTaskBlock from './CalendarTaskBlock'
 import UnscheduledTasks from './UnscheduledTasks'
 import TimeScheduleModal from './TimeScheduleModal'
+import CalendarDropZone from './CalendarDropZone'
 
 interface CalendarViewProps {
   userId: string
@@ -23,8 +25,18 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const [unscheduledTasks, setUnscheduledTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [activeTask, setActiveTask] = useState<Task | null>(null)
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
+
+  // Configurar sensores para drag & drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   // Generar array de horas (00:00 a 23:00)
   const hours = Array.from({ length: 24 }, (_, i) => i)
@@ -104,11 +116,40 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     return { top, height }
   }
 
-  // Manejar drag de una tarea desde unscheduled al calendario
-  const handleDropToCalendar = async (task: Task, hour: number) => {
+  // Handler cuando comienza el drag
+  const handleDragStart = (event: DragStartEvent) => {
+    const taskId = event.active.id as string
+    const task = unscheduledTasks.find(t => t.id === taskId)
+    if (task) {
+      setActiveTask(task)
+    }
+  }
+
+  // Handler cuando termina el drag
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveTask(null)
+
+    if (!over) return
+
+    const taskId = active.id as string
+    const task = unscheduledTasks.find(t => t.id === taskId)
+
+    if (!task) return
+
+    // El over.id tiene el formato "hour-X" donde X es la hora
+    const hourMatch = (over.id as string).match(/hour-(\d+)/)
+    if (!hourMatch) return
+
+    const hour = parseInt(hourMatch[1])
+    await scheduleTask(task, hour)
+  }
+
+  // Función para programar una tarea en un horario específico
+  const scheduleTask = async (task: Task, hour: number, minute: number = 0) => {
     try {
-      const startTime = `${hour.toString().padStart(2, '0')}:00:00`
-      const endTime = `${(hour + 1).toString().padStart(2, '0')}:00:00`
+      const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`
+      const endTime = `${(hour + 1).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`
       const dateString = format(selectedDate, 'yyyy-MM-dd')
 
       const { error } = await supabase
@@ -155,6 +196,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   }
 
   return (
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
     <div className="h-full flex flex-col">
       {/* Header con navegación de fechas */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-4">
@@ -211,7 +253,6 @@ export default function CalendarView({ userId }: CalendarViewProps) {
         {/* Tareas sin programar (sidebar) */}
         <UnscheduledTasks
           tasks={unscheduledTasks}
-          onTaskSchedule={(task, hour) => handleDropToCalendar(task, hour)}
           onRefresh={loadTasks}
         />
 
@@ -223,28 +264,9 @@ export default function CalendarView({ userId }: CalendarViewProps) {
             style={{ scrollBehavior: 'smooth' }}
           >
             <div className="relative" style={{ height: '1440px' }}> {/* 24 horas * 60px */}
-              {/* Grid de horas */}
+              {/* Grid de horas con drop zones */}
               {hours.map((hour) => (
-                <div
-                  key={hour}
-                  className="absolute left-0 right-0 border-t border-gray-200 dark:border-gray-700"
-                  style={{ top: `${hour * 60}px`, height: '60px' }}
-                >
-                  <div className="flex">
-                    {/* Columna de tiempo */}
-                    <div className="w-16 flex-shrink-0 pr-2 text-right">
-                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        {hour.toString().padStart(2, '0')}:00
-                      </span>
-                    </div>
-
-                    {/* Área de tareas */}
-                    <div className="flex-1 relative">
-                      {/* Línea de media hora */}
-                      <div className="absolute top-8 left-0 right-0 h-px bg-gray-100 dark:bg-gray-700/50" />
-                    </div>
-                  </div>
-                </div>
+                <CalendarDropZone key={hour} hour={hour} />
               ))}
 
               {/* Tareas programadas */}
@@ -281,6 +303,18 @@ export default function CalendarView({ userId }: CalendarViewProps) {
           onSave={loadTasks}
         />
       )}
+
+      {/* Drag overlay - muestra una copia de la tarea mientras se arrastra */}
+      <DragOverlay>
+        {activeTask ? (
+          <div className="bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg px-3 py-2 shadow-lg opacity-90">
+            <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+              {activeTask.title}
+            </p>
+          </div>
+        ) : null}
+      </DragOverlay>
     </div>
+    </DndContext>
   )
 }
