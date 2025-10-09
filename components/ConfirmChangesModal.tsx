@@ -10,12 +10,14 @@ interface ConfirmChangesModalProps {
       dueDate?: string
       description?: string
       priority?: string
+      tags?: string[]
     }
     original: {
       title: string
       dueDate: string | null
       description: string | null
       priority: string
+      tags?: string[] | null
     }
   }
   currentTask: any
@@ -30,6 +32,11 @@ export default function ConfirmChangesModal({
   onCancel
 }: ConfirmChangesModalProps) {
   const { changedFields, original } = changes
+
+  // Debug logging
+  console.log('🔍 ConfirmChangesModal - changedFields:', changedFields)
+  console.log('🔍 ConfirmChangesModal - original:', original)
+  console.log('🔍 ConfirmChangesModal - tags en changedFields:', changedFields.tags)
 
   // Cerrar con ESC y bloquear scroll del body
   useEffect(() => {
@@ -165,6 +172,40 @@ export default function ConfirmChangesModal({
               <p className="text-green-600 dark:text-green-500 font-medium">
                 {priorityLabels[changedFields.priority as keyof typeof priorityLabels]}
               </p>
+            </div>
+          )}
+
+          {changedFields.tags && (
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Etiquetas</p>
+
+              {/* Original tags */}
+              {original.tags && original.tags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {original.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 dark:bg-red-950/20 text-red-500/80 line-through text-xs font-medium rounded-full border border-red-200 dark:border-red-900"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-red-500/80 line-through text-sm mb-2">Sin etiquetas</p>
+              )}
+
+              {/* New tags */}
+              <div className="flex flex-wrap gap-1.5">
+                {changedFields.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-500 text-xs font-semibold rounded-full border border-green-200 dark:border-green-900"
+                  >
+                    + #{tag}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>

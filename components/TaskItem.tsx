@@ -24,6 +24,7 @@ interface VoiceTaskChanges {
   dueDate?: string | null
   description?: string | null
   priority?: 'baja' | 'media' | 'alta'
+  tags?: string[]
 }
 
 export default function TaskItem({ task }: TaskItemProps) {
@@ -271,6 +272,11 @@ export default function TaskItem({ task }: TaskItemProps) {
       if (changes.priority !== undefined) {
         updateData.priority = changes.priority
       }
+      if (changes.tags !== undefined) {
+        updateData.tags = changes.tags
+      }
+
+      console.log('📝 Actualizando tarea con datos:', updateData)
 
       const { error } = await supabase
         .from('tasks')
@@ -691,7 +697,8 @@ export default function TaskItem({ task }: TaskItemProps) {
                 title: task.title,
                 dueDate: task.due_date,
                 description: task.description,
-                priority: task.priority || 'media'
+                priority: task.priority || 'media',
+                tags: task.tags
               }}
               onEditConfirmed={handleVoiceEdit}
             />

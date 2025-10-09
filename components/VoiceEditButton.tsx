@@ -12,6 +12,7 @@ interface VoiceEditButtonProps {
     dueDate: string | null
     description: string | null
     priority: 'baja' | 'media' | 'alta'
+    tags?: string[] | null
   }
   onEditConfirmed: (changes: any) => void
 }
@@ -229,8 +230,9 @@ export default function VoiceEditButton({
             if (!response.ok) throw new Error('Error al procesar')
 
             const result = await response.json()
-            console.log('✅ Respuesta completa:', result)
-            console.log('✅ Campos cambiados:', result.changedFields)
+            console.log('✅ Respuesta completa del API:', result)
+            console.log('✅ Campos cambiados (changedFields):', result.changedFields)
+            console.log('✅ Tags recibidos:', result.changedFields?.tags)
 
             toast.dismiss(loadingToast)
 
@@ -241,9 +243,10 @@ export default function VoiceEditButton({
               Object.keys(result.changedFields).some(key => result.changedFields[key] !== undefined && result.changedFields[key] !== null)
 
             if (hasChanges) {
+              console.log('✅ Estableciendo cambios sugeridos en estado:', result)
               setSuggestedChanges(result)
             } else {
-              console.warn('No se detectaron cambios válidos:', result)
+              console.warn('⚠️ No se detectaron cambios válidos:', result)
               toast.error('No se detectaron cambios en el comando. Intenta ser más específico.')
             }
           } catch (err) {
