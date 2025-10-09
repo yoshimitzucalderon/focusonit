@@ -20,7 +20,18 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
   const [tags, setTags] = useState<string[]>(task.tags || [])
   const [newTag, setNewTag] = useState('')
   const [saving, setSaving] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const supabase = createClient()
+
+  // Detectar dispositivo móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Popular tags para sugerencias
   const popularTags = ['trabajo', 'estudio', 'personal', 'urgente', 'reunión', 'proyecto']
@@ -170,6 +181,127 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
     }
   }
 
+  // VISTA MÓVIL - BOTTOM SHEET COMPACTO
+  if (isMobile) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl max-h-[75vh] overflow-y-auto"
+          >
+            {/* HEADER COMPACTO MÓVIL */}
+            <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-purple-600 px-5 py-3 rounded-t-3xl flex items-center justify-between z-10">
+              <h3 className="text-white font-semibold text-base">Editar Horario</h3>
+              <button
+                onClick={onClose}
+                className="text-white hover:bg-white/20 rounded-lg p-1.5 active:scale-95 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* CONTENIDO COMPACTO */}
+            <div className="p-4 space-y-3">
+
+              {/* TÍTULO DE TAREA - SIN DESCRIPCIÓN */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                <h4 className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">
+                  {task.title}
+                </h4>
+              </div>
+
+              {/* PRIORIDAD - BOTONES MÁS PEQUEÑOS */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                  Prioridad
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['baja', 'media', 'alta'] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPriority(p)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${getPriorityStyles(p)}`}
+                    >
+                      {getPriorityEmoji(p)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* HORARIOS - MÁS COMPACTOS */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Inicio
+                  </label>
+                  <input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                    Fin
+                  </label>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-white outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* DURACIÓN - INLINE MÁS PEQUEÑA */}
+              {duration.valid && (
+                <div className="text-center text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  ⏱️ {duration.text}
+                </div>
+              )}
+              {!duration.valid && (
+                <div className="text-center text-sm font-medium text-red-700 dark:text-red-400">
+                  ⚠️ {duration.text}
+                </div>
+              )}
+            </div>
+
+            {/* BOTONES - MÁS COMPACTOS */}
+            <div className="sticky bottom-0 px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex gap-2">
+              <button
+                onClick={onClose}
+                disabled={saving}
+                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium active:scale-95 transition-transform disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !duration.valid}
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-lg text-sm font-semibold active:scale-95 disabled:opacity-50 transition-all"
+              >
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    )
+  }
+
+  // VISTA DESKTOP (ORIGINAL)
   return (
     <AnimatePresence>
       <motion.div

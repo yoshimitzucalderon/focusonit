@@ -371,6 +371,49 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     }
   }
 
+  // Actualizar tiempos de tarea (para drag & drop móvil)
+  const handleUpdateTaskTime = async (taskId: string, newTimes: { start_time: string, end_time: string }) => {
+    console.log('💾 Actualizando tarea:', taskId, newTimes)
+
+    try {
+      // Actualizar en estado local inmediatamente para UX fluida
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId
+            ? { ...task, ...newTimes }
+            : task
+        )
+      )
+
+      // Actualizar en base de datos
+      const { error } = await supabase
+        .from('tasks')
+        // @ts-ignore
+        .update({
+          start_time: newTimes.start_time,
+          end_time: newTimes.end_time,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId)
+
+      if (error) {
+        console.error('❌ Error guardando tarea:', error)
+        toast.error('Error al guardar cambios')
+        // Recargar datos en caso de error
+        loadTasks()
+      } else {
+        console.log('✅ Tarea guardada en DB')
+        toast.success('Horario actualizado', { duration: 1500 })
+        // Recargar para asegurar consistencia
+        loadTasks()
+      }
+    } catch (error) {
+      console.error('❌ Error actualizando tarea:', error)
+      toast.error('Error al actualizar tarea')
+      loadTasks()
+    }
+  }
+
   // Renderizar vista móvil en pantallas pequeñas
   if (isMobile) {
     return (
@@ -385,6 +428,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
             // TODO: Implementar modal de agregar tarea
             toast('Funcionalidad en desarrollo', { icon: '🚧' })
           }}
+          onUpdateTaskTime={handleUpdateTaskTime}
         />
 
         {/* Modal de edición compartido */}

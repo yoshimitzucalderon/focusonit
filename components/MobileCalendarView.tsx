@@ -17,6 +17,7 @@ interface MobileCalendarViewProps {
   onEditTask: (task: Task) => void
   onAddTask: () => void
   onToggleComplete?: (taskId: string) => void
+  onUpdateTaskTime?: (taskId: string, newTimes: { start_time: string, end_time: string }) => Promise<void>
 }
 
 export default function MobileCalendarView({
@@ -26,7 +27,8 @@ export default function MobileCalendarView({
   unscheduledTasks,
   onEditTask,
   onAddTask,
-  onToggleComplete
+  onToggleComplete,
+  onUpdateTaskTime
 }: MobileCalendarViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
   const calendarRef = useRef<HTMLDivElement>(null)
@@ -253,6 +255,7 @@ export default function MobileCalendarView({
                   left={left}
                   zIndex={zIndex}
                   onTap={() => onEditTask(task)}
+                  onUpdateTime={onUpdateTaskTime}
                 />
               )
             })}
