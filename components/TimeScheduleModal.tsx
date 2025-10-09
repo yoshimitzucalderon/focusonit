@@ -35,6 +35,7 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
     try {
       const { error } = await supabase
         .from('tasks')
+        // @ts-ignore - Temporary fix for Supabase type inference issue with new columns
         .update({
           start_time: `${startTime}:00`,
           end_time: `${endTime}:00`,
@@ -61,6 +62,7 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
     try {
       const { error } = await supabase
         .from('tasks')
+        // @ts-ignore - Temporary fix for Supabase type inference issue with new columns
         .update({
           start_time: null,
           end_time: null,

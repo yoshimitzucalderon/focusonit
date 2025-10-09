@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { Clock, GripVertical } from 'lucide-react'
@@ -29,7 +29,7 @@ export default function CalendarTaskBlock({
   const [tempTop, setTempTop] = useState(initialTop)
   const [tempHeight, setTempHeight] = useState(initialHeight)
   const blockRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     setTop(initialTop)
@@ -108,6 +108,7 @@ export default function CalendarTaskBlock({
         try {
           const { error } = await supabase
             .from('tasks')
+            // @ts-ignore - Temporary fix for Supabase type inference issue with new columns
             .update({
               start_time: newStartTime,
               end_time: newEndTime,
@@ -141,7 +142,7 @@ export default function CalendarTaskBlock({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDraggingTop, isDraggingBottom, tempTop, tempHeight, top, height, task.id, onUpdate])
+  }, [isDraggingTop, isDraggingBottom, tempTop, tempHeight, top, height, task.id, onUpdate, supabase])
 
   // Calcular tiempo de inicio y fin para tooltip
   const startTime = minutesToTime(tempTop).slice(0, 5)

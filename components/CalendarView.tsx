@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock } from 'lucide-react'
@@ -24,7 +24,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const [loading, setLoading] = useState(true)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const calendarRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Generar array de horas (00:00 a 23:00)
   const hours = Array.from({ length: 24 }, (_, i) => i)
@@ -37,11 +37,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   }, [])
 
   // Cargar tareas
-  useEffect(() => {
-    loadTasks()
-  }, [selectedDate, userId])
-
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     setLoading(true)
     try {
       const dateString = format(selectedDate, 'yyyy-MM-dd')
@@ -55,7 +51,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
       if (error) throw error
 
-      const allTasks = data || []
+      const allTasks: Task[] = (data as Task[]) || []
 
       // Separar tareas programadas vs sin programar
       const scheduled = allTasks.filter(task =>
@@ -81,7 +77,11 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedDate, userId, supabase])
+
+  useEffect(() => {
+    loadTasks()
+  }, [loadTasks])
 
   // Navegar entre días
   const goToPreviousDay = () => setSelectedDate(subDays(selectedDate, 1))
@@ -113,6 +113,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
       const { error } = await supabase
         .from('tasks')
+        // @ts-ignore - Temporary fix for Supabase type inference issue with new columns
         .update({
           start_time: startTime,
           end_time: endTime,

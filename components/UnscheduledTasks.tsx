@@ -75,11 +75,9 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       draggable
-      onDragStart={(e) => {
+      onDragStart={(e: React.DragEvent<HTMLDivElement>) => {
         e.dataTransfer.setData('taskId', task.id)
         e.dataTransfer.effectAllowed = 'move'
       }}
@@ -135,6 +133,6 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
           </span>
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
