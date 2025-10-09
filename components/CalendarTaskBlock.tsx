@@ -423,7 +423,7 @@ export default function CalendarTaskBlock({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+              className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-md p-4"
               onClick={() => setExpandedTask(false)}
             >
               <motion.div
@@ -680,7 +680,7 @@ export default function CalendarTaskBlock({
         hover:scale-[1.02] hover:z-20
         ${task.completed ? 'opacity-60' : ''}
         ${isResizingTop || isResizingBottom ? 'shadow-soft-2xl z-30 scale-105' : 'z-10'}
-        ${!isResizingTop && !isResizingBottom ? 'cursor-grab active:cursor-grabbing' : ''}
+        ${!isResizingTop && !isResizingBottom ? 'cursor-move hover:cursor-grab active:cursor-grabbing' : ''}
         backdrop-blur-sm
       `}
       onClick={(e) => {

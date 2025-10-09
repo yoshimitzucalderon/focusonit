@@ -33,11 +33,12 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
-  // Configurar sensores para drag & drop
+  // Configurar sensores para drag & drop con mejor UX
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5, // Reducido de 8 a 5 para activación más rápida
+        tolerance: 5,
       },
     })
   )
@@ -203,7 +204,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
   // Handler cuando termina el drag
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
+    const { active, over, delta } = event
     setActiveTask(null)
 
     if (!over) return
@@ -226,7 +227,41 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     if (!hourMatch) return
 
     const hour = parseInt(hourMatch[1])
-    await scheduleTask(task, hour)
+
+    // Calcular minutos exactos basado en la posición Y del mouse
+    // Usamos el delta.y si la tarea ya estaba programada, o calculamos desde la posición del drop
+    let minute = 0
+
+    // Si tenemos acceso al elemento del calendario, calcular posición precisa
+    if (calendarRef.current && event.activatorEvent) {
+      const calendarRect = calendarRef.current.getBoundingClientRect()
+      const activator = event.activatorEvent as MouseEvent | TouchEvent | PointerEvent
+      const mouseY = 'clientY' in activator ? (activator.clientY as number) + delta.y : 0
+      const relativeY = mouseY - calendarRect.top + calendarRef.current.scrollTop
+
+      // Calcular hora total en minutos desde la posición Y (1px = 1 minuto)
+      const totalMinutes = Math.max(0, Math.floor(relativeY))
+      const calculatedHour = Math.floor(totalMinutes / 60)
+      minute = totalMinutes % 60
+
+      console.log('📍 Drop calculation:', {
+        mouseY,
+        relativeY,
+        totalMinutes,
+        calculatedHour,
+        minute,
+        dropHour: hour
+      })
+
+      // Usar la hora calculada si está cerca de la hora del drop zone
+      if (Math.abs(calculatedHour - hour) <= 1) {
+        await scheduleTask(task, calculatedHour, minute)
+        return
+      }
+    }
+
+    // Fallback: usar solo la hora del drop zone
+    await scheduleTask(task, hour, minute)
   }
 
   // Función para programar una tarea en un horario específico
@@ -244,9 +279,9 @@ export default function CalendarView({ userId }: CalendarViewProps) {
         durationInMinutes = originalEndMinutes - originalStartMinutes
       }
 
-      // Snap hora a intervalos de 15 minutos
+      // Snap hora a intervalos de 30 minutos (más natural para programación)
       const startMinutes = hour * 60 + minute
-      const snappedStartMinutes = Math.round(startMinutes / 15) * 15
+      const snappedStartMinutes = Math.round(startMinutes / 30) * 30
 
       // Calcular end time manteniendo la duración
       let endMinutes = snappedStartMinutes + durationInMinutes
@@ -563,13 +598,34 @@ export default function CalendarView({ userId }: CalendarViewProps) {
       )}
 
       {/* Drag overlay - muestra una copia de la tarea mientras se arrastra */}
-      <DragOverlay>
+      <DragOverlay dropAnimation={{
+        duration: 250,
+        easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+      }}>
         {activeTask ? (
-          <div className="bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg px-3 py-2 shadow-lg opacity-90">
-            <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">
-              {activeTask.title}
-            </p>
-          </div>
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0.8 }}
+            animate={{ scale: 1.05, opacity: 1 }}
+            className="bg-gradient-to-br from-primary-100 to-purple-100 dark:from-primary-900/40 dark:to-purple-900/40 border-l-4 border-primary-500 rounded-xl px-4 py-3 shadow-2xl cursor-grabbing min-w-[200px]"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+              <p className="font-bold text-sm text-primary-900 dark:text-primary-100">
+                {activeTask.title}
+              </p>
+            </div>
+            {activeTask.start_time && activeTask.end_time && (
+              <div className="flex items-center gap-1 text-xs text-primary-700 dark:text-primary-300">
+                <Clock className="w-3 h-3" />
+                <span>{activeTask.start_time.slice(0, 5)} - {activeTask.end_time.slice(0, 5)}</span>
+              </div>
+            )}
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+              <div className="px-2 py-1 bg-primary-600 text-white text-xs font-semibold rounded-full shadow-lg whitespace-nowrap">
+                Arrastrando...
+              </div>
+            </div>
+          </motion.div>
         ) : null}
       </DragOverlay>
 
