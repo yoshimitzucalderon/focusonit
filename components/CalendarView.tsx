@@ -119,7 +119,16 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   // Handler cuando comienza el drag
   const handleDragStart = (event: DragStartEvent) => {
     const taskId = event.active.id as string
-    const task = unscheduledTasks.find(t => t.id === taskId)
+
+    // Check if it's a scheduled task (ID format: "scheduled-{taskId}")
+    let task: Task | undefined
+    if (taskId.startsWith('scheduled-')) {
+      const actualTaskId = taskId.replace('scheduled-', '')
+      task = scheduledTasks.find(t => t.id === actualTaskId)
+    } else {
+      task = unscheduledTasks.find(t => t.id === taskId)
+    }
+
     if (task) {
       setActiveTask(task)
     }
@@ -133,7 +142,15 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     if (!over) return
 
     const taskId = active.id as string
-    const task = unscheduledTasks.find(t => t.id === taskId)
+
+    // Check if it's a scheduled task (ID format: "scheduled-{taskId}")
+    let task: Task | undefined
+    if (taskId.startsWith('scheduled-')) {
+      const actualTaskId = taskId.replace('scheduled-', '')
+      task = scheduledTasks.find(t => t.id === actualTaskId)
+    } else {
+      task = unscheduledTasks.find(t => t.id === taskId)
+    }
 
     if (!task) return
 

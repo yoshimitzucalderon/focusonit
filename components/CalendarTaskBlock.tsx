@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
 import { Clock, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { motion } from 'framer-motion'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 
 interface CalendarTaskBlockProps {
   task: Task
@@ -22,14 +23,24 @@ export default function CalendarTaskBlock({
   onEdit,
   onUpdate
 }: CalendarTaskBlockProps) {
-  const [isDraggingTop, setIsDraggingTop] = useState(false)
-  const [isDraggingBottom, setIsDraggingBottom] = useState(false)
+  const [isResizingTop, setIsResizingTop] = useState(false)
+  const [isResizingBottom, setIsResizingBottom] = useState(false)
   const [top, setTop] = useState(initialTop)
   const [height, setHeight] = useState(initialHeight)
   const [tempTop, setTempTop] = useState(initialTop)
   const [tempHeight, setTempHeight] = useState(initialHeight)
-  const blockRef = useRef<HTMLDivElement>(null)
+  const blockRef = useRef<HTMLDivElement | null>(null)
   const supabase = useMemo(() => createClient(), [])
+
+  // Drag & drop para mover la tarea completa
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `scheduled-${task.id}`,
+    disabled: isResizingTop || isResizingBottom,
+  })
+
+  const dragStyle = transform ? {
+    transform: CSS.Translate.toString(transform),
+  } : undefined
 
   useEffect(() => {
     setTop(initialTop)
@@ -38,15 +49,16 @@ export default function CalendarTaskBlock({
     setTempHeight(initialHeight)
   }, [initialTop, initialHeight])
 
-  // Snap a intervalos de 15 minutos
+  // Snap a intervalos de 15 minutos (más suave que 1 hora)
   const snapToInterval = (minutes: number, interval: number = 15) => {
     return Math.round(minutes / interval) * interval
   }
 
   // Convertir minutos a tiempo HH:MM:SS
   const minutesToTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
+    const clampedMinutes = Math.max(0, Math.min(1439, minutes)) // 0-1439 (23:59)
+    const hours = Math.floor(clampedMinutes / 60)
+    const mins = clampedMinutes % 60
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:00`
   }
 
@@ -56,23 +68,23 @@ export default function CalendarTaskBlock({
     return hours * 60 + minutes
   }
 
-  // Manejar inicio de drag en borde superior
+  // Manejar inicio de resize en borde superior
   const handleTopMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDraggingTop(true)
+    setIsResizingTop(true)
   }
 
-  // Manejar inicio de drag en borde inferior
+  // Manejar inicio de resize en borde inferior
   const handleBottomMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDraggingBottom(true)
+    setIsResizingBottom(true)
   }
 
-  // Manejar movimiento del mouse
+  // Manejar movimiento del mouse para resize
   useEffect(() => {
-    if (!isDraggingTop && !isDraggingBottom) return
+    if (!isResizingTop && !isResizingBottom) return
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!blockRef.current) return
@@ -80,27 +92,43 @@ export default function CalendarTaskBlock({
       const calendarContainer = blockRef.current.closest('.relative') as HTMLElement
       if (!calendarContainer) return
 
-      const rect = calendarContainer.getBoundingClientRect()
-      const mouseY = e.clientY - rect.top + calendarContainer.parentElement!.scrollTop
+      const containerRect = calendarContainer.getBoundingClientRect()
+      const scrollTop = calendarContainer.parentElement?.scrollTop || 0
 
-      if (isDraggingTop) {
-        // Arrastrar borde superior
-        const newTop = snapToInterval(Math.max(0, Math.min(mouseY, tempTop + tempHeight - 15)))
-        const newHeight = tempTop + tempHeight - newTop
+      // Calcular posición Y relativa al calendario (en píxeles desde el top)
+      const mouseY = e.clientY - containerRect.top + scrollTop
 
-        if (newHeight >= 15) { // Mínimo 15 minutos
+      // Convertir a minutos (cada píxel = 1 minuto)
+      let mouseMinutes = Math.max(0, Math.min(1440, mouseY))
+
+      // Snap a 15 minutos
+      mouseMinutes = snapToInterval(mouseMinutes, 15)
+
+      if (isResizingTop) {
+        // Redimensionar desde arriba: cambiar start_time, mantener end_time
+        const originalEndMinutes = tempTop + tempHeight
+        const newTop = mouseMinutes
+        const newHeight = originalEndMinutes - newTop
+
+        // Validar duración mínima de 15 minutos
+        if (newHeight >= 15 && newTop >= 0) {
           setTempTop(newTop)
           setTempHeight(newHeight)
         }
-      } else if (isDraggingBottom) {
-        // Arrastrar borde inferior
-        const newHeight = snapToInterval(Math.max(15, mouseY - tempTop))
-        setTempHeight(Math.min(newHeight, 1440 - tempTop)) // No exceder las 24 horas
+      } else if (isResizingBottom) {
+        // Redimensionar desde abajo: cambiar end_time, mantener start_time
+        const newEndMinutes = mouseMinutes
+        const newHeight = newEndMinutes - tempTop
+
+        // Validar duración mínima de 15 minutos y no exceder 23:59
+        if (newHeight >= 15 && newEndMinutes <= 1440) {
+          setTempHeight(newHeight)
+        }
       }
     }
 
     const handleMouseUp = async () => {
-      if (isDraggingTop || isDraggingBottom) {
+      if (isResizingTop || isResizingBottom) {
         // Guardar cambios en la base de datos
         const newStartTime = minutesToTime(tempTop)
         const newEndTime = minutesToTime(tempTop + tempHeight)
@@ -131,8 +159,8 @@ export default function CalendarTaskBlock({
         }
       }
 
-      setIsDraggingTop(false)
-      setIsDraggingBottom(false)
+      setIsResizingTop(false)
+      setIsResizingBottom(false)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -142,7 +170,7 @@ export default function CalendarTaskBlock({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDraggingTop, isDraggingBottom, tempTop, tempHeight, top, height, task.id, onUpdate, supabase])
+  }, [isResizingTop, isResizingBottom, tempTop, tempHeight, top, height, task.id, onUpdate, supabase])
 
   // Calcular tiempo de inicio y fin para tooltip
   const startTime = minutesToTime(tempTop).slice(0, 5)
@@ -163,21 +191,28 @@ export default function CalendarTaskBlock({
     }
   }
 
+  // Merge refs callback
+  const setRefs = useCallback((node: HTMLDivElement | null) => {
+    blockRef.current = node
+    setNodeRef(node)
+  }, [setNodeRef])
+
   return (
-    <motion.div
-      ref={blockRef}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={`absolute left-0 right-2 rounded-lg border-l-4 px-3 py-2 cursor-pointer group transition-shadow hover:shadow-lg ${getPriorityColor()} ${
-        task.completed ? 'opacity-50' : ''
-      } ${isDraggingTop || isDraggingBottom ? 'shadow-2xl z-30' : 'z-10'}`}
+    <div
+      ref={setRefs}
       style={{
+        ...dragStyle,
         top: `${tempTop}px`,
         height: `${tempHeight}px`,
-        minHeight: '30px'
+        minHeight: '30px',
+        opacity: isDragging ? 0.5 : 1,
+        marginBottom: '4px', // Separación entre tareas
       }}
+      className={`absolute left-0 right-2 rounded-lg border-l-4 border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 group transition-shadow hover:shadow-lg ${getPriorityColor()} ${
+        task.completed ? 'opacity-50' : ''
+      } ${isResizingTop || isResizingBottom ? 'shadow-2xl z-30' : 'z-10'} ${!isResizingTop && !isResizingBottom ? 'cursor-grab active:cursor-grabbing' : ''}`}
       onClick={(e) => {
-        if (!isDraggingTop && !isDraggingBottom) {
+        if (!isResizingTop && !isResizingBottom && !isDragging) {
           e.stopPropagation()
           onEdit()
         }
@@ -185,16 +220,21 @@ export default function CalendarTaskBlock({
     >
       {/* Borde superior para redimensionar */}
       <div
-        className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-blue-400/30 transition-colors flex items-center justify-center"
         onMouseDown={handleTopMouseDown}
+        style={{ zIndex: 40 }}
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gray-400 dark:bg-gray-500 rounded-full" />
+        <div className="w-12 h-1 bg-gray-400 dark:bg-gray-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
 
-      {/* Contenido de la tarea */}
-      <div className="relative z-10 h-full flex flex-col justify-between overflow-hidden">
+      {/* Contenido de la tarea - área para drag & drop de toda la tarea */}
+      <div
+        {...listeners}
+        {...attributes}
+        className="relative z-10 h-full flex flex-col justify-between overflow-hidden px-1 py-1"
+      >
         <div className="flex items-start gap-2 min-h-0">
-          <GripVertical size={14} className="flex-shrink-0 mt-0.5 opacity-50" />
+          <GripVertical size={14} className="flex-shrink-0 mt-0.5 opacity-30 group-hover:opacity-70 transition-opacity" />
           <div className="flex-1 min-w-0">
             <p className={`font-semibold text-sm leading-tight ${task.completed ? 'line-through' : ''}`}>
               {task.title}
@@ -216,20 +256,22 @@ export default function CalendarTaskBlock({
         )}
       </div>
 
-      {/* Tooltip mientras se arrastra */}
-      {(isDraggingTop || isDraggingBottom) && (
-        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-50">
-          {startTime} - {endTime} ({duration}h)
+      {/* Tooltip mientras se redimensiona */}
+      {(isResizingTop || isResizingBottom) && (
+        <div className="fixed left-1/2 top-4 -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-sm px-3 py-2 rounded shadow-2xl whitespace-nowrap z-[100] pointer-events-none">
+          <div className="font-semibold">{startTime} - {endTime}</div>
+          <div className="text-xs text-gray-300">Duración: {duration}h</div>
         </div>
       )}
 
       {/* Borde inferior para redimensionar */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize hover:bg-blue-400/30 transition-colors flex items-center justify-center"
         onMouseDown={handleBottomMouseDown}
+        style={{ zIndex: 40 }}
       >
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gray-400 dark:bg-gray-500 rounded-full" />
+        <div className="w-12 h-1 bg-gray-400 dark:bg-gray-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
-    </motion.div>
+    </div>
   )
 }
