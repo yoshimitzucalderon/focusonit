@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { transcript } = await request.json();
+    const { transcript, timezone } = await request.json();
 
     if (!transcript) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ transcript }),
+      body: JSON.stringify({ transcript, timezone }),
     });
 
     if (!response.ok) {
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       title: data.title,
       description: data.description,
       dueDate: data.dueDate,
+      priority: data.priority,
+      tags: data.tags,
     });
   } catch (error) {
     console.error('Error en /api/voice-to-task:', error);
