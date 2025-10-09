@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { Task } from '@/types/database.types'
-import { ListTodo, GripVertical, Clock, Tag, AlertCircle, CheckCircle2, Zap } from 'lucide-react'
+import { ListTodo, GripVertical, Clock, Tag, CheckCircle2, Edit3, AlertCircle, Zap } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { motion } from 'framer-motion'
@@ -9,54 +10,49 @@ import { motion } from 'framer-motion'
 interface UnscheduledTasksProps {
   tasks: Task[]
   onRefresh: () => void
+  onScheduleTask?: (task: Task) => void
 }
 
-export default function UnscheduledTasks({ tasks, onRefresh }: UnscheduledTasksProps) {
+export default function UnscheduledTasks({ tasks, onRefresh, onScheduleTask }: UnscheduledTasksProps) {
   return (
-    <div className="w-80 flex-shrink-0 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 rounded-2xl shadow-soft-lg overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700">
-      {/* Header con gradiente moderno */}
-      <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-5 py-4 relative overflow-hidden">
-        {/* Decoración de fondo */}
-        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,white)]" />
+    <div className="w-80 flex-shrink-0 bg-gray-50 dark:bg-gray-900 h-full flex flex-col">
 
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <ListTodo size={20} className="text-white" />
+      {/* HEADER COMPACTO */}
+      <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-purple-600 px-4 py-3 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <ListTodo className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white tracking-tight">
-                Sin programar
-              </h3>
-              <p className="text-xs text-primary-100 mt-0.5">
-                Arrastra al calendario
+              <h2 className="font-bold text-base text-white leading-tight">Sin programar</h2>
+              <p className="text-white/80 text-[10px] leading-tight">
+                Doble click o arrastra al calendario
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-              {tasks.length}
-            </span>
-          </div>
+          <span className="bg-white/20 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
+            {tasks.length}
+          </span>
         </div>
       </div>
 
-      {/* Lista de tareas con scroll mejorado */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      {/* LISTA DE TAREAS - COMPACTA */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
         {tasks.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
+            className="flex flex-col items-center justify-center py-12 px-4 text-center"
           >
-            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-success-100 to-success-200 dark:from-success-900/20 dark:to-success-800/20 flex items-center justify-center shadow-soft">
-              <CheckCircle2 className="text-success-600 dark:text-success-400" size={32} />
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3">
+              <CheckCircle2 className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              ¡Todo programado!
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+              No hay tareas sin programar
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Todas las tareas tienen horario asignado
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Todas tus tareas están en el calendario
             </p>
           </motion.div>
         ) : (
@@ -65,12 +61,19 @@ export default function UnscheduledTasks({ tasks, onRefresh }: UnscheduledTasksP
               key={task.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.03 }}
             >
-              <UnscheduledTaskCard task={task} />
+              <UnscheduledTaskCard task={task} onSchedule={onScheduleTask} />
             </motion.div>
           ))
         )}
+      </div>
+
+      {/* FOOTER CON TIP */}
+      <div className="px-3 py-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <p className="text-[10px] text-gray-500 dark:text-gray-400 text-center">
+          💡 Arrastra tareas al calendario o haz doble click para programar
+        </p>
       </div>
     </div>
   )
@@ -78,60 +81,56 @@ export default function UnscheduledTasks({ tasks, onRefresh }: UnscheduledTasksP
 
 interface UnscheduledTaskCardProps {
   task: Task
+  onSchedule?: (task: Task) => void
 }
 
-function UnscheduledTaskCard({ task }: UnscheduledTaskCardProps) {
+function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
+  const [hoveredTask, setHoveredTask] = useState(false)
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   })
 
   const style = {
     transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.6 : 1,
+    opacity: isDragging ? 0.5 : 1,
   }
 
-  // Colores modernos basados en prioridad
-  const getPriorityColors = () => {
-    switch (task.priority) {
-      case 'alta':
-        return {
-          bg: 'bg-gradient-to-br from-danger-50 via-white to-danger-50/30 dark:from-danger-950/20 dark:via-gray-800 dark:to-danger-950/10',
-          border: 'border-l-danger-500',
-          badge: 'bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400 border-danger-300 dark:border-danger-700',
-          icon: 'text-danger-500',
-          shadow: 'hover:shadow-danger/20'
-        }
-      case 'media':
-        return {
-          bg: 'bg-gradient-to-br from-warning-50 via-white to-warning-50/30 dark:from-warning-950/20 dark:via-gray-800 dark:to-warning-950/10',
-          border: 'border-l-warning-500',
-          badge: 'bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400 border-warning-300 dark:border-warning-700',
-          icon: 'text-warning-500',
-          shadow: 'hover:shadow-warning-500/20'
-        }
-      case 'baja':
-        return {
-          bg: 'bg-gradient-to-br from-success-50 via-white to-success-50/30 dark:from-success-950/20 dark:via-gray-800 dark:to-success-950/10',
-          border: 'border-l-success-500',
-          badge: 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 border-success-300 dark:border-success-700',
-          icon: 'text-success-500',
-          shadow: 'hover:shadow-success/20'
-        }
-      default:
-        return {
-          bg: 'bg-gradient-to-br from-gray-50 via-white to-gray-50/30 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900',
-          border: 'border-l-gray-400',
-          badge: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600',
-          icon: 'text-gray-400',
-          shadow: 'hover:shadow-gray-400/20'
-        }
+  // Manejador de doble click
+  const handleDoubleClick = () => {
+    if (onSchedule) {
+      onSchedule(task)
     }
   }
 
-  const colors = getPriorityColors()
+  // Estilos por prioridad - COMPACTOS
+  const priorityConfig = {
+    alta: {
+      icon: '🔥',
+      bg: 'bg-red-50 dark:bg-red-900/10',
+      border: 'border-l-3 border-red-500',
+      badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      hover: 'hover:bg-red-100 dark:hover:bg-red-900/20',
+      PriorityIcon: AlertCircle
+    },
+    media: {
+      icon: '⚡',
+      bg: 'bg-yellow-50 dark:bg-yellow-900/10',
+      border: 'border-l-3 border-yellow-500',
+      badge: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      hover: 'hover:bg-yellow-100 dark:hover:bg-yellow-900/20',
+      PriorityIcon: Zap
+    },
+    baja: {
+      icon: '✓',
+      bg: 'bg-green-50 dark:bg-green-900/10',
+      border: 'border-l-3 border-green-500',
+      badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      hover: 'hover:bg-green-100 dark:hover:bg-green-900/20',
+      PriorityIcon: CheckCircle2
+    }
+  }
 
-  // Icono según prioridad
-  const PriorityIcon = task.priority === 'alta' ? AlertCircle : task.priority === 'media' ? Zap : CheckCircle2
+  const config = priorityConfig[task.priority as keyof typeof priorityConfig] || priorityConfig.baja
 
   return (
     <div
@@ -139,82 +138,129 @@ function UnscheduledTaskCard({ task }: UnscheduledTaskCardProps) {
       style={style}
       {...listeners}
       {...attributes}
+      onDoubleClick={handleDoubleClick}
+      onMouseEnter={() => setHoveredTask(true)}
+      onMouseLeave={() => setHoveredTask(false)}
       className={`
-        group relative border-l-4 ${colors.border} ${colors.bg}
-        rounded-2xl p-4 cursor-move
-        shadow-soft ${colors.shadow} hover:shadow-soft-lg
-        transition-all duration-200
-        hover:scale-[1.02] active:scale-95
+        group relative
+        ${config.bg} ${config.border} ${config.hover}
+        rounded-lg p-2.5
+        cursor-move
+        transition-all duration-150
+        hover:shadow-md hover:scale-[1.01]
+        active:scale-[0.98] active:shadow-sm
         ${task.completed ? 'opacity-60' : ''}
-        ${isDragging ? 'z-50 shadow-soft-2xl scale-105' : ''}
-        border-r border-t border-b border-gray-200 dark:border-gray-700
       `}
     >
-      <div className="flex items-start gap-3">
-        {/* Grip handle */}
-        <GripVertical
-          size={18}
-          className="flex-shrink-0 mt-0.5 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:text-gray-400"
-        />
+      {/* INDICADOR DE ARRASTRABLE */}
+      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40 transition-opacity">
+        <GripVertical className="w-3 h-3 text-gray-500" />
+      </div>
 
+      {/* CONTENIDO PRINCIPAL */}
+      <div className="flex items-start gap-2 pl-2">
+
+        {/* ICONO DE PRIORIDAD - MÁS PEQUEÑO */}
+        <span className="text-sm mt-0.5 flex-shrink-0">{config.icon}</span>
+
+        {/* INFORMACIÓN DE LA TAREA */}
         <div className="flex-1 min-w-0">
-          {/* Badge de prioridad con icono */}
-          {task.priority && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`
-                inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1
-                rounded-full border ${colors.badge}
-                shadow-sm
-              `}>
-                <PriorityIcon size={12} />
-                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-              </span>
-            </div>
-          )}
 
-          {/* Título */}
-          <p className={`
-            font-semibold text-sm text-gray-900 dark:text-white leading-snug mb-1
+          {/* TÍTULO */}
+          <h3 className={`
+            font-semibold text-sm text-gray-900 dark:text-white leading-tight mb-0.5
             ${task.completed ? 'line-through opacity-60' : ''}
           `}>
             {task.title}
-          </p>
+          </h3>
 
-          {/* Descripción */}
+          {/* DESCRIPCIÓN - TRUNCADA */}
           {task.description && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 mb-1.5 leading-relaxed">
               {task.description}
             </p>
           )}
 
-          {/* Tags */}
-          {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {task.tags.slice(0, 3).map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium border border-gray-200 dark:border-gray-600"
-                >
-                  <Tag size={10} />
-                  {tag}
-                </span>
-              ))}
-              {task.tags.length > 3 && (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-semibold border border-primary-200 dark:border-primary-800">
-                  +{task.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
+          {/* FILA INFERIOR: Badge prioridad + fecha + tags */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+
+            {/* Badge de prioridad - COMPACTO */}
+            <span className={`
+              ${config.badge}
+              px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide
+            `}>
+              {task.priority}
+            </span>
+
+            {/* Fecha de deadline si existe */}
+            {task.due_date && (
+              <span className="flex items-center gap-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                <Clock className="w-3 h-3" />
+                {new Date(task.due_date).toLocaleDateString('es', {
+                  day: 'numeric',
+                  month: 'short'
+                })}
+              </span>
+            )}
+
+            {/* Tags si existen - MINI */}
+            {task.tags && task.tags.length > 0 && (
+              <div className="flex gap-1 items-center">
+                {task.tags.slice(0, 2).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {task.tags.length > 2 && (
+                  <span className="text-[10px] text-gray-400 font-medium">
+                    +{task.tags.length - 2}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* BOTÓN DE EDITAR - APARECE EN HOVER */}
+        {hoveredTask && onSchedule && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDoubleClick()
+            }}
+            className="
+              p-1.5 bg-white dark:bg-gray-700
+              rounded-md shadow-sm
+              hover:bg-gray-100 dark:hover:bg-gray-600
+              transition-colors
+              flex-shrink-0
+            "
+          >
+            <Edit3 className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+          </motion.button>
+        )}
       </div>
 
-      {/* Indicador visual de "arrastrando" */}
+      {/* INDICADOR DE DOBLE CLICK - APARECE EN HOVER */}
+      {hoveredTask && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.3 }}
+          className="absolute inset-0 rounded-lg border-2 border-primary-400 border-dashed pointer-events-none"
+        />
+      )}
+
+      {/* INDICADOR VISUAL DE "ARRASTRANDO" */}
       {isDragging && (
-        <div className="absolute inset-0 rounded-2xl bg-primary-500/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-          <div className="bg-white dark:bg-gray-800 rounded-xl px-4 py-2 shadow-soft-lg border border-primary-300 dark:border-primary-700">
-            <p className="text-sm font-semibold text-primary-700 dark:text-primary-300 flex items-center gap-2">
-              <Clock size={14} />
+        <div className="absolute inset-0 rounded-lg bg-primary-500/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 shadow-lg border border-primary-300 dark:border-primary-700">
+            <p className="text-xs font-semibold text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
               Arrastrando...
             </p>
           </div>
