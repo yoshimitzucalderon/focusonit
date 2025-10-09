@@ -142,7 +142,7 @@ export default function UnscheduledTasksMobile({
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Desliza para programar • Toca para editar
+                  📋 Tap en <Calendar className="w-3 h-3 inline" /> para programar • Tap en tarjeta para detalles
                 </p>
               </div>
 
@@ -210,6 +210,24 @@ function MobileTaskCard({ task, index, onSchedule, onToggleComplete }: MobileTas
       }
     }
   )
+
+  // PROGRAMAR RÁPIDAMENTE con checkbox
+  const handleQuickSchedule = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    console.log('✅ Checkbox click - programación rápida:', task.title)
+
+    if (onSchedule) {
+      // Sugerir próximo horario disponible (siguiente hora completa)
+      const now = new Date()
+      const nextHour = new Date(now)
+      nextHour.setHours(now.getHours() + 1, 0, 0, 0)
+
+      console.log('📅 Programando automáticamente a las', nextHour.getHours() + ':00')
+
+      triggerHaptic(20)
+      onSchedule(task)
+    }
+  }
 
   const getPriorityConfig = () => {
     switch (task.priority) {
@@ -294,25 +312,20 @@ function MobileTaskCard({ task, index, onSchedule, onToggleComplete }: MobileTas
         `}
       >
         <div className="flex items-start gap-3">
-          {/* Checkbox */}
+          {/* Checkbox - Programar rápidamente */}
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              if (onToggleComplete) {
-                onToggleComplete(task.id)
-                triggerHaptic(15)
-              }
-            }}
-            className={`
-              mt-0.5 w-6 h-6 rounded border-2 flex items-center justify-center
-              transition-all active:scale-90
-              ${task.completed
-                ? 'bg-primary-500 border-primary-500'
-                : 'border-gray-300 dark:border-gray-600 hover:border-primary-500'
-              }
-            `}
+            onClick={handleQuickSchedule}
+            className="
+              mt-0.5 w-6 h-6 min-w-6 rounded border-2
+              border-primary-500
+              flex items-center justify-center
+              hover:bg-primary-50 dark:hover:bg-primary-900/20
+              active:scale-90
+              transition-all
+            "
+            title="Programar rápidamente"
           >
-            {task.completed && <Check className="w-4 h-4 text-white" />}
+            <Calendar className="w-4 h-4 text-primary-600" />
           </button>
 
           <div className="flex-1 min-w-0">

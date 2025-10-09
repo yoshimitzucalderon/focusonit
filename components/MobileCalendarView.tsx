@@ -74,6 +74,60 @@ export default function MobileCalendarView({
     return { top, height }
   }
 
+  // Detectar tareas que se solapan en el tiempo
+  const getSimultaneousTasks = (task: Task): Task[] => {
+    if (!task.start_time || !task.end_time) return []
+
+    const [taskStartHour, taskStartMin] = task.start_time.split(':').map(Number)
+    const [taskEndHour, taskEndMin] = task.end_time.split(':').map(Number)
+    const taskStart = taskStartHour * 60 + taskStartMin
+    const taskEnd = taskEndHour * 60 + taskEndMin
+
+    return scheduledTasks.filter(otherTask => {
+      if (otherTask.id === task.id) return true // Incluir la tarea misma
+      if (!otherTask.start_time || !otherTask.end_time) return false
+
+      const [otherStartHour, otherStartMin] = otherTask.start_time.split(':').map(Number)
+      const [otherEndHour, otherEndMin] = otherTask.end_time.split(':').map(Number)
+      const otherStart = otherStartHour * 60 + otherStartMin
+      const otherEnd = otherEndHour * 60 + otherEndMin
+
+      // Detectar solapamiento
+      return taskStart < otherEnd && taskEnd > otherStart
+    })
+  }
+
+  // Calcular layout (ancho y posición) para tareas simultáneas
+  const calculateTaskLayout = (task: Task) => {
+    const simultaneousTasks = getSimultaneousTasks(task)
+
+    if (simultaneousTasks.length <= 1) {
+      return { width: '100%', left: '0%', zIndex: 1 }
+    }
+
+    // Ordenar por hora de inicio para asignar columnas
+    const sortedTasks = [...simultaneousTasks].sort((a, b) => {
+      const aStart = a.start_time?.split(':').map(Number)[0] || 0
+      const bStart = b.start_time?.split(':').map(Number)[0] || 0
+      return aStart - bStart
+    })
+
+    const totalTasks = sortedTasks.length
+    const taskIndex = sortedTasks.findIndex(t => t.id === task.id)
+
+    // Calcular ancho y posición con pequeño margen para visual
+    const widthPercentage = (100 / totalTasks) - 1
+    const leftPercentage = (100 / totalTasks) * taskIndex
+
+    console.log(`📊 Layout para "${task.title}": ${totalTasks} tareas simultáneas, columna ${taskIndex + 1}/${totalTasks}`)
+
+    return {
+      width: `${widthPercentage}%`,
+      left: `${leftPercentage}%`,
+      zIndex: taskIndex + 1
+    }
+  }
+
   // Renderizar línea de hora actual
   const renderCurrentTimeLine = () => {
     if (!isTodayFn(selectedDate)) return null
@@ -183,6 +237,7 @@ export default function MobileCalendarView({
             {scheduledTasks.map((task) => {
               if (!task.start_time || !task.end_time) return null
               const { top, height } = getTaskPosition(task.start_time, task.end_time)
+              const { width, left, zIndex } = calculateTaskLayout(task)
 
               // Solo mostrar si está en el rango visible
               const [startHour] = task.start_time.split(':').map(Number)
@@ -194,6 +249,9 @@ export default function MobileCalendarView({
                   task={task}
                   top={top}
                   height={height}
+                  width={width}
+                  left={left}
+                  zIndex={zIndex}
                   onTap={() => onEditTask(task)}
                 />
               )
