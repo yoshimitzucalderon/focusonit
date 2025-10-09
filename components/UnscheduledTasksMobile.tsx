@@ -89,20 +89,38 @@ export default function UnscheduledTasksMobile({
         animate={{ height: heights[sheetHeight] }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl flex flex-col"
+        style={{ touchAction: sheetHeight === 'mini' ? 'auto' : 'none' }}
       >
-        {/* HANDLE PARA ARRASTRAR */}
+        {/* HANDLE PARA ARRASTRAR - Área clickeable más grande */}
         <motion.div
           drag="y"
           dragConstraints={{ top: 0, bottom: 0 }}
           dragElastic={0.2}
           onDragEnd={handleDragEnd}
-          className="flex justify-center py-2 cursor-grab active:cursor-grabbing"
+          onClick={() => {
+            // Click simple para expandir cuando está minimizado
+            if (sheetHeight === 'mini') {
+              triggerHaptic(15)
+              setSheetHeight('medio')
+              console.log('📈 Abriendo drawer por click')
+            }
+          }}
+          className="flex justify-center py-3 cursor-pointer active:cursor-grabbing"
         >
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors" />
         </motion.div>
 
-        {/* HEADER */}
-        <div className="px-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+        {/* HEADER - También clickeable cuando está minimizado */}
+        <div
+          className="px-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          onClick={() => {
+            if (sheetHeight === 'mini') {
+              triggerHaptic(15)
+              setSheetHeight('medio')
+              console.log('📈 Abriendo drawer por click en header')
+            }
+          }}
+        >
           <div className="flex items-center justify-between">
             <h3 className="text-base font-bold text-gray-900 dark:text-white">
               Sin programar
@@ -115,10 +133,28 @@ export default function UnscheduledTasksMobile({
               {/* BOTÓN MINIMIZAR */}
               {sheetHeight !== 'mini' && (
                 <button
-                  onClick={closeSheet}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    closeSheet()
+                  }}
                   className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all"
                 >
                   <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400 rotate-180" />
+                </button>
+              )}
+
+              {/* BOTÓN EXPANDIR cuando está minimizado */}
+              {sheetHeight === 'mini' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    triggerHaptic(15)
+                    setSheetHeight('medio')
+                    console.log('📈 Expandiendo drawer')
+                  }}
+                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all"
+                >
+                  <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
               )}
             </div>
