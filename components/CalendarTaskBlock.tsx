@@ -14,6 +14,9 @@ interface CalendarTaskBlockProps {
   height: number
   onEdit: () => void
   onUpdate: () => void
+  overlapWidth?: number
+  overlapOffset?: number
+  overlapCount?: number
 }
 
 export default function CalendarTaskBlock({
@@ -21,7 +24,10 @@ export default function CalendarTaskBlock({
   top: initialTop,
   height: initialHeight,
   onEdit,
-  onUpdate
+  onUpdate,
+  overlapWidth = 100,
+  overlapOffset = 0,
+  overlapCount = 1
 }: CalendarTaskBlockProps) {
   const [isResizingTop, setIsResizingTop] = useState(false)
   const [isResizingBottom, setIsResizingBottom] = useState(false)
@@ -207,8 +213,10 @@ export default function CalendarTaskBlock({
         minHeight: '30px',
         opacity: isDragging ? 0.5 : 1,
         marginBottom: '4px', // Separación entre tareas
+        left: `${overlapOffset}%`,
+        width: `calc(${overlapWidth}% - 8px)`, // Restar padding
       }}
-      className={`absolute left-0 right-2 rounded-lg border-l-4 border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 group transition-shadow hover:shadow-lg ${getPriorityColor()} ${
+      className={`absolute rounded-lg border-l-4 border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 group transition-shadow hover:shadow-lg ${getPriorityColor()} ${
         task.completed ? 'opacity-50' : ''
       } ${isResizingTop || isResizingBottom ? 'shadow-2xl z-30' : 'z-10'} ${!isResizingTop && !isResizingBottom ? 'cursor-grab active:cursor-grabbing' : ''}`}
       onClick={(e) => {
@@ -226,6 +234,13 @@ export default function CalendarTaskBlock({
       >
         <div className="w-12 h-1 bg-gray-400 dark:bg-gray-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
+
+      {/* Badge indicador de tareas superpuestas */}
+      {overlapCount > 1 && (
+        <div className="absolute top-1 right-1 bg-blue-500 dark:bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-lg z-50">
+          {overlapCount}
+        </div>
+      )}
 
       {/* Contenido de la tarea - área para drag & drop de toda la tarea */}
       <div
@@ -256,11 +271,16 @@ export default function CalendarTaskBlock({
         )}
       </div>
 
-      {/* Tooltip mientras se redimensiona */}
+      {/* Tooltip mientras se redimensiona - más prominente */}
       {(isResizingTop || isResizingBottom) && (
-        <div className="fixed left-1/2 top-4 -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-sm px-3 py-2 rounded shadow-2xl whitespace-nowrap z-[100] pointer-events-none">
-          <div className="font-semibold">{startTime} - {endTime}</div>
-          <div className="text-xs text-gray-300">Duración: {duration}h</div>
+        <div className="fixed left-1/2 top-4 -translate-x-1/2 bg-blue-600 dark:bg-blue-700 text-white text-base px-4 py-3 rounded-lg shadow-2xl whitespace-nowrap z-[100] pointer-events-none border-2 border-blue-400 dark:border-blue-500">
+          <div className="font-bold text-lg">{startTime} - {endTime}</div>
+          <div className="text-sm opacity-90 mt-1">
+            Duración: {duration}h ({Math.round(tempHeight)} minutos)
+          </div>
+          <div className="text-xs opacity-75 mt-1">
+            {isResizingTop ? '↑ Ajustando hora de inicio' : '↓ Ajustando hora de fin'}
+          </div>
         </div>
       )}
 

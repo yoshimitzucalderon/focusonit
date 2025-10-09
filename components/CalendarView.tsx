@@ -116,6 +116,57 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     return { top, height }
   }
 
+  // Detectar tareas que se traslapan y calcular posiciones
+  const detectOverlappingTasks = () => {
+    const overlaps: Map<string, { width: number, offset: number, count: number }> = new Map()
+
+    scheduledTasks.forEach((task1, index1) => {
+      if (!task1.start_time || !task1.end_time) return
+
+      const [start1Hour, start1Min] = task1.start_time.split(':').map(Number)
+      const [end1Hour, end1Min] = task1.end_time.split(':').map(Number)
+      const start1Minutes = start1Hour * 60 + start1Min
+      const end1Minutes = end1Hour * 60 + end1Min
+
+      const overlappingTasks: number[] = []
+
+      scheduledTasks.forEach((task2, index2) => {
+        if (index1 === index2 || !task2.start_time || !task2.end_time) return
+
+        const [start2Hour, start2Min] = task2.start_time.split(':').map(Number)
+        const [end2Hour, end2Min] = task2.end_time.split(':').map(Number)
+        const start2Minutes = start2Hour * 60 + start2Min
+        const end2Minutes = end2Hour * 60 + end2Min
+
+        // Verificar si se traslapan (existe intersección)
+        if (start1Minutes < end2Minutes && end1Minutes > start2Minutes) {
+          overlappingTasks.push(index2)
+        }
+      })
+
+      if (overlappingTasks.length > 0) {
+        // Calcular posición en el grupo de tareas traslapadas
+        const totalInGroup = overlappingTasks.length + 1
+        let position = 0
+
+        // Contar cuántas tareas del grupo vienen antes de esta
+        overlappingTasks.forEach(otherIndex => {
+          if (otherIndex < index1) {
+            position++
+          }
+        })
+
+        overlaps.set(task1.id, {
+          width: 100 / totalInGroup,
+          offset: position * (100 / totalInGroup),
+          count: totalInGroup
+        })
+      }
+    })
+
+    return overlaps
+  }
+
   // Handler cuando comienza el drag
   const handleDragStart = (event: DragStartEvent) => {
     const taskId = event.active.id as string
@@ -165,9 +216,45 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   // Función para programar una tarea en un horario específico
   const scheduleTask = async (task: Task, hour: number, minute: number = 0) => {
     try {
-      const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`
-      const endTime = `${(hour + 1).toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`
+      // Calcular duración original de la tarea (si ya tiene horario)
+      let durationInMinutes = 60 // Default: 1 hora para tareas nuevas
+
+      if (task.start_time && task.end_time) {
+        // Tarea ya tiene horario - mantener su duración
+        const [startHour, startMin] = task.start_time.split(':').map(Number)
+        const [endHour, endMin] = task.end_time.split(':').map(Number)
+        const originalStartMinutes = startHour * 60 + startMin
+        const originalEndMinutes = endHour * 60 + endMin
+        durationInMinutes = originalEndMinutes - originalStartMinutes
+      }
+
+      // Snap hora a intervalos de 15 minutos
+      const startMinutes = hour * 60 + minute
+      const snappedStartMinutes = Math.round(startMinutes / 15) * 15
+
+      // Calcular end time manteniendo la duración
+      let endMinutes = snappedStartMinutes + durationInMinutes
+
+      // Validar que no exceda 23:59 (1439 minutos)
+      if (endMinutes > 1439) {
+        endMinutes = 1439
+        // Ajustar start time para que quepa
+        const adjustedStartMinutes = endMinutes - durationInMinutes
+        if (adjustedStartMinutes < 0) {
+          // Si la tarea es muy larga, ajustar al máximo posible
+          toast('Tarea ajustada para no exceder las 23:59', { icon: '⚠️' })
+        }
+      }
+
+      const startTime = `${Math.floor(snappedStartMinutes / 60).toString().padStart(2, '0')}:${(snappedStartMinutes % 60).toString().padStart(2, '0')}:00`
+      const endTime = `${Math.floor(endMinutes / 60).toString().padStart(2, '0')}:${(endMinutes % 60).toString().padStart(2, '0')}:00`
       const dateString = format(selectedDate, 'yyyy-MM-dd')
+
+      console.log('📅 Programando tarea:', {
+        original: { start: task.start_time, end: task.end_time },
+        new: { start: startTime, end: endTime },
+        duration: `${durationInMinutes} min`
+      })
 
       const { error } = await supabase
         .from('tasks')
@@ -183,7 +270,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
       if (error) throw error
 
-      toast.success('Tarea programada')
+      toast.success(`Tarea programada (${Math.round(durationInMinutes / 60 * 10) / 10}h)`)
       loadTasks()
     } catch (error) {
       console.error('Error scheduling task:', error)
@@ -288,21 +375,29 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
               {/* Tareas programadas */}
               <div className="absolute left-16 right-0 top-0 bottom-0">
-                {scheduledTasks.map((task) => {
-                  if (!task.start_time || !task.end_time) return null
-                  const { top, height } = getTaskPosition(task.start_time, task.end_time)
+                {(() => {
+                  const overlaps = detectOverlappingTasks()
 
-                  return (
-                    <CalendarTaskBlock
-                      key={task.id}
-                      task={task}
-                      top={top}
-                      height={height}
-                      onEdit={() => setEditingTask(task)}
-                      onUpdate={loadTasks}
-                    />
-                  )
-                })}
+                  return scheduledTasks.map((task) => {
+                    if (!task.start_time || !task.end_time) return null
+                    const { top, height } = getTaskPosition(task.start_time, task.end_time)
+                    const overlap = overlaps.get(task.id)
+
+                    return (
+                      <CalendarTaskBlock
+                        key={task.id}
+                        task={task}
+                        top={top}
+                        height={height}
+                        onEdit={() => setEditingTask(task)}
+                        onUpdate={loadTasks}
+                        overlapWidth={overlap?.width}
+                        overlapOffset={overlap?.offset}
+                        overlapCount={overlap?.count}
+                      />
+                    )
+                  })
+                })()}
               </div>
 
               {/* Línea de hora actual */}
