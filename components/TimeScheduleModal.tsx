@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Task } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
-import { X, Clock, Tag, AlertCircle, Trash2, Sparkles } from 'lucide-react'
+import { X, Clock, Tag, AlertCircle, Trash2, Sparkles, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
+import { format, addDays, subDays, isToday, isPast, startOfDay } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface TimeScheduleModalProps {
   task: Task
@@ -21,6 +23,15 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
   const [newTag, setNewTag] = useState('')
   const [saving, setSaving] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // NUEVO: Estado para la fecha
+  const [taskDate, setTaskDate] = useState<Date>(() => {
+    if (task.due_date) {
+      return new Date(task.due_date)
+    }
+    return new Date()
+  })
+
   const supabase = createClient()
 
   // Detectar dispositivo móvil
@@ -36,6 +47,43 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
   // Popular tags para sugerencias
   const popularTags = ['trabajo', 'estudio', 'personal', 'urgente', 'reunión', 'proyecto']
   const suggestedTags = popularTags.filter(tag => !tags.includes(tag))
+
+  // Funciones de navegación de fecha
+  const adjustDate = (days: number) => {
+    const newDate = days > 0 ? addDays(taskDate, days) : subDays(taskDate, Math.abs(days))
+    setTaskDate(newDate)
+
+    // Mostrar warning si es fecha pasada
+    if (isPast(startOfDay(newDate)) && !isToday(newDate)) {
+      toast('⚠️ Fecha en el pasado', { duration: 2000 })
+    }
+  }
+
+  const setToday = () => {
+    setTaskDate(new Date())
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value)
+    if (!isNaN(newDate.getTime())) {
+      setTaskDate(newDate)
+
+      // Mostrar warning si es fecha pasada
+      if (isPast(startOfDay(newDate)) && !isToday(newDate)) {
+        toast('⚠️ Programando tarea en fecha pasada', { duration: 2000 })
+      }
+    }
+  }
+
+  // Formato de fecha para el input type="date"
+  const getDateInputValue = () => {
+    return format(taskDate, 'yyyy-MM-dd')
+  }
+
+  // Formato legible de fecha
+  const getReadableDate = () => {
+    return format(taskDate, "EEEE, d 'de' MMMM yyyy", { locale: es })
+  }
 
   // Atajos de teclado
   useEffect(() => {
@@ -65,12 +113,23 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
 
     setSaving(true)
     try {
+      const dateString = format(taskDate, 'yyyy-MM-dd')
+
+      console.log('💾 Guardando tarea con fecha:', {
+        date: dateString,
+        start: `${startTime}:00`,
+        end: `${endTime}:00`,
+        priority,
+        originalDate: task.due_date
+      })
+
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore
         .update({
           start_time: `${startTime}:00`,
           end_time: `${endTime}:00`,
+          due_date: dateString,
           priority,
           tags,
           is_all_day: false,
@@ -80,7 +139,13 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
 
       if (error) throw error
 
-      toast.success('Tarea actualizada')
+      // Mensaje de éxito con información de cambio de fecha
+      if (task.due_date !== dateString) {
+        toast.success(`Tarea movida a ${format(taskDate, "d 'de' MMMM", { locale: es })}`)
+      } else {
+        toast.success('Tarea actualizada')
+      }
+
       onSave()
       onClose()
     } catch (error) {
@@ -221,6 +286,60 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
                 </h4>
               </div>
 
+              {/* NUEVO: SELECTOR DE FECHA */}
+              <div>
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 block flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Fecha
+                </label>
+
+                {/* Fecha legible */}
+                <div className="mb-2 px-3 py-2 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+                  <p className="text-sm font-medium text-primary-900 dark:text-primary-100 capitalize">
+                    {getReadableDate()}
+                  </p>
+                </div>
+
+                {/* Navegación rápida */}
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => adjustDate(-1)}
+                    className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium active:scale-95 transition-all flex items-center justify-center gap-1"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                    Ayer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={setToday}
+                    className={`px-2 py-1.5 rounded-lg text-xs font-semibold active:scale-95 transition-all ${
+                      isToday(taskDate)
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    Hoy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustDate(1)}
+                    className="px-2 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-medium active:scale-95 transition-all flex items-center justify-center gap-1"
+                  >
+                    Mañana
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Input de fecha nativo */}
+                <input
+                  type="date"
+                  value={getDateInputValue()}
+                  onChange={handleDateChange}
+                  className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg focus:border-primary-500 dark:bg-gray-700 dark:text-white outline-none"
+                />
+              </div>
+
               {/* PRIORIDAD - BOTONES MÁS PEQUEÑOS */}
               <div>
                 <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
@@ -359,6 +478,73 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* NUEVO: SELECTOR DE FECHA */}
+            <div>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                Fecha
+              </label>
+
+              {/* Fecha legible */}
+              <div className="mb-3 px-4 py-3 bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border border-primary-200 dark:border-primary-800 rounded-xl">
+                <p className="text-base font-semibold text-primary-900 dark:text-primary-100 capitalize">
+                  {getReadableDate()}
+                </p>
+              </div>
+
+              {/* Navegación rápida */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => adjustDate(-1)}
+                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Ayer
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={setToday}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    isToday(taskDate)
+                      ? 'bg-primary-600 text-white shadow-md'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Hoy
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => adjustDate(1)}
+                  className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  Mañana
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </div>
+
+              {/* Input de fecha nativo */}
+              <input
+                type="date"
+                value={getDateInputValue()}
+                onChange={handleDateChange}
+                className="
+                  w-full px-3 py-2 text-sm
+                  border-2 border-gray-200 dark:border-gray-600
+                  rounded-lg
+                  focus:border-primary-500 focus:ring-2 focus:ring-primary-200 dark:focus:ring-primary-800
+                  dark:bg-gray-700 dark:text-white
+                  transition-all outline-none
+                "
+              />
             </div>
 
             {/* SELECTOR DE PRIORIDAD */}
