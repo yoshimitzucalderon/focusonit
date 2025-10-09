@@ -7,6 +7,7 @@ import { Clock, GripVertical } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { diagnoseTaskTimes, normalizeTime, isValidTimeFormat } from '@/lib/utils/timeNormalization'
 
 interface CalendarTaskBlockProps {
   task: Task
@@ -48,6 +49,30 @@ export default function CalendarTaskBlock({
     transform: CSS.Translate.toString(transform),
   } : undefined
 
+  // Diagnóstico de tiempos al cargar la tarea
+  useEffect(() => {
+    const diagnosis = diagnoseTaskTimes(task)
+
+    if (diagnosis.hasIssues) {
+      console.error('⚠️ TAREA CON PROBLEMAS DETECTADA:', {
+        id: task.id,
+        title: task.title,
+        start_time: task.start_time,
+        end_time: task.end_time,
+        start_time_type: typeof task.start_time,
+        end_time_type: typeof task.end_time,
+        issues: diagnosis.issues
+      })
+    } else {
+      console.log('✅ Tarea con tiempos válidos:', {
+        id: task.id,
+        title: task.title,
+        start_time: task.start_time,
+        end_time: task.end_time
+      })
+    }
+  }, [task.id, task.title, task.start_time, task.end_time])
+
   useEffect(() => {
     setTop(initialTop)
     setHeight(initialHeight)
@@ -78,6 +103,39 @@ export default function CalendarTaskBlock({
   const handleTopMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // VALIDAR tiempos antes de permitir resize
+    if (!isValidTimeFormat(task.start_time) || !isValidTimeFormat(task.end_time)) {
+      console.error('❌ Tiempos inválidos detectados al intentar resize:', {
+        taskId: task.id,
+        start_time: task.start_time,
+        end_time: task.end_time
+      })
+
+      toast.error('Formato de tiempo inválido. Normalizando...')
+
+      // Normalizar automáticamente
+      const normalizedStart = normalizeTime(task.start_time)
+      const normalizedEnd = normalizeTime(task.end_time)
+
+      // Actualizar en BD
+      supabase
+        .from('tasks')
+        // @ts-ignore
+        .update({
+          start_time: normalizedStart,
+          end_time: normalizedEnd,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task.id)
+        .then(() => {
+          toast.success('Tiempos normalizados. Intenta de nuevo.')
+          onUpdate()
+        })
+
+      return
+    }
+
     setIsResizingTop(true)
   }
 
@@ -85,6 +143,39 @@ export default function CalendarTaskBlock({
   const handleBottomMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // VALIDAR tiempos antes de permitir resize
+    if (!isValidTimeFormat(task.start_time) || !isValidTimeFormat(task.end_time)) {
+      console.error('❌ Tiempos inválidos detectados al intentar resize:', {
+        taskId: task.id,
+        start_time: task.start_time,
+        end_time: task.end_time
+      })
+
+      toast.error('Formato de tiempo inválido. Normalizando...')
+
+      // Normalizar automáticamente
+      const normalizedStart = normalizeTime(task.start_time)
+      const normalizedEnd = normalizeTime(task.end_time)
+
+      // Actualizar en BD
+      supabase
+        .from('tasks')
+        // @ts-ignore
+        .update({
+          start_time: normalizedStart,
+          end_time: normalizedEnd,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', task.id)
+        .then(() => {
+          toast.success('Tiempos normalizados. Intenta de nuevo.')
+          onUpdate()
+        })
+
+      return
+    }
+
     setIsResizingBottom(true)
   }
 

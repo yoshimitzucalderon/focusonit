@@ -9,6 +9,8 @@ import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { normalizeTaskTimes } from '@/lib/utils/timeNormalization'
+import { cleanupAllTasks, analyzeTasksOnly } from '@/lib/utils/cleanupTasks'
 import CalendarTaskBlock from './CalendarTaskBlock'
 import UnscheduledTasks from './UnscheduledTasks'
 import TimeScheduleModal from './TimeScheduleModal'
@@ -63,7 +65,8 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
       if (error) throw error
 
-      const allTasks: Task[] = (data as Task[]) || []
+      // NORMALIZAR todas las tareas al cargar
+      const allTasks: Task[] = ((data as Task[]) || []).map(task => normalizeTaskTimes(task))
 
       // Separar tareas programadas vs sin programar
       const scheduled = allTasks.filter(task =>
@@ -299,9 +302,65 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     )
   }
 
+  // Handler para limpiar datos (solo en desarrollo)
+  const handleCleanupData = async () => {
+    const confirmCleanup = confirm('¿Analizar y limpiar datos de todas las tareas?\n\nEsto normalizará los formatos de tiempo.')
+
+    if (!confirmCleanup) return
+
+    const loadingToast = toast.loading('Analizando tareas...')
+
+    try {
+      // Primero analizar
+      const analysis = await analyzeTasksOnly(userId)
+
+      console.log('📊 Resultado del análisis:', analysis)
+
+      if (analysis.tasksWithIssues === 0) {
+        toast.dismiss(loadingToast)
+        toast.success('✅ Todas las tareas tienen formatos correctos')
+        return
+      }
+
+      // Si hay problemas, preguntar si quiere limpiar
+      toast.dismiss(loadingToast)
+
+      const confirmFix = confirm(
+        `Se encontraron ${analysis.tasksWithIssues} tareas con problemas.\n\n` +
+        `¿Deseas normalizarlas automáticamente?\n\n` +
+        `Tareas afectadas:\n${analysis.details.slice(0, 5).map(d => `- ${d.title}`).join('\n')}`
+      )
+
+      if (!confirmFix) return
+
+      const cleanupToast = toast.loading('Limpiando datos...')
+
+      // Limpiar
+      const result = await cleanupAllTasks(userId)
+
+      toast.dismiss(cleanupToast)
+
+      if (result.tasksUpdated > 0) {
+        toast.success(`✅ ${result.tasksUpdated} tareas normalizadas correctamente`)
+        await loadTasks() // Recargar
+      } else {
+        toast.success('✅ No se requirieron cambios')
+      }
+
+      if (result.errors.length > 0) {
+        console.error('❌ Errores durante limpieza:', result.errors)
+        toast.error(`⚠️ ${result.errors.length} errores durante la limpieza`)
+      }
+    } catch (error) {
+      console.error('Error en limpieza:', error)
+      toast.dismiss(loadingToast)
+      toast.error('Error al limpiar datos')
+    }
+  }
+
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
       {/* Header con navegación de fechas */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-4">
         <div className="flex items-center justify-between">
@@ -426,6 +485,20 @@ export default function CalendarView({ userId }: CalendarViewProps) {
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Botón de limpieza de datos (solo en desarrollo) */}
+      {process.env.NODE_ENV === 'development' && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleCleanupData}
+          className="fixed bottom-4 left-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 font-medium z-50"
+          title="Analizar y normalizar formatos de tiempo"
+        >
+          <span className="text-lg">🧹</span>
+          <span>Limpiar Datos</span>
+        </motion.button>
+      )}
     </div>
     </DndContext>
   )
