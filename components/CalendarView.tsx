@@ -8,7 +8,7 @@ import { format, addDays, subDays, isToday as isTodayFn, startOfDay } from 'date
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { normalizeTaskTimes } from '@/lib/utils/timeNormalization'
 import { cleanupAllTasks, analyzeTasksOnly } from '@/lib/utils/cleanupTasks'
 import CalendarTaskBlock from './CalendarTaskBlock'
@@ -33,12 +33,17 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
-  // Configurar sensores para drag & drop con mejor UX
+  // Configurar sensores para drag & drop - SIN restricciones para activación inmediata
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 3, // Reducido a 3px para activación instantánea
-        tolerance: 3,
+        distance: 0, // Activación inmediata
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 5,
       },
     })
   )
