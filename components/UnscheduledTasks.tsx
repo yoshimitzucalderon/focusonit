@@ -95,6 +95,28 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
     opacity: isDragging ? 0.5 : 1,
   }
 
+  // Handler HTML5 drag start
+  const handleNativeDragStart = (e: React.DragEvent) => {
+    console.log('🚀 HTML5 Drag Start:', task.title)
+    e.dataTransfer.effectAllowed = 'move'
+
+    // Calcular duración si tiene horarios
+    let duration = 60 // Default 1 hora
+    if (task.start_time && task.end_time) {
+      const [startHour, startMin] = task.start_time.split(':').map(Number)
+      const [endHour, endMin] = task.end_time.split(':').map(Number)
+      duration = (endHour * 60 + endMin) - (startHour * 60 + startMin)
+    }
+
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      id: task.id,
+      title: task.title,
+      duration,
+      priority: task.priority,
+      description: task.description
+    }))
+  }
+
   // Manejador de doble click
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -157,6 +179,8 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
       style={style}
       {...listeners}
       {...attributes}
+      draggable={true}
+      onDragStart={handleNativeDragStart}
       onDoubleClick={handleDoubleClick}
       onMouseEnter={() => setHoveredTask(true)}
       onMouseLeave={() => setHoveredTask(false)}

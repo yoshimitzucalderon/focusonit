@@ -208,6 +208,23 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     }
   }
 
+  // Handler para drop HTML5 nativo
+  const handleNativeTaskDrop = async (taskData: any, hour: number, minute: number) => {
+    console.log('🎯 HTML5 Task Drop:', { taskData, hour, minute })
+
+    // Buscar la tarea completa en unscheduledTasks o scheduledTasks
+    const task = unscheduledTasks.find(t => t.id === taskData.id) ||
+                 scheduledTasks.find(t => t.id === taskData.id)
+
+    if (!task) {
+      console.error('❌ Tarea no encontrada:', taskData.id)
+      toast.error('Error: tarea no encontrada')
+      return
+    }
+
+    await scheduleTask(task, hour, minute)
+  }
+
   // Handler cuando termina el drag
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over, delta } = event
@@ -557,7 +574,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
             <div className="relative" style={{ height: '1440px' }}> {/* 24 horas * 60px */}
               {/* Grid de horas con drop zones */}
               {hours.map((hour) => (
-                <CalendarDropZone key={hour} hour={hour} />
+                <CalendarDropZone key={hour} hour={hour} onTaskDrop={handleNativeTaskDrop} />
               ))}
 
               {/* Tareas programadas */}

@@ -1,22 +1,66 @@
 'use client'
 
+import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 
 interface CalendarDropZoneProps {
   hour: number
   isOver?: boolean
+  onTaskDrop?: (taskData: any, hour: number, minute: number) => void
 }
 
-export default function CalendarDropZone({ hour }: CalendarDropZoneProps) {
+export default function CalendarDropZone({ hour, onTaskDrop }: CalendarDropZoneProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `hour-${hour}`,
   })
 
+  const [isDragOver, setIsDragOver] = useState(false)
+
+  // Handler HTML5 dragOver - MANDATORY para habilitar drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault() // OBLIGATORIO
+    e.dataTransfer.dropEffect = 'move'
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragOver(false)
+  }
+
+  // Handler HTML5 drop
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+
+    try {
+      const taskData = JSON.parse(e.dataTransfer.getData('application/json'))
+      console.log('📥 HTML5 Drop en hora:', hour, 'Task:', taskData.title)
+
+      // Calcular minutos basado en posición Y dentro del slot
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+      const relativeY = e.clientY - rect.top
+      const minute = Math.floor((relativeY / rect.height) * 60)
+
+      console.log('⏰ Drop position:', { hour, minute, relativeY, height: rect.height })
+
+      if (onTaskDrop) {
+        onTaskDrop(taskData, hour, minute)
+      }
+    } catch (error) {
+      console.error('❌ Error procesando drop:', error)
+    }
+  }
+
+  const showHighlight = isOver || isDragOver
+
   return (
     <div
       ref={setNodeRef}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       className={`absolute left-0 right-0 border-t border-gray-200 dark:border-gray-700 transition-all duration-200 ${
-        isOver
+        showHighlight
           ? 'bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-400 dark:border-primary-600 shadow-inner'
           : ''
       }`}
@@ -44,11 +88,11 @@ export default function CalendarDropZone({ hour }: CalendarDropZoneProps) {
           }`} />
 
           {/* Indicador de drop mejorado */}
-          {isOver && (
+          {showHighlight && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="flex items-center gap-2 text-xs font-bold text-primary-700 dark:text-primary-300 bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-lg border-2 border-primary-400 dark:border-primary-600 animate-pulse">
                 <div className="w-2 h-2 rounded-full bg-primary-500" />
-                <span>Soltar aquí • {hour.toString().padStart(2, '0')}:00 - {hour.toString().padStart(2, '0')}:30</span>
+                <span>Soltar aquí • {hour.toString().padStart(2, '0')}:00 - {(hour + 1).toString().padStart(2, '0')}:00</span>
               </div>
             </div>
           )}
