@@ -14,51 +14,11 @@ export default function CalendarDropZone({ hour, onTaskDrop }: CalendarDropZoneP
     id: `hour-${hour}`,
   })
 
-  const [isDragOver, setIsDragOver] = useState(false)
-
-  // Handler HTML5 dragOver - MANDATORY para habilitar drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault() // OBLIGATORIO
-    e.dataTransfer.dropEffect = 'move'
-    setIsDragOver(true)
-  }
-
-  const handleDragLeave = () => {
-    setIsDragOver(false)
-  }
-
-  // Handler HTML5 drop
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-
-    try {
-      const taskData = JSON.parse(e.dataTransfer.getData('application/json'))
-      console.log('📥 HTML5 Drop en hora:', hour, 'Task:', taskData.title)
-
-      // Calcular minutos basado en posición Y dentro del slot
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const relativeY = e.clientY - rect.top
-      const minute = Math.floor((relativeY / rect.height) * 60)
-
-      console.log('⏰ Drop position:', { hour, minute, relativeY, height: rect.height })
-
-      if (onTaskDrop) {
-        onTaskDrop(taskData, hour, minute)
-      }
-    } catch (error) {
-      console.error('❌ Error procesando drop:', error)
-    }
-  }
-
-  const showHighlight = isOver || isDragOver
+  const showHighlight = isOver
 
   return (
     <div
       ref={setNodeRef}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
       className={`absolute left-0 right-0 border-t border-gray-200 dark:border-gray-700 transition-all duration-200 ${
         showHighlight
           ? 'bg-gradient-to-r from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-primary-400 dark:border-primary-600 shadow-inner'

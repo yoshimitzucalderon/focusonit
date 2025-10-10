@@ -179,8 +179,6 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
       style={style}
       {...listeners}
       {...attributes}
-      draggable={true}
-      onDragStart={handleNativeDragStart}
       onDoubleClick={handleDoubleClick}
       onMouseEnter={() => setHoveredTask(true)}
       onMouseLeave={() => setHoveredTask(false)}
