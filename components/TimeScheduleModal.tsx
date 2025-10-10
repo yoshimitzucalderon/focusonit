@@ -427,8 +427,19 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        className="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[9999] p-4"
         onClick={onClose}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          minWidth: '100vw',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0
+        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -436,7 +447,7 @@ export default function TimeScheduleModal({ task, onClose, onSave }: TimeSchedul
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', duration: 0.4, bounce: 0.25 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
         >
 
           {/* HEADER COMPACTO */}

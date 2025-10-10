@@ -171,19 +171,19 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
         ${task.completed ? 'opacity-60' : ''}
       `}
     >
-      {/* INDICADOR DE ARRASTRABLE - Más visible */}
-      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-100 transition-opacity">
-        <GripVertical className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+      {/* INDICADOR DE ARRASTRABLE - MUY VISIBLE */}
+      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-60 group-hover:opacity-100 transition-all group-hover:scale-110 duration-200">
+        <GripVertical className="w-5 h-5 text-primary-600 dark:text-primary-400" />
       </div>
 
-      {/* Badge "ARRASTRA" en hover */}
+      {/* Badge "ARRASTRA" en hover - MÁS GRANDE Y VISIBLE */}
       {hoveredTask && !isDragging && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg pointer-events-none z-10"
+          initial={{ opacity: 0, scale: 0.8, y: -5 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="absolute -top-3 -right-3 bg-gradient-to-r from-primary-600 to-purple-600 text-white text-xs font-extrabold px-3 py-1 rounded-full shadow-2xl pointer-events-none z-20 border-2 border-white dark:border-gray-800"
         >
-          ARRASTRA
+          🖱️ ARRASTRA
         </motion.div>
       )}
 
