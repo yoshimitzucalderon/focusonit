@@ -33,16 +33,12 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
-  // Configurar sensores para drag & drop - SIN restricciones para activación inmediata
+  // Configurar sensores para drag & drop - Activación instantánea y suave
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 0, // Activación inmediata
-      },
-    }),
+    useSensor(MouseSensor),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 100,
+        delay: 50,
         tolerance: 5,
       },
     })
