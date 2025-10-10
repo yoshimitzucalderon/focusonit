@@ -171,10 +171,21 @@ function UnscheduledTaskCard({ task, onSchedule }: UnscheduledTaskCardProps) {
         ${task.completed ? 'opacity-60' : ''}
       `}
     >
-      {/* INDICADOR DE ARRASTRABLE */}
-      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-40 transition-opacity">
-        <GripVertical className="w-3 h-3 text-gray-500" />
+      {/* INDICADOR DE ARRASTRABLE - Más visible */}
+      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-100 transition-opacity">
+        <GripVertical className="w-4 h-4 text-gray-600 dark:text-gray-400" />
       </div>
+
+      {/* Badge "ARRASTRA" en hover */}
+      {hoveredTask && !isDragging && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg pointer-events-none z-10"
+        >
+          ARRASTRA
+        </motion.div>
+      )}
 
       {/* CONTENIDO PRINCIPAL */}
       <div className="flex items-start gap-2 pl-2">

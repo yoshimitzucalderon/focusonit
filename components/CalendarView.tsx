@@ -37,8 +37,8 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5, // Reducido de 8 a 5 para activación más rápida
-        tolerance: 5,
+        distance: 3, // Reducido a 3px para activación instantánea
+        tolerance: 3,
       },
     })
   )
@@ -187,18 +187,24 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   // Handler cuando comienza el drag
   const handleDragStart = (event: DragStartEvent) => {
     const taskId = event.active.id as string
+    console.log('🎯 DRAG START - Task ID:', taskId)
 
     // Check if it's a scheduled task (ID format: "scheduled-{taskId}")
     let task: Task | undefined
     if (taskId.startsWith('scheduled-')) {
       const actualTaskId = taskId.replace('scheduled-', '')
       task = scheduledTasks.find(t => t.id === actualTaskId)
+      console.log('📅 Arrastrando tarea PROGRAMADA:', task?.title)
     } else {
       task = unscheduledTasks.find(t => t.id === taskId)
+      console.log('📋 Arrastrando tarea SIN PROGRAMAR:', task?.title)
     }
 
     if (task) {
       setActiveTask(task)
+      console.log('✅ Task activa establecida para overlay')
+    } else {
+      console.warn('⚠️ No se encontró la tarea con ID:', taskId)
     }
   }
 
