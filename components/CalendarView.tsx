@@ -570,10 +570,6 @@ export default function CalendarView({ userId }: CalendarViewProps) {
             ref={calendarRef}
             className="h-full overflow-y-auto overflow-x-hidden"
             style={{ scrollBehavior: 'smooth' }}
-            onDragOver={(e) => {
-              e.preventDefault() // Prevenir cursor prohibido
-              e.dataTransfer.dropEffect = 'move'
-            }}
           >
             <div className="relative" style={{ height: '1440px' }}> {/* 24 horas * 60px */}
               {/* Grid de horas con drop zones */}
