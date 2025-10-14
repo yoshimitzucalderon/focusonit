@@ -210,39 +210,78 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     if (task) {
       setActiveTask(task)
       console.log('✅ Task activa establecida para overlay')
+
+      // Iniciar tracking nativo del mouse/touch
+      startNativeMouseTracking()
     } else {
       console.warn('⚠️ No se encontró la tarea con ID:', taskId)
     }
   }
 
-  // Handler cuando se mueve el drag - actualizar línea guía
-  const handleDragMove = (event: DragMoveEvent) => {
-    if (!calendarRef.current) return
+  // Tracking nativo del mouse/touch durante drag
+  const startNativeMouseTracking = () => {
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      if (!calendarRef.current) return
 
-    const { activatorEvent, delta } = event
+      let clientY = 0
 
-    if (!activatorEvent) return
+      if ('clientY' in e) {
+        clientY = e.clientY
+      } else if ('touches' in e && e.touches.length > 0) {
+        clientY = e.touches[0].clientY
+      }
 
-    const activator = activatorEvent as MouseEvent | TouchEvent | PointerEvent
-    let mouseY = 0
+      if (clientY === 0) return
 
-    if ('clientY' in activator) {
-      mouseY = activator.clientY
-    } else if ('touches' in activator && activator.touches.length > 0) {
-      mouseY = activator.touches[0].clientY
+      // Calcular posición en minutos
+      const calendarRect = calendarRef.current.getBoundingClientRect()
+      const scrollTop = calendarRef.current.scrollTop || 0
+      const relativeY = clientY - calendarRect.top + scrollTop
+
+      // Convertir a minutos (1px = 1 minuto)
+      const minutes = Math.max(0, Math.min(1439, Math.floor(relativeY)))
+
+      console.log('🖱️ Mouse tracking:', {
+        clientY,
+        'calendarRect.top': calendarRect.top,
+        scrollTop,
+        relativeY,
+        minutes,
+        snapped: Math.round(minutes / 15) * 15
+      })
+
+      setDragMouseMinutes(minutes)
     }
 
-    if (mouseY === 0) return
+    const handleMouseUp = () => {
+      stopNativeMouseTracking()
+    }
 
-    // Calcular posición en minutos
-    const calendarRect = calendarRef.current.getBoundingClientRect()
-    const scrollTop = calendarRef.current.scrollTop || 0
-    const relativeY = mouseY - calendarRect.top + scrollTop
+    // Agregar listeners nativos
+    document.addEventListener('mousemove', handleMouseMove as any)
+    document.addEventListener('touchmove', handleMouseMove as any, { passive: false })
+    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('touchend', handleMouseUp)
 
-    // Convertir a minutos (1px = 1 minuto)
-    const minutes = Math.max(0, Math.min(1439, Math.floor(relativeY)))
+    // Guardar referencias para cleanup
+    ;(window as any).__dragCleanup = () => {
+      document.removeEventListener('mousemove', handleMouseMove as any)
+      document.removeEventListener('touchmove', handleMouseMove as any)
+      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('touchend', handleMouseUp)
+    }
+  }
 
-    setDragMouseMinutes(minutes)
+  const stopNativeMouseTracking = () => {
+    if ((window as any).__dragCleanup) {
+      ;(window as any).__dragCleanup()
+      ;(window as any).__dragCleanup = null
+    }
+  }
+
+  // Handler cuando se mueve el drag - NO USADO (dnd-kit no proporciona coordenadas actuales)
+  const handleDragMove = (event: DragMoveEvent) => {
+    // Dejamos esto vacío porque usamos tracking nativo en su lugar
   }
 
   // Handler para drop HTML5 nativo
@@ -265,6 +304,9 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   // Handler cuando termina el drag
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+
+    // Detener tracking nativo y limpiar estado
+    stopNativeMouseTracking()
     setActiveTask(null)
     setDragMouseMinutes(null) // Limpiar línea guía
 
@@ -283,65 +325,30 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
     if (!task) return
 
-    // Calcular posición exacta basada en el evento del mouse
-    let targetMinutes = 0
+    // Usar la posición capturada por el tracking nativo del mouse
+    let targetMinutes = dragMouseMinutes !== null ? dragMouseMinutes : 0
 
-    if (calendarRef.current) {
-      const calendarContainer = calendarRef.current
-      const calendarRect = calendarContainer.getBoundingClientRect()
-
-      // Obtener la posición Y final del mouse
-      let mouseY = 0
-
-      // Intentar obtener la posición desde diferentes fuentes del evento
-      if (event.activatorEvent) {
-        const activator = event.activatorEvent as MouseEvent | TouchEvent | PointerEvent
-
-        if ('clientY' in activator) {
-          mouseY = activator.clientY
-        } else if ('touches' in activator && activator.touches.length > 0) {
-          mouseY = activator.touches[0].clientY
-        }
-      }
-
-      // Si no tenemos mouseY, usar el over.id como fallback
-      if (mouseY === 0) {
-        const hourMatch = (over.id as string).match(/hour-(\d+)/)
-        if (hourMatch) {
-          const hour = parseInt(hourMatch[1])
-          targetMinutes = hour * 60
-        }
-      } else {
-        // Calcular posición relativa en el calendario (considerando scroll)
-        const scrollTop = calendarContainer.scrollTop || 0
-        const relativeY = mouseY - calendarRect.top + scrollTop
-
-        // Convertir posición a minutos (1px = 1 minuto)
-        targetMinutes = Math.max(0, Math.min(1439, Math.floor(relativeY)))
-
-        console.log('📍 Cálculo preciso de drop:', {
-          mouseY,
-          'calendarRect.top': calendarRect.top,
-          scrollTop,
-          relativeY,
-          targetMinutes,
-          snapped: Math.round(targetMinutes / 15) * 15
-        })
-      }
-
-      // Calcular hora y minuto
-      const hour = Math.floor(targetMinutes / 60)
-      const minute = targetMinutes % 60
-
-      await scheduleTask(task, hour, minute)
-    } else {
-      // Fallback sin ref: usar solo la hora del drop zone
+    if (targetMinutes === 0 && over.id) {
+      // Fallback: usar el over.id si no tenemos tracking
       const hourMatch = (over.id as string).match(/hour-(\d+)/)
       if (hourMatch) {
         const hour = parseInt(hourMatch[1])
-        await scheduleTask(task, hour, 0)
+        targetMinutes = hour * 60
       }
     }
+
+    console.log('📍 Drop final position:', {
+      dragMouseMinutes,
+      targetMinutes,
+      snapped: Math.round(targetMinutes / 15) * 15,
+      'over.id': over.id
+    })
+
+    // Calcular hora y minuto
+    const hour = Math.floor(targetMinutes / 60)
+    const minute = targetMinutes % 60
+
+    await scheduleTask(task, hour, minute)
   }
 
   // Función para programar una tarea en un horario específico
