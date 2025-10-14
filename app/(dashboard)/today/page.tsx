@@ -116,6 +116,9 @@ function TodayPageContent() {
 
     if (!confirmed) return
 
+    // Mostrar indicador inmediatamente
+    const toastId = toast.loading(`Completando ${selectedIds.size} tarea(s)...`)
+
     try {
       const updates = Array.from(selectedIds).map((taskId) =>
         supabase
@@ -133,9 +136,9 @@ function TodayPageContent() {
       await Promise.all(updates)
 
       clearSelection()
-      toast.success(`${selectedIds.size} tarea(s) completada(s)`)
+      toast.success(`${selectedIds.size} tarea(s) completada(s)`, { id: toastId })
     } catch (error) {
-      toast.error('Error al completar tareas')
+      toast.error('Error al completar tareas', { id: toastId })
       console.error(error)
     }
   }
@@ -147,6 +150,9 @@ function TodayPageContent() {
 
     if (!confirmed) return
 
+    // Mostrar indicador inmediatamente
+    const toastId = toast.loading(`Eliminando ${selectedIds.size} tarea(s)...`)
+
     try {
       const deletes = Array.from(selectedIds).map((taskId) =>
         supabase.from('tasks').delete().eq('id', taskId)
@@ -155,9 +161,9 @@ function TodayPageContent() {
       await Promise.all(deletes)
 
       clearSelection()
-      toast.success(`${selectedIds.size} tarea(s) eliminada(s)`)
+      toast.success(`${selectedIds.size} tarea(s) eliminada(s)`, { id: toastId })
     } catch (error) {
-      toast.error('Error al eliminar tareas')
+      toast.error('Error al eliminar tareas', { id: toastId })
       console.error(error)
     }
   }

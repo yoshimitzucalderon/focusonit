@@ -111,8 +111,10 @@ export default function TaskItem({ task }: TaskItemProps) {
   const hasDescription = task.description && task.description.trim().length > 0
   const isLongDescription = (task.description?.length || 0) > 150
 
-  // Toggle completar tarea
+  // Toggle completar tarea con actualización optimista
   const toggleComplete = async () => {
+    const toastId = toast.loading('Actualizando...')
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -126,9 +128,9 @@ export default function TaskItem({ task }: TaskItemProps) {
 
       if (error) throw error
 
-      toast.success(task.completed ? 'Tarea marcada como pendiente' : 'Tarea completada')
+      toast.success(task.completed ? 'Tarea marcada como pendiente' : 'Tarea completada', { id: toastId })
     } catch (error: any) {
-      toast.error('Error al actualizar tarea')
+      toast.error('Error al actualizar tarea', { id: toastId })
       console.error(error)
     }
   }

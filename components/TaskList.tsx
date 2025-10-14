@@ -270,14 +270,26 @@ export default function TaskList({
   }
 
   const handleComplete = async (task: Task) => {
+    // Actualización optimista: cambiar UI inmediatamente
+    const newCompleted = !task.completed
+    const nowLocal = getLocalTimestamp()
+
+    // Actualizar UI de inmediato
+    setItems(current =>
+      current.map(t =>
+        t.id === task.id
+          ? { ...t, completed: newCompleted, completed_at: newCompleted ? nowLocal : null }
+          : t
+      )
+    )
+
     try {
-      const nowLocal = getLocalTimestamp()
       const { error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
-          completed: !task.completed,
-          completed_at: !task.completed ? nowLocal : null,
+          completed: newCompleted,
+          completed_at: newCompleted ? nowLocal : null,
           updated_at: nowLocal,
           timezone_offset: getTimezoneOffset()
         })
@@ -285,12 +297,25 @@ export default function TaskList({
 
       if (error) throw error
     } catch (error: any) {
+      // Revertir cambios en caso de error
+      setItems(current =>
+        current.map(t =>
+          t.id === task.id ? task : t
+        )
+      )
       toast.error('Error al actualizar tarea')
       console.error(error)
     }
   }
 
   const handleDelete = async (taskId: string) => {
+    // Guardar tarea original para rollback
+    const originalTask = items.find(t => t.id === taskId)
+    if (!originalTask) return
+
+    // Actualización optimista: eliminar de UI inmediatamente
+    setItems(current => current.filter(task => task.id !== taskId))
+
     try {
       const { error } = await supabase.from('tasks').delete().eq('id', taskId)
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
@@ -299,6 +324,16 @@ export default function TaskList({
 
       toast.success('Tarea eliminada')
     } catch (error: any) {
+      // Revertir: restaurar tarea
+      setItems(current => {
+        const index = current.findIndex(t => t.position > (originalTask.position || 0))
+        if (index === -1) return [...current, originalTask]
+        return [
+          ...current.slice(0, index),
+          originalTask,
+          ...current.slice(index)
+        ]
+      })
       toast.error('Error al eliminar tarea')
       console.error(error)
     }
