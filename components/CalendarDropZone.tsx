@@ -40,12 +40,22 @@ export default function CalendarDropZone({ hour, onTaskDrop }: CalendarDropZoneP
 
         {/* Área de tareas */}
         <div className="flex-1 relative">
-          {/* Línea de media hora */}
-          <div className={`absolute top-8 left-0 right-0 h-px transition-colors ${
+          {/* Líneas de 15 minutos */}
+          <div className={`absolute left-0 right-0 h-px transition-colors ${
+            isOver
+              ? 'bg-primary-200 dark:bg-primary-800'
+              : 'bg-gray-100 dark:bg-gray-700/30'
+          }`} style={{ top: '15px' }} />
+          <div className={`absolute left-0 right-0 h-px transition-colors ${
             isOver
               ? 'bg-primary-300 dark:bg-primary-700'
               : 'bg-gray-100 dark:bg-gray-700/50'
-          }`} />
+          }`} style={{ top: '30px' }} />
+          <div className={`absolute left-0 right-0 h-px transition-colors ${
+            isOver
+              ? 'bg-primary-200 dark:bg-primary-800'
+              : 'bg-gray-100 dark:bg-gray-700/30'
+          }`} style={{ top: '45px' }} />
 
           {/* Indicador de drop mejorado */}
           {showHighlight && (

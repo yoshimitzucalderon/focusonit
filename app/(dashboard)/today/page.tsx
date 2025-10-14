@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTasks } from '@/lib/hooks/useTasks'
 import { useAuth } from '@/lib/hooks/useAuth'
 import TaskList from '@/components/TaskList'
@@ -16,10 +16,18 @@ import EditTaskModal from '@/components/EditTaskModal'
 import AddTaskModal from '@/components/AddTaskModal'
 import { Task } from '@/types/database.types'
 
+const HIDE_COMPLETED_KEY = 'focusOnIt_hideCompleted'
+
 function TodayPageContent() {
   const { user } = useAuth()
   const { tasks, loading } = useTasks()
-  const [hideCompleted, setHideCompleted] = useState(false)
+
+  // Cargar el estado inicial desde localStorage
+  const [hideCompleted, setHideCompleted] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const saved = localStorage.getItem(HIDE_COMPLETED_KEY)
+    return saved !== null ? JSON.parse(saved) : false
+  })
   const [movingAll, setMovingAll] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [addModalMode, setAddModalMode] = useState<'text' | 'voice'>('text')
@@ -27,6 +35,11 @@ function TodayPageContent() {
   const [showEditModal, setShowEditModal] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
+
+  // Guardar el estado en localStorage cada vez que cambie
+  useEffect(() => {
+    localStorage.setItem(HIDE_COMPLETED_KEY, JSON.stringify(hideCompleted))
+  }, [hideCompleted])
 
   // Separar tareas atrasadas y de hoy
   const { overdueTasks, todayTasks } = useMemo(() => {

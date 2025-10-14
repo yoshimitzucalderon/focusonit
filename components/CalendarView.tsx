@@ -307,9 +307,9 @@ export default function CalendarView({ userId }: CalendarViewProps) {
         durationInMinutes = originalEndMinutes - originalStartMinutes
       }
 
-      // Snap hora a intervalos de 30 minutos (más natural para programación)
+      // Snap hora a intervalos de 15 minutos
       const startMinutes = hour * 60 + minute
-      const snappedStartMinutes = Math.round(startMinutes / 30) * 30
+      const snappedStartMinutes = Math.round(startMinutes / 15) * 15
 
       // Calcular end time manteniendo la duración
       let endMinutes = snappedStartMinutes + durationInMinutes
