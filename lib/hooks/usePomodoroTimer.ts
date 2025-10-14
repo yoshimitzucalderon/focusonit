@@ -11,6 +11,8 @@ import {
   heartbeatTimeSession,
 } from '@/lib/supabase/timeSessionQueries'
 import { usePomodoroSettings } from './usePomodoroSettings'
+import { useDocumentTitle } from './useDocumentTitle'
+import { useFavicon } from './useFavicon'
 import toast from 'react-hot-toast'
 
 interface UsePomodoroTimerProps {
@@ -53,6 +55,37 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
         return WORK_DURATION
     }
   }
+
+  // Format time for display (MM:SS)
+  const formatTime = useCallback((seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }, [])
+
+  // Generar título dinámico para la pestaña
+  const getDocumentTitle = useCallback(() => {
+    if (!isRunning || timeRemaining === 0) return null
+
+    const timeFormatted = formatTime(timeRemaining)
+    const emoji = isBreak ? '☕' : '🍅'
+    const status = isBreak ? 'Descanso' : 'Pomodoro'
+
+    return `${emoji} ${timeFormatted} - ${status}`
+  }, [isRunning, timeRemaining, isBreak, formatTime])
+
+  // Actualizar título del documento
+  useDocumentTitle(getDocumentTitle(), {
+    enabled: isRunning,
+    restoreOnUnmount: true
+  })
+
+  // Actualizar favicon
+  useFavicon({
+    timeRemaining,
+    isBreak,
+    isRunning
+  })
 
   // Load total time spent on this task
   useEffect(() => {
@@ -431,13 +464,6 @@ export function usePomodoroTimer({ taskId, userId, onComplete }: UsePomodoroTime
       toast.error('Error al pausar timer')
     }
   }, [activeSession, taskId])
-
-  // Format time for display (MM:SS)
-  const formatTime = useCallback((seconds: number): string => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }, [])
 
   // Format total time spent (Xh Ym)
   const formatTotalTime = useCallback((seconds: number): string => {

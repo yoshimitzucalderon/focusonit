@@ -8,7 +8,7 @@ import { format, addDays, subDays, isToday as isTodayFn, startOfDay } from 'date
 import { es } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors, DragMoveEvent } from '@dnd-kit/core'
 import { normalizeTaskTimes } from '@/lib/utils/timeNormalization'
 import { cleanupAllTasks, analyzeTasksOnly } from '@/lib/utils/cleanupTasks'
 import CalendarTaskBlock from './CalendarTaskBlock'
@@ -16,6 +16,7 @@ import UnscheduledTasks from './UnscheduledTasks'
 import TimeScheduleModal from './TimeScheduleModal'
 import CalendarDropZone from './CalendarDropZone'
 import MobileCalendarView from './MobileCalendarView'
+import CalendarDragGuide from './CalendarDragGuide'
 
 interface CalendarViewProps {
   userId: string
@@ -30,6 +31,7 @@ export default function CalendarView({ userId }: CalendarViewProps) {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [dragMouseMinutes, setDragMouseMinutes] = useState<number | null>(null)
   const calendarRef = useRef<HTMLDivElement>(null)
   const supabase = useMemo(() => createClient(), [])
 
@@ -213,6 +215,36 @@ export default function CalendarView({ userId }: CalendarViewProps) {
     }
   }
 
+  // Handler cuando se mueve el drag - actualizar línea guía
+  const handleDragMove = (event: DragMoveEvent) => {
+    if (!calendarRef.current) return
+
+    const { activatorEvent, delta } = event
+
+    if (!activatorEvent) return
+
+    const activator = activatorEvent as MouseEvent | TouchEvent | PointerEvent
+    let mouseY = 0
+
+    if ('clientY' in activator) {
+      mouseY = activator.clientY
+    } else if ('touches' in activator && activator.touches.length > 0) {
+      mouseY = activator.touches[0].clientY
+    }
+
+    if (mouseY === 0) return
+
+    // Calcular posición en minutos
+    const calendarRect = calendarRef.current.getBoundingClientRect()
+    const scrollTop = calendarRef.current.scrollTop || 0
+    const relativeY = mouseY - calendarRect.top + scrollTop
+
+    // Convertir a minutos (1px = 1 minuto)
+    const minutes = Math.max(0, Math.min(1439, Math.floor(relativeY)))
+
+    setDragMouseMinutes(minutes)
+  }
+
   // Handler para drop HTML5 nativo
   const handleNativeTaskDrop = async (taskData: any, hour: number, minute: number) => {
     console.log('🎯 HTML5 Task Drop:', { taskData, hour, minute })
@@ -232,8 +264,9 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
   // Handler cuando termina el drag
   const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over, delta } = event
+    const { active, over } = event
     setActiveTask(null)
+    setDragMouseMinutes(null) // Limpiar línea guía
 
     if (!over) return
 
@@ -250,46 +283,65 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
     if (!task) return
 
-    // El over.id tiene el formato "hour-X" donde X es la hora
-    const hourMatch = (over.id as string).match(/hour-(\d+)/)
-    if (!hourMatch) return
+    // Calcular posición exacta basada en el evento del mouse
+    let targetMinutes = 0
 
-    const hour = parseInt(hourMatch[1])
+    if (calendarRef.current) {
+      const calendarContainer = calendarRef.current
+      const calendarRect = calendarContainer.getBoundingClientRect()
 
-    // Calcular minutos exactos basado en la posición Y del mouse
-    // Usamos el delta.y si la tarea ya estaba programada, o calculamos desde la posición del drop
-    let minute = 0
+      // Obtener la posición Y final del mouse
+      let mouseY = 0
 
-    // Si tenemos acceso al elemento del calendario, calcular posición precisa
-    if (calendarRef.current && event.activatorEvent) {
-      const calendarRect = calendarRef.current.getBoundingClientRect()
-      const activator = event.activatorEvent as MouseEvent | TouchEvent | PointerEvent
-      const mouseY = 'clientY' in activator ? (activator.clientY as number) + delta.y : 0
-      const relativeY = mouseY - calendarRect.top + calendarRef.current.scrollTop
+      // Intentar obtener la posición desde diferentes fuentes del evento
+      if (event.activatorEvent) {
+        const activator = event.activatorEvent as MouseEvent | TouchEvent | PointerEvent
 
-      // Calcular hora total en minutos desde la posición Y (1px = 1 minuto)
-      const totalMinutes = Math.max(0, Math.floor(relativeY))
-      const calculatedHour = Math.floor(totalMinutes / 60)
-      minute = totalMinutes % 60
+        if ('clientY' in activator) {
+          mouseY = activator.clientY
+        } else if ('touches' in activator && activator.touches.length > 0) {
+          mouseY = activator.touches[0].clientY
+        }
+      }
 
-      console.log('📍 Drop calculation:', {
-        mouseY,
-        relativeY,
-        totalMinutes,
-        calculatedHour,
-        minute,
-        dropHour: hour
-      })
+      // Si no tenemos mouseY, usar el over.id como fallback
+      if (mouseY === 0) {
+        const hourMatch = (over.id as string).match(/hour-(\d+)/)
+        if (hourMatch) {
+          const hour = parseInt(hourMatch[1])
+          targetMinutes = hour * 60
+        }
+      } else {
+        // Calcular posición relativa en el calendario (considerando scroll)
+        const scrollTop = calendarContainer.scrollTop || 0
+        const relativeY = mouseY - calendarRect.top + scrollTop
 
-      // Usar la hora calculada si está cerca de la hora del drop zone
-      if (Math.abs(calculatedHour - hour) <= 1) {
-        await scheduleTask(task, calculatedHour, minute)
-        return
+        // Convertir posición a minutos (1px = 1 minuto)
+        targetMinutes = Math.max(0, Math.min(1439, Math.floor(relativeY)))
+
+        console.log('📍 Cálculo preciso de drop:', {
+          mouseY,
+          'calendarRect.top': calendarRect.top,
+          scrollTop,
+          relativeY,
+          targetMinutes,
+          snapped: Math.round(targetMinutes / 15) * 15
+        })
+      }
+
+      // Calcular hora y minuto
+      const hour = Math.floor(targetMinutes / 60)
+      const minute = targetMinutes % 60
+
+      await scheduleTask(task, hour, minute)
+    } else {
+      // Fallback sin ref: usar solo la hora del drop zone
+      const hourMatch = (over.id as string).match(/hour-(\d+)/)
+      if (hourMatch) {
+        const hour = parseInt(hourMatch[1])
+        await scheduleTask(task, hour, 0)
       }
     }
-
-    // Fallback: usar solo la hora del drop zone
-    await scheduleTask(task, hour, minute)
   }
 
   // Función para programar una tarea en un horario específico
@@ -508,7 +560,12 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
   // Vista desktop (original)
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
+      onDragEnd={handleDragEnd}
+    >
     <div className="h-full flex flex-col relative">
       {/* Header con navegación de fechas */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm p-4 mb-4">
@@ -611,6 +668,13 @@ export default function CalendarView({ userId }: CalendarViewProps) {
 
               {/* Línea de hora actual */}
               {renderCurrentTimeLine()}
+
+              {/* Línea guía durante drag & drop */}
+              <CalendarDragGuide
+                isDragging={activeTask !== null}
+                mouseMinutes={dragMouseMinutes}
+                calendarRef={calendarRef}
+              />
             </div>
           </div>
         </div>
