@@ -17,6 +17,7 @@ import { useSwipeable } from 'react-swipeable'
 
 interface TaskItemProps {
   task: Task
+  onDoubleClick?: () => void
 }
 
 interface VoiceTaskChanges {
@@ -27,7 +28,7 @@ interface VoiceTaskChanges {
   tags?: string[]
 }
 
-export default function TaskItem({ task }: TaskItemProps) {
+export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
   const { selectedIds, toggleSelection } = useSelection()
   const isSelected = selectedIds.has(task.id)
   const [editing, setEditing] = useState(false)
@@ -415,6 +416,11 @@ export default function TaskItem({ task }: TaskItemProps) {
       {/* Main Task Card */}
       <motion.div
         {...handlers}
+        onDoubleClick={() => {
+          if (!task.completed && onDoubleClick) {
+            onDoubleClick()
+          }
+        }}
         initial={{ opacity: 0, y: -10 }}
         animate={{
           opacity: 1,

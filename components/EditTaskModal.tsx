@@ -44,7 +44,6 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
 
     setUpdating(true)
 
-    // Cerrar modal inmediatamente para mejor UX
     const updates = {
       title: title.trim(),
       description: description.trim() || null,
@@ -57,9 +56,8 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
       timezone_offset: getTimezoneOffset()
     }
 
-    // Mostrar feedback inmediato
-    onClose()
-    toast.loading('Guardando cambios...', { id: 'update-task' })
+    // Mostrar feedback inmediato y cerrar modal
+    const toastId = toast.loading('Guardando cambios...')
 
     try {
       const { error } = await supabase
@@ -70,9 +68,11 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
 
       if (error) throw error
 
-      toast.success('Tarea actualizada', { id: 'update-task' })
+      // Cerrar modal después de guardar exitosamente
+      onClose()
+      toast.success('Tarea actualizada correctamente', { id: toastId })
     } catch (error: any) {
-      toast.error('Error al actualizar tarea', { id: 'update-task' })
+      toast.error('Error al actualizar tarea', { id: toastId })
       console.error(error)
     } finally {
       setUpdating(false)

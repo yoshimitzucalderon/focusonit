@@ -357,7 +357,11 @@ export default function TaskList({
       <AnimatePresence mode="popLayout">
         {items.map((task, index) => {
           const taskElement = (
-            <TaskItem key={task.id} task={task} />
+            <TaskItem
+              key={task.id}
+              task={task}
+              onDoubleClick={() => onEditTask?.(task)}
+            />
           )
 
           return enableReorder ? (
