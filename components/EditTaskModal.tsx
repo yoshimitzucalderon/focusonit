@@ -13,9 +13,10 @@ interface EditTaskModalProps {
   task: Task | null
   isOpen: boolean
   onClose: () => void
+  onTaskUpdated?: (updatedTask: Task) => void
 }
 
-export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalProps) {
+export default function EditTaskModal({ task, isOpen, onClose, onTaskUpdated }: EditTaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<Date | null>(null)
@@ -56,17 +57,24 @@ export default function EditTaskModal({ task, isOpen, onClose }: EditTaskModalPr
       timezone_offset: getTimezoneOffset()
     }
 
-    // Mostrar feedback inmediato y cerrar modal
+    // Mostrar feedback inmediato
     const toastId = toast.loading('Guardando cambios...')
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update(updates)
         .eq('id', task.id)
+        .select()
+        .single()
 
       if (error) throw error
+
+      // ✅ ACTUALIZACIÓN OPTIMISTA INMEDIATA - Llamar callback con la tarea actualizada
+      if (data && onTaskUpdated) {
+        onTaskUpdated(data as Task)
+      }
 
       // Cerrar modal después de guardar exitosamente
       onClose()

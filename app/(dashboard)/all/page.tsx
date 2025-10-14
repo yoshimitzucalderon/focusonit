@@ -14,7 +14,7 @@ import { Task } from '@/types/database.types'
 
 function AllPageContent() {
   const { user } = useAuth()
-  const { tasks, loading } = useTasks()
+  const { tasks, loading, setTasks } = useTasks()
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const supabase = createClient()
@@ -103,6 +103,15 @@ function AllPageContent() {
     setShowEditModal(true)
   }
 
+  // ✅ Función para actualizar la tarea en el estado local inmediatamente
+  const handleTaskUpdated = (updatedTask: Task) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -149,6 +158,7 @@ function AllPageContent() {
           setEditingTask(null)
           clearSelection()
         }}
+        onTaskUpdated={handleTaskUpdated}
       />
     </>
   )

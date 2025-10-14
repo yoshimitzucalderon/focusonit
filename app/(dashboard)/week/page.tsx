@@ -19,7 +19,7 @@ import { Task } from '@/types/database.types'
 
 function WeekPageContent() {
   const { user } = useAuth()
-  const { tasks, loading } = useTasks()
+  const { tasks, loading, setTasks } = useTasks()
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -191,6 +191,15 @@ function WeekPageContent() {
     setShowEditModal(true)
   }
 
+  // ✅ Función para actualizar la tarea en el estado local inmediatamente
+  const handleTaskUpdated = (updatedTask: Task) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -353,6 +362,7 @@ function WeekPageContent() {
           setEditingTask(null)
           clearSelection()
         }}
+        onTaskUpdated={handleTaskUpdated}
       />
 
       {/* Modal para crear tarea */}

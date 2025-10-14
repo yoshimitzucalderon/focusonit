@@ -20,7 +20,7 @@ const HIDE_COMPLETED_KEY = 'focusOnIt_hideCompleted'
 
 function TodayPageContent() {
   const { user } = useAuth()
-  const { tasks, loading } = useTasks()
+  const { tasks, loading, setTasks } = useTasks()
 
   // Cargar el estado inicial desde localStorage
   const [hideCompleted, setHideCompleted] = useState(() => {
@@ -182,6 +182,15 @@ function TodayPageContent() {
     setShowEditModal(true)
   }
 
+  // ✅ Función para actualizar la tarea en el estado local inmediatamente
+  const handleTaskUpdated = (updatedTask: Task) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -325,6 +334,7 @@ function TodayPageContent() {
           setEditingTask(null)
           clearSelection()
         }}
+        onTaskUpdated={handleTaskUpdated}
       />
 
       {/* Modal para agregar tarea */}
