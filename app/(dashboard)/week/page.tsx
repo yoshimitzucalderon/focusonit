@@ -55,7 +55,6 @@ function WeekPageContent() {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .insert({
           user_id: user.id,
           title: title.trim(),
@@ -78,7 +77,8 @@ function WeekPageContent() {
 
       // ✅ Actualizar el estado inmediatamente con la nueva tarea
       if (data) {
-        setTasks(prevTasks => [data, ...prevTasks])
+        const newTask = data as Task
+        setTasks(prevTasks => [newTask, ...prevTasks])
       }
 
       // Resetear form

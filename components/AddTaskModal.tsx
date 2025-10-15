@@ -7,13 +7,14 @@ import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from './DatePicker'
 import { toDateOnlyString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
+import { Task } from '@/types/database.types'
 
 interface AddTaskModalProps {
   isOpen: boolean
   onClose: () => void
   userId: string
   mode?: 'text' | 'voice'
-  onTaskCreated?: (task: any) => void
+  onTaskCreated?: (task: Task) => void
 }
 
 interface ProcessedTask {
@@ -225,7 +226,6 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
 
       const { data, error } = await supabase
         .from('tasks')
-        // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .insert(taskData)
         .select()
         .single()
@@ -237,9 +237,10 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
 
       // ✅ Actualizar el estado inmediatamente con la nueva tarea
       if (data && onTaskCreated) {
-        console.log('✅ [AddTaskModal] Tarea creada exitosamente:', data.id, data.title)
+        const newTask = data as Task
+        console.log('✅ [AddTaskModal] Tarea creada exitosamente:', newTask.id, newTask.title)
         console.log('✅ [AddTaskModal] Llamando onTaskCreated para actualizar estado local')
-        onTaskCreated(data)
+        onTaskCreated(newTask)
       } else if (!onTaskCreated) {
         console.warn('⚠️ [AddTaskModal] onTaskCreated callback no está definido')
       }
