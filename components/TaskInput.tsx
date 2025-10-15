@@ -61,7 +61,6 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
@@ -69,7 +68,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         created_at: getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      })
+      } as any)
 
       if (error) throw error
 
@@ -104,7 +103,6 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
@@ -118,7 +116,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
         created_at: voiceCreatedAt || getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      })
+      } as any)
 
       if (error) throw error
 

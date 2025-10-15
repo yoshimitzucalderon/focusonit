@@ -69,7 +69,7 @@ function WeekPageContent() {
           created_at: getLocalTimestamp(),
           updated_at: getLocalTimestamp(),
           timezone_offset: getTimezoneOffset()
-        })
+        } as any)
         .select()
         .single()
 

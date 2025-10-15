@@ -109,14 +109,13 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      })
+      } as any)
 
       if (error) throw error
 
@@ -162,7 +161,6 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
       const { error } = await supabase.from('tasks').insert({
         user_id: userId,
         title: title.trim(),
@@ -170,7 +168,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      })
+      } as any)
 
       if (error) throw error
 

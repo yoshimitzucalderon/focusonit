@@ -332,9 +332,8 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
   // Función para duplicar tarea
   const duplicateTask = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('tasks')
-        // @ts-ignore
         .insert({
           title: `${task.title} (copia)`,
           description: task.description,
@@ -343,7 +342,7 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
           user_id: task.user_id,
           created_at: getLocalTimestamp(),
           updated_at: getLocalTimestamp()
-        })
+        } as any)
         .select()
         .single()
 
