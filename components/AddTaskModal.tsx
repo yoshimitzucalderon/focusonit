@@ -237,7 +237,11 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
 
       // ✅ Actualizar el estado inmediatamente con la nueva tarea
       if (data && onTaskCreated) {
+        console.log('✅ [AddTaskModal] Tarea creada exitosamente:', data.id, data.title)
+        console.log('✅ [AddTaskModal] Llamando onTaskCreated para actualizar estado local')
         onTaskCreated(data)
+      } else if (!onTaskCreated) {
+        console.warn('⚠️ [AddTaskModal] onTaskCreated callback no está definido')
       }
 
       toast.success('✓ Tarea creada')

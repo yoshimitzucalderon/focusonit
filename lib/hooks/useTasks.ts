@@ -43,7 +43,19 @@ export function useTasks() {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setTasks((current) => [payload.new as Task, ...current])
+            // ✅ Verificar si la tarea ya existe antes de agregarla (evita duplicados)
+            setTasks((current) => {
+              const newTask = payload.new as Task
+              const exists = current.some(task => task.id === newTask.id)
+
+              if (exists) {
+                console.log('🔄 [useTasks Realtime] INSERT detectado pero tarea ya existe:', newTask.id, newTask.title, '- Ignorando para evitar duplicado')
+                return current // Ya existe, no agregar
+              }
+
+              console.log('🔄 [useTasks Realtime] INSERT detectado, agregando tarea:', newTask.id, newTask.title)
+              return [newTask, ...current]
+            })
           } else if (payload.eventType === 'UPDATE') {
             setTasks((current) =>
               current.map((task) =>

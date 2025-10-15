@@ -203,7 +203,14 @@ function TodayPageContent() {
 
   // ✅ Función para agregar nueva tarea al estado inmediatamente
   const handleTaskCreated = (newTask: Task) => {
-    setTasks(prevTasks => [newTask, ...prevTasks])
+    console.log('✅ [TodayPage] handleTaskCreated llamado con tarea:', newTask.id, newTask.title)
+    console.log('✅ [TodayPage] Agregando tarea al estado local...')
+    setTasks(prevTasks => {
+      console.log('✅ [TodayPage] Estado anterior tenía', prevTasks.length, 'tareas')
+      const newState = [newTask, ...prevTasks]
+      console.log('✅ [TodayPage] Nuevo estado tiene', newState.length, 'tareas')
+      return newState
+    })
   }
 
   if (loading) {
