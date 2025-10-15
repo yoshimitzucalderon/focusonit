@@ -14,6 +14,7 @@ import { parseDateString, toDateOnlyString, getLocalTimestamp, getTimezoneOffset
 import { FAB } from '@/components/FAB'
 import EditTaskModal from '@/components/EditTaskModal'
 import AddTaskModal from '@/components/AddTaskModal'
+import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import { Task } from '@/types/database.types'
 
 const HIDE_COMPLETED_KEY = 'focusOnIt_hideCompleted'
@@ -33,6 +34,8 @@ function TodayPageContent() {
   const [addModalMode, setAddModalMode] = useState<'text' | 'voice'>('text')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -144,27 +147,34 @@ function TodayPageContent() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = window.confirm(
-      `¿Eliminar ${selectedIds.size} tarea(s)? Esta acción no se puede deshacer.`
-    )
+    setShowDeleteModal(true)
+  }
 
-    if (!confirmed) return
+  const confirmDelete = async () => {
+    setIsDeleting(true)
 
-    // Mostrar indicador inmediatamente
-    const toastId = toast.loading(`Eliminando ${selectedIds.size} tarea(s)...`)
+    // ✅ Actualización optimista: eliminar del estado inmediatamente
+    const tasksToDelete = Array.from(selectedIds)
+    setTasks(prevTasks => prevTasks.filter(task => !tasksToDelete.includes(task.id)))
 
     try {
-      const deletes = Array.from(selectedIds).map((taskId) =>
+      const deletes = tasksToDelete.map((taskId) =>
         supabase.from('tasks').delete().eq('id', taskId)
       )
 
       await Promise.all(deletes)
 
       clearSelection()
-      toast.success(`${selectedIds.size} tarea(s) eliminada(s)`, { id: toastId })
+      setShowDeleteModal(false)
+      toast.success(`${tasksToDelete.length} tarea(s) eliminada(s)`)
     } catch (error) {
-      toast.error('Error al eliminar tareas', { id: toastId })
+      // Revertir cambios en caso de error
+      toast.error('Error al eliminar tareas')
       console.error(error)
+      // Recargar las tareas para restaurar el estado correcto
+      window.location.reload()
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -363,6 +373,15 @@ function TodayPageContent() {
           setAddModalMode('voice')
           setShowAddModal(true)
         }}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        tasks={tasks.filter(task => selectedIds.has(task.id))}
+        isDeleting={isDeleting}
       />
     </>
   )

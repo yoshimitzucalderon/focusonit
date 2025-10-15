@@ -15,6 +15,7 @@ import { Calendar, Sparkles, Plus, CalendarPlus, Type, FileText, Flag, Tag, Bell
 import { motion, AnimatePresence } from 'framer-motion'
 import { DatePicker } from '@/components/DatePicker'
 import EditTaskModal from '@/components/EditTaskModal'
+import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import { Task } from '@/types/database.types'
 
 function WeekPageContent() {
@@ -36,6 +37,8 @@ function WeekPageContent() {
   const [creating, setCreating] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Abrir modal con fecha preseleccionada
   const openModalWithDate = (date: Date) => {
@@ -163,24 +166,33 @@ function WeekPageContent() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = window.confirm(
-      `¿Eliminar ${selectedIds.size} tarea(s)? Esta acción no se puede deshacer.`
-    )
+    setShowDeleteModal(true)
+  }
 
-    if (!confirmed) return
+  const confirmDelete = async () => {
+    setIsDeleting(true)
+
+    // ✅ Actualización optimista: eliminar del estado inmediatamente
+    const tasksToDelete = Array.from(selectedIds)
+    setTasks(prevTasks => prevTasks.filter(task => !tasksToDelete.includes(task.id)))
 
     try {
-      const deletes = Array.from(selectedIds).map((taskId) =>
+      const deletes = tasksToDelete.map((taskId) =>
         supabase.from('tasks').delete().eq('id', taskId)
       )
 
       await Promise.all(deletes)
 
       clearSelection()
-      toast.success(`${selectedIds.size} tarea(s) eliminada(s)`)
+      setShowDeleteModal(false)
+      toast.success(`${tasksToDelete.length} tarea(s) eliminada(s)`)
     } catch (error) {
       toast.error('Error al eliminar tareas')
       console.error(error)
+      // Recargar las tareas para restaurar el estado correcto
+      window.location.reload()
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -628,6 +640,15 @@ function WeekPageContent() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        tasks={tasks.filter(task => selectedIds.has(task.id))}
+        isDeleting={isDeleting}
+      />
     </>
   )
 }

@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import { parseDateString, getLocalTimestamp, getTimezoneOffset } from '@/lib/utils/timezone'
 import EditTaskModal from '@/components/EditTaskModal'
+import DeleteConfirmModal from '@/components/DeleteConfirmModal'
 import { Task } from '@/types/database.types'
 
 function AllPageContent() {
@@ -17,6 +18,8 @@ function AllPageContent() {
   const { tasks, loading, setTasks } = useTasks()
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const supabase = createClient()
   const { selectedIds, clearSelection } = useSelection()
 
@@ -68,24 +71,33 @@ function AllPageContent() {
   }
 
   const handleBulkDelete = async () => {
-    const confirmed = window.confirm(
-      `¿Eliminar ${selectedIds.size} tarea(s)? Esta acción no se puede deshacer.`
-    )
+    setShowDeleteModal(true)
+  }
 
-    if (!confirmed) return
+  const confirmDelete = async () => {
+    setIsDeleting(true)
+
+    // ✅ Actualización optimista: eliminar del estado inmediatamente
+    const tasksToDelete = Array.from(selectedIds)
+    setTasks(prevTasks => prevTasks.filter(task => !tasksToDelete.includes(task.id)))
 
     try {
-      const deletes = Array.from(selectedIds).map((taskId) =>
+      const deletes = tasksToDelete.map((taskId) =>
         supabase.from('tasks').delete().eq('id', taskId)
       )
 
       await Promise.all(deletes)
 
       clearSelection()
-      toast.success(`${selectedIds.size} tarea(s) eliminada(s)`)
+      setShowDeleteModal(false)
+      toast.success(`${tasksToDelete.length} tarea(s) eliminada(s)`)
     } catch (error) {
       toast.error('Error al eliminar tareas')
       console.error(error)
+      // Recargar las tareas para restaurar el estado correcto
+      window.location.reload()
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -159,6 +171,15 @@ function AllPageContent() {
           clearSelection()
         }}
         onTaskUpdated={handleTaskUpdated}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        tasks={tasks.filter(task => selectedIds.has(task.id))}
+        isDeleting={isDeleting}
       />
     </>
   )
