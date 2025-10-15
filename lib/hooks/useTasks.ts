@@ -43,10 +43,20 @@ export function useTasks() {
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
+            console.log('🐛 DEBUG [useTasks Realtime] ===== INSERT DETECTADO =====')
+            console.log('🐛 DEBUG [useTasks Realtime] Payload:', payload)
+
             // ✅ Verificar si la tarea ya existe antes de agregarla (evita duplicados)
             setTasks((current) => {
               const newTask = payload.new as Task
+              console.log('🐛 DEBUG [useTasks Realtime] Nueva tarea:', newTask)
+              console.log('🐛 DEBUG [useTasks Realtime] ID:', newTask.id)
+              console.log('🐛 DEBUG [useTasks Realtime] Título:', newTask.title)
+              console.log('🐛 DEBUG [useTasks Realtime] Estado actual:', current)
+              console.log('🐛 DEBUG [useTasks Realtime] Cantidad de tareas actual:', current.length)
+
               const exists = current.some(task => task.id === newTask.id)
+              console.log('🐛 DEBUG [useTasks Realtime] ¿Tarea ya existe?:', exists)
 
               if (exists) {
                 console.log('🔄 [useTasks Realtime] INSERT detectado pero tarea ya existe:', newTask.id, newTask.title, '- Ignorando para evitar duplicado')
@@ -54,7 +64,11 @@ export function useTasks() {
               }
 
               console.log('🔄 [useTasks Realtime] INSERT detectado, agregando tarea:', newTask.id, newTask.title)
-              return [newTask, ...current]
+              const updated = [newTask, ...current]
+              console.log('🐛 DEBUG [useTasks Realtime] Nuevo estado:', updated)
+              console.log('🐛 DEBUG [useTasks Realtime] Nueva cantidad de tareas:', updated.length)
+              console.log('🐛 DEBUG [useTasks Realtime] ===== INSERT TERMINADO =====')
+              return updated
             })
           } else if (payload.eventType === 'UPDATE') {
             setTasks((current) =>

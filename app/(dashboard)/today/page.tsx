@@ -203,14 +203,36 @@ function TodayPageContent() {
 
   // ✅ Función para agregar nueva tarea al estado inmediatamente
   const handleTaskCreated = (newTask: Task) => {
-    console.log('✅ [TodayPage] handleTaskCreated llamado con tarea:', newTask.id, newTask.title)
-    console.log('✅ [TodayPage] Agregando tarea al estado local...')
+    console.log('🐛 DEBUG [TodayPage] ===== handleTaskCreated EJECUTADO =====')
+    console.log('🐛 DEBUG [TodayPage] Nueva tarea recibida:', newTask)
+    console.log('🐛 DEBUG [TodayPage] ID:', newTask.id)
+    console.log('🐛 DEBUG [TodayPage] Título:', newTask.title)
+    console.log('🐛 DEBUG [TodayPage] Fecha:', newTask.due_date)
+    console.log('🐛 DEBUG [TodayPage] tasks actual (antes):', tasks)
+    console.log('🐛 DEBUG [TodayPage] tasks.length (antes):', tasks.length)
+    console.log('🐛 DEBUG [TodayPage] setTasks existe?', !!setTasks)
+    console.log('🐛 DEBUG [TodayPage] tipo de setTasks:', typeof setTasks)
+
     setTasks(prevTasks => {
-      console.log('✅ [TodayPage] Estado anterior tenía', prevTasks.length, 'tareas')
+      console.log('🐛 DEBUG [TodayPage] Dentro de setTasks - prevTasks:', prevTasks)
+      console.log('🐛 DEBUG [TodayPage] Dentro de setTasks - prevTasks.length:', prevTasks.length)
+
       const newState = [newTask, ...prevTasks]
-      console.log('✅ [TodayPage] Nuevo estado tiene', newState.length, 'tareas')
+
+      console.log('🐛 DEBUG [TodayPage] Dentro de setTasks - newState:', newState)
+      console.log('🐛 DEBUG [TodayPage] Dentro de setTasks - newState.length:', newState.length)
+      console.log('🐛 DEBUG [TodayPage] Dentro de setTasks - Primera tarea:', newState[0])
+
       return newState
     })
+
+    // Verificar después de un momento
+    setTimeout(() => {
+      console.log('🐛 DEBUG [TodayPage] tasks después de 100ms:', tasks)
+      console.log('🐛 DEBUG [TodayPage] tasks.length después de 100ms:', tasks.length)
+    }, 100)
+
+    console.log('🐛 DEBUG [TodayPage] ===== handleTaskCreated TERMINADO =====')
   }
 
   if (loading) {

@@ -236,13 +236,27 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
       }
 
       // ✅ Actualizar el estado inmediatamente con la nueva tarea
+      console.log('🐛 DEBUG [AddTaskModal] data recibida:', data)
+      console.log('🐛 DEBUG [AddTaskModal] onTaskCreated existe?', !!onTaskCreated)
+      console.log('🐛 DEBUG [AddTaskModal] tipo de onTaskCreated:', typeof onTaskCreated)
+
       if (data && onTaskCreated) {
         const newTask = data as Task
         console.log('✅ [AddTaskModal] Tarea creada exitosamente:', newTask.id, newTask.title)
+        console.log('✅ [AddTaskModal] Datos completos de la tarea:', JSON.stringify(newTask, null, 2))
         console.log('✅ [AddTaskModal] Llamando onTaskCreated para actualizar estado local')
+
         onTaskCreated(newTask)
-      } else if (!onTaskCreated) {
-        console.warn('⚠️ [AddTaskModal] onTaskCreated callback no está definido')
+
+        console.log('✅ [AddTaskModal] onTaskCreated ejecutado correctamente')
+      } else {
+        if (!data) {
+          console.error('❌ [AddTaskModal] ERROR: data es null o undefined')
+        }
+        if (!onTaskCreated) {
+          console.error('❌ [AddTaskModal] ERROR CRÍTICO: onTaskCreated callback NO está definido')
+          console.error('❌ [AddTaskModal] Esto significa que el padre no pasó el callback')
+        }
       }
 
       toast.success('✓ Tarea creada')
