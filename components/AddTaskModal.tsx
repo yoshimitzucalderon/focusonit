@@ -13,6 +13,7 @@ interface AddTaskModalProps {
   onClose: () => void
   userId: string
   mode?: 'text' | 'voice'
+  onTaskCreated?: (task: any) => void
 }
 
 interface ProcessedTask {
@@ -23,7 +24,7 @@ interface ProcessedTask {
   tags?: string[]
 }
 
-export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }: AddTaskModalProps) {
+export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', onTaskCreated }: AddTaskModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<Date | null>(null)
@@ -222,14 +223,21 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text' }:
       const timezoneOffset = getTimezoneOffset()
       if (timezoneOffset) taskData.timezone_offset = timezoneOffset
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .insert(taskData)
+        .select()
+        .single()
 
       if (error) {
         console.error('Error details:', error)
         throw error
+      }
+
+      // ✅ Actualizar el estado inmediatamente con la nueva tarea
+      if (data && onTaskCreated) {
+        onTaskCreated(data)
       }
 
       toast.success('✓ Tarea creada')

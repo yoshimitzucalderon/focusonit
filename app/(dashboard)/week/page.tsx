@@ -50,7 +50,7 @@ function WeekPageContent() {
 
     setCreating(true)
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .insert({
@@ -68,8 +68,15 @@ function WeekPageContent() {
           updated_at: getLocalTimestamp(),
           timezone_offset: getTimezoneOffset()
         })
+        .select()
+        .single()
 
       if (error) throw error
+
+      // ✅ Actualizar el estado inmediatamente con la nueva tarea
+      if (data) {
+        setTasks(prevTasks => [data, ...prevTasks])
+      }
 
       // Resetear form
       setTitle('')

@@ -191,6 +191,11 @@ function TodayPageContent() {
     )
   }
 
+  // ✅ Función para agregar nueva tarea al estado inmediatamente
+  const handleTaskCreated = (newTask: Task) => {
+    setTasks(prevTasks => [newTask, ...prevTasks])
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -344,6 +349,7 @@ function TodayPageContent() {
           onClose={() => setShowAddModal(false)}
           userId={user.id}
           mode={addModalMode}
+          onTaskCreated={handleTaskCreated}
         />
       )}
 
