@@ -11,6 +11,7 @@ import { CyclePreview } from '@/components/settings/CyclePreview'
 import { SliderWithInput } from '@/components/settings/SliderWithInput'
 import { SoundControls } from '@/components/settings/SoundControls'
 import { SaveButton } from '@/components/settings/SaveButton'
+import { GoogleCalendarIntegration } from '@/components/settings/GoogleCalendarIntegration'
 
 const DEFAULT_SETTINGS: Omit<PomodoroSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   work_duration: 25,
@@ -150,6 +151,9 @@ export default function SettingsPage() {
           longBreakDuration={settings.long_break_duration}
           pomodorosUntilLongBreak={settings.pomodoros_until_long_break}
         />
+
+        {/* Google Calendar Integration */}
+        <GoogleCalendarIntegration userId={user.id} />
 
         {/* Timer Durations */}
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow">
