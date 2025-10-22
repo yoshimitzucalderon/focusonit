@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
           // Update task in database
           const { error: updateError } = await supabase
             .from('tasks')
+            // @ts-ignore - Temporary bypass due to type inference issue
             .update(updates)
             .eq('id', task.id);
 
