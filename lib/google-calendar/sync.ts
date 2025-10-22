@@ -243,6 +243,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
         calendarId: calendarId,
         timeMin: timeMin.toISOString(),
         timeMax: timeMax.toISOString(),
+        maxResults: 2500,
         singleEvents: true,
         orderBy: 'startTime',
       });
