@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     let failCount = 0;
     const results = [];
 
-    for (const task of tasksToClean) {
+    for (const task of tasksToClean as any[]) {
       try {
         console.log(`Deleting event for task: ${task.title} (Event ID: ${task.google_event_id})`);
 
