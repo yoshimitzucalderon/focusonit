@@ -17,3 +17,15 @@ export const updateTask = async (
     .eq('id', taskId)
   return result
 }
+
+/**
+ * Helper for updating tasks with custom filters
+ * Returns a query builder that can be chained with .eq(), .not(), etc.
+ */
+export const updateTasksQuery = (
+  supabase: SupabaseClient<Database>,
+  updates: Database['public']['Tables']['tasks']['Update']
+) => {
+  // @ts-ignore - Bypass Supabase query builder type inference issue
+  return supabase.from('tasks').update(updates)
+}

@@ -3,8 +3,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthenticatedClient } from '@/lib/google-calendar/oauth';
 import { google } from 'googleapis';
 import { Database } from '@/types/database.types';
+import { updateTasksQuery } from '@/lib/supabase/helpers';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
+type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 export const dynamic = 'force-dynamic';
 
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
           console.log(`Updating task "${task.title}" from Google Calendar`);
 
           // Extract updated data from Google Calendar event
-          const updates: any = {
+          const updates: TaskUpdate = {
             title: event.summary || task.title,
             description: event.description || null,
             updated_at: new Date().toISOString(),
@@ -85,10 +87,7 @@ export async function POST(request: NextRequest) {
           }
 
           // Update task in database
-          const { error: updateError } = await supabase
-            .from('tasks')
-            // @ts-ignore - Temporary bypass due to type inference issue
-            .update(updates)
+          const { error: updateError } = await updateTasksQuery(supabase, updates)
             .eq('id', task.id);
 
           if (updateError) {
@@ -102,13 +101,13 @@ export async function POST(request: NextRequest) {
           // Event was deleted from Google Calendar
           console.log(`Event deleted from Google Calendar, removing google_event_id from task "${task.title}"`);
 
-          const { error: updateError } = await supabase
-            .from('tasks')
-            .update({
-              google_event_id: null,
-              synced_with_calendar: false,
-              updated_at: new Date().toISOString(),
-            })
+          const deleteUpdates: TaskUpdate = {
+            google_event_id: null,
+            synced_with_calendar: false,
+            updated_at: new Date().toISOString(),
+          };
+
+          const { error: updateError } = await updateTasksQuery(supabase, deleteUpdates)
             .eq('id', task.id);
 
           if (updateError) {

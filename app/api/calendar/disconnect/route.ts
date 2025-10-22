@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteTokens } from '@/lib/google-calendar/oauth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/types/database.types';
+import { updateTasksQuery } from '@/lib/supabase/helpers';
+
+type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 export const dynamic = 'force-dynamic';
 
@@ -21,13 +25,12 @@ export async function POST(request: NextRequest) {
     await deleteTokens(user.id);
 
     // Clear Google Calendar sync from all tasks
-    await supabase
-      .from('tasks')
-      // @ts-ignore - google_calendar_sync field exists in tasks table
-      .update({
-        google_calendar_sync: false,
-        synced_with_calendar: false,
-      })
+    const disconnectUpdates: TaskUpdate = {
+      google_calendar_sync: false,
+      synced_with_calendar: false,
+    };
+
+    await updateTasksQuery(supabase, disconnectUpdates)
       .eq('user_id', user.id)
       .not('google_event_id', 'is', null);
 

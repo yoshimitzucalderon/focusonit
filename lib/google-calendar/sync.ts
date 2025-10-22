@@ -2,9 +2,11 @@ import { google, calendar_v3 } from 'googleapis';
 import { getAuthenticatedClient } from './oauth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { Database } from '@/types/database.types';
+import { updateTasksQuery } from '@/lib/supabase/helpers';
 
 // Usar el tipo de la base de datos en lugar de una interfaz local
 type Task = Database['public']['Tables']['tasks']['Row'];
+type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 interface SyncResult {
   success: boolean;
@@ -105,15 +107,14 @@ export async function createCalendarEvent(userId: string, task: Task): Promise<S
     console.log('Event link:', response.data.htmlLink);
 
     // Update task with Google event ID
+    const createUpdates: TaskUpdate = {
+      google_event_id: response.data.id,
+      synced_with_calendar: true,
+      last_synced_at: new Date().toISOString(),
+    };
+
     const supabase = await createServerSupabaseClient();
-    await supabase
-      .from('tasks')
-      // @ts-ignore - google_event_id field exists in tasks table
-      .update({
-        google_event_id: response.data.id,
-        synced_with_calendar: true,
-        last_synced_at: new Date().toISOString(),
-      })
+    await updateTasksQuery(supabase, createUpdates)
       .eq('id', task.id);
 
     return {
@@ -151,14 +152,13 @@ export async function updateCalendarEvent(userId: string, task: Task): Promise<S
     });
 
     // Update sync timestamp
+    const syncUpdates: TaskUpdate = {
+      synced_with_calendar: true,
+      last_synced_at: new Date().toISOString(),
+    };
+
     const supabase = await createServerSupabaseClient();
-    await supabase
-      .from('tasks')
-      // @ts-ignore - synced_with_calendar field exists in tasks table
-      .update({
-        synced_with_calendar: true,
-        last_synced_at: new Date().toISOString(),
-      })
+    await updateTasksQuery(supabase, syncUpdates)
       .eq('id', task.id);
 
     return {
@@ -192,15 +192,14 @@ export async function deleteCalendarEvent(userId: string, task: Task): Promise<S
     });
 
     // Clear Google event ID from task
+    const deleteUpdates: TaskUpdate = {
+      google_event_id: null,
+      synced_with_calendar: false,
+      last_synced_at: new Date().toISOString(),
+    };
+
     const supabase = await createServerSupabaseClient();
-    await supabase
-      .from('tasks')
-      // @ts-ignore - google_event_id field exists in tasks table
-      .update({
-        google_event_id: null,
-        synced_with_calendar: false,
-        last_synced_at: new Date().toISOString(),
-      })
+    await updateTasksQuery(supabase, deleteUpdates)
       .eq('id', task.id);
 
     return {

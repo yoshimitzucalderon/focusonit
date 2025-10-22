@@ -3,8 +3,10 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getAuthenticatedClient } from '@/lib/google-calendar/oauth';
 import { google } from 'googleapis';
 import { Database } from '@/types/database.types';
+import { updateTasksQuery } from '@/lib/supabase/helpers';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
+type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
 
 export const dynamic = 'force-dynamic';
 
@@ -57,20 +59,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const userId = taskWithEvent.user_id;
+    const userId = (taskWithEvent as { user_id: string }).user_id;
 
     // Handle different actions
     if (action === 'deleted') {
       // Event was deleted from Google Calendar
       console.log(`Event ${eventId} was deleted`);
 
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          google_event_id: null,
-          synced_with_calendar: false,
-          updated_at: new Date().toISOString(),
-        })
+      const deleteUpdates: TaskUpdate = {
+        google_event_id: null,
+        synced_with_calendar: false,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await updateTasksQuery(supabase, deleteUpdates)
         .eq('google_event_id', eventId)
         .eq('user_id', userId);
 
@@ -106,13 +108,13 @@ export async function POST(request: NextRequest) {
         .eq('google_event_id', eventId)
         .eq('user_id', userId);
 
-      const existingTask = existingTasks?.[0] as Task | null;
+      const existingTask: Task | null = existingTasks?.[0] ? (existingTasks[0] as Task) : null;
 
       if (existingTask) {
         // Update existing task
         console.log(`Updating existing task: ${existingTask.title}`);
 
-        const updates: any = {
+        const updates: TaskUpdate = {
           title: event.summary || existingTask.title,
           description: event.description || null,
           updated_at: new Date().toISOString(),
@@ -139,10 +141,7 @@ export async function POST(request: NextRequest) {
           updates.end_time = null;
         }
 
-        const { error } = await supabase
-          .from('tasks')
-          // @ts-ignore - Temporary bypass due to type inference issue
-          .update(updates)
+        const { error } = await updateTasksQuery(supabase, updates)
           .eq('id', existingTask.id);
 
         if (error) {
@@ -172,13 +171,13 @@ export async function POST(request: NextRequest) {
         // Event was deleted
         console.log(`Event ${eventId} not found (likely deleted)`);
 
-        const { error: updateError } = await supabase
-          .from('tasks')
-          .update({
-            google_event_id: null,
-            synced_with_calendar: false,
-            updated_at: new Date().toISOString(),
-          })
+        const deleteUpdates: TaskUpdate = {
+          google_event_id: null,
+          synced_with_calendar: false,
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error: updateError } = await updateTasksQuery(supabase, deleteUpdates)
           .eq('google_event_id', eventId)
           .eq('user_id', userId);
 
