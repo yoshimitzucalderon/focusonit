@@ -290,6 +290,13 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
 
       console.log('→ NEW EVENT - will import:', event.summary);
 
+      // Helper function to extract date from ISO datetime or date string
+      const extractDate = (dateString: string | null | undefined): string | null => {
+        if (!dateString) return null;
+        // Extract date portion: "2025-10-16T13:30:00-07:00" -> "2025-10-16" OR "2025-10-16" -> "2025-10-16"
+        return dateString.split('T')[0];
+      };
+
       // Helper function to extract time from ISO datetime
       const extractTime = (dateTimeString: string | null | undefined): string | null => {
         if (!dateTimeString) return null;
@@ -314,7 +321,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
         user_id: userId,
         title: event.summary || 'Untitled Event',
         description: event.description || null,
-        due_date: event.start?.dateTime || event.start?.date || null,
+        due_date: extractDate(event.start?.dateTime || event.start?.date),
         start_time: extractTime(event.start?.dateTime),
         end_time: extractTime(event.end?.dateTime),
         is_all_day: !!event.start?.date,
