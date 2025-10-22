@@ -300,20 +300,40 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
 
       console.log('→ NEW EVENT - will import:', event.summary);
 
+      // Helper function to extract time from ISO datetime
+      const extractTime = (dateTimeString: string | null | undefined): string | null => {
+        if (!dateTimeString) return null;
+        // Extract time portion from "2025-10-16T13:30:00-07:00" -> "13:30:00"
+        const match = dateTimeString.match(/T(\d{2}:\d{2}:\d{2})/);
+        return match ? match[1] : null;
+      };
+
+      // Get next available position
+      const { data: maxPositionTask } = await supabase
+        .from('tasks')
+        .select('position')
+        .eq('user_id', userId)
+        .order('position', { ascending: false })
+        .limit(1)
+        .single();
+
+      const nextPosition = maxPositionTask ? (maxPositionTask as any).position + 1 : 0;
+
       // Convert event to task
       const task = {
         user_id: userId,
         title: event.summary || 'Untitled Event',
         description: event.description || null,
         due_date: event.start?.dateTime || event.start?.date || null,
-        start_time: event.start?.dateTime || null,
-        end_time: event.end?.dateTime || null,
+        start_time: extractTime(event.start?.dateTime),
+        end_time: extractTime(event.end?.dateTime),
         is_all_day: !!event.start?.date,
         completed: event.status === 'cancelled',
         google_event_id: event.id,
         synced_with_calendar: true,
         google_calendar_sync: true,
         last_synced_at: new Date().toISOString(),
+        position: nextPosition,
       };
 
       const { data: newTask, error } = await supabase
