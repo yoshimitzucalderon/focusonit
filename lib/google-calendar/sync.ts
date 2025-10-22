@@ -226,23 +226,54 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     const timeMin = startDate || new Date();
     const timeMax = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    console.log('=== SYNC.TS: Importing events from Google Calendar ===');
-    console.log('Calendar ID:', calendarId);
-    console.log('Date range:', { timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() });
-
-    const response = await calendar.events.list({
-      calendarId: calendarId,
+    const debugInfo = {
+      timestamp: new Date().toISOString(),
+      userId,
+      calendarId,
       timeMin: timeMin.toISOString(),
       timeMax: timeMax.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
+    };
+
+    console.log('=== SYNC.TS: Importing events from Google Calendar ===');
+    console.log(JSON.stringify(debugInfo, null, 2));
+
+    let response;
+    try {
+      response = await calendar.events.list({
+        calendarId: calendarId,
+        timeMin: timeMin.toISOString(),
+        timeMax: timeMax.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+    } catch (apiError: any) {
+      console.error('=== GOOGLE API ERROR ===');
+      console.error('Error:', apiError.message);
+      console.error('Code:', apiError.code);
+      console.error('Details:', JSON.stringify(apiError, null, 2));
+      throw apiError;
+    }
 
     const events = response.data.items || [];
     console.log(`=== SYNC.TS: Found ${events.length} events in Google Calendar from calendar: ${calendarId} ===`);
 
     if (events.length > 0) {
       console.log('First event sample:', JSON.stringify(events[0], null, 2));
+    } else {
+      console.log('=== NO EVENTS FOUND - Checking all calendars for debugging ===');
+      // Try to list from 'primary' explicitly
+      try {
+        const primaryTest = await calendar.events.list({
+          calendarId: 'primary',
+          timeMin: timeMin.toISOString(),
+          timeMax: timeMax.toISOString(),
+          singleEvents: true,
+          maxResults: 5,
+        });
+        console.log(`Primary calendar check: ${primaryTest.data.items?.length || 0} events`);
+      } catch (e) {
+        console.log('Could not check primary calendar');
+      }
     }
     const supabase = await createServerSupabaseClient();
 
