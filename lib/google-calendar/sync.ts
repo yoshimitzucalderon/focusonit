@@ -299,7 +299,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
         .eq('user_id', userId)
         .order('position', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
 
       const nextPosition = maxPositionTask ? (maxPositionTask as any).position + 1 : 0;
 
