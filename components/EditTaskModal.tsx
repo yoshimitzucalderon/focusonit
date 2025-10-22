@@ -76,6 +76,20 @@ export default function EditTaskModal({ task, isOpen, onClose, onTaskUpdated }: 
         onTaskUpdated(data as Task)
       }
 
+      // 🔄 Sincronizar con Google Calendar si está conectado y la tarea tiene google_calendar_sync activado
+      const updatedTask = data as Task
+      if (updatedTask.google_calendar_sync && updatedTask.google_event_id) {
+        // Sincronizar en segundo plano (no bloquear la UI)
+        fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds: [updatedTask.id] }),
+        }).catch(err => {
+          console.error('Error syncing with Google Calendar:', err)
+          // No mostrar error al usuario, solo log
+        })
+      }
+
       // Cerrar modal después de guardar exitosamente
       onClose()
       toast.success('Tarea actualizada correctamente', { id: toastId })

@@ -489,6 +489,28 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
                   </>
                 )}
               </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/calendar/sync-from-google', {
+                      method: 'POST',
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                      toast.success(`✓ ${data.updated} actualizaciones sincronizadas desde Google Calendar`);
+                    } else {
+                      toast.error(data.error || 'Error al sincronizar');
+                    }
+                  } catch (error) {
+                    toast.error('Error al sincronizar desde Google Calendar');
+                  }
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-purple-200 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Sincronizar desde Google Calendar
+              </button>
             </div>
 
             {/* Temporary cleanup button */}

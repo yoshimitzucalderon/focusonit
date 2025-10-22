@@ -249,6 +249,19 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
         onTaskCreated(newTask)
 
         console.log('✅ [AddTaskModal] onTaskCreated ejecutado correctamente')
+
+        // 🔄 Sincronizar con Google Calendar si la tarea tiene fecha/hora y google_calendar_sync está activado
+        if (newTask.google_calendar_sync && newTask.due_date) {
+          // Sincronizar en segundo plano (no bloquear la UI)
+          fetch('/api/calendar/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskIds: [newTask.id] }),
+          }).catch(err => {
+            console.error('Error syncing new task with Google Calendar:', err)
+            // No mostrar error al usuario, solo log
+          })
+        }
       } else {
         if (!data) {
           console.error('❌ [AddTaskModal] ERROR: data es null o undefined')
