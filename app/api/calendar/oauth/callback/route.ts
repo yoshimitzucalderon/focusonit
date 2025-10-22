@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exchangeCodeForTokens, storeTokens } from '@/lib/google-calendar/oauth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

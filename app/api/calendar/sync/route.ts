@@ -6,6 +6,8 @@ import { Database } from '@/types/database.types';
 // Tipo explícito para las tareas desde la base de datos
 type Task = Database['public']['Tables']['tasks']['Row'];
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Verify user is authenticated

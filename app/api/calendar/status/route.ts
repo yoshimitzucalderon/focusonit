@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isGoogleCalendarConnected } from '@/lib/google-calendar/oauth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // Verify user is authenticated
