@@ -24,16 +24,40 @@ export async function POST(request: NextRequest) {
     console.log('=== GOOGLE CALENDAR WEBHOOK ===');
     console.log('Received payload:', JSON.stringify(body, null, 2));
 
-    const { userId, eventId, calendarId, action } = body;
+    const { eventId, calendarId, action } = body;
 
-    if (!userId || !eventId) {
+    if (!eventId) {
       return NextResponse.json(
-        { error: 'Missing required fields: userId, eventId' },
+        { error: 'Missing required field: eventId' },
         { status: 400 }
       );
     }
 
     const supabase = await createServerSupabaseClient();
+
+    // Buscar el userId basándose en el google_event_id
+    const { data: taskWithEvent, error: searchError } = await supabase
+      .from('tasks')
+      .select('user_id')
+      .eq('google_event_id', eventId)
+      .limit(1)
+      .maybeSingle();
+
+    if (searchError) {
+      console.error('Error searching for task:', searchError);
+      return NextResponse.json({ error: 'Failed to find task' }, { status: 500 });
+    }
+
+    if (!taskWithEvent) {
+      console.log(`No task found with google_event_id: ${eventId}. Event might not be synced yet.`);
+      return NextResponse.json({
+        success: true,
+        action: 'ignored',
+        message: 'Event not linked to any task in FocusOnIt',
+      });
+    }
+
+    const userId = taskWithEvent.user_id;
 
     // Handle different actions
     if (action === 'deleted') {
