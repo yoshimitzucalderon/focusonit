@@ -54,7 +54,9 @@ export default function EditTaskModal({ task, isOpen, onClose, onTaskUpdated }: 
       reminder_enabled: reminder,
       reminder_at: reminder && dueDate ? dueDate.toISOString() : null,
       updated_at: getLocalTimestamp(),
-      timezone_offset: getTimezoneOffset()
+      timezone_offset: getTimezoneOffset(),
+      // Activar sincronización automática con Google Calendar si tiene fecha
+      google_calendar_sync: dueDate ? true : (task.google_calendar_sync || false)
     }
 
     // Mostrar feedback inmediato
@@ -78,8 +80,9 @@ export default function EditTaskModal({ task, isOpen, onClose, onTaskUpdated }: 
 
       // 🔄 Sincronizar con Google Calendar si está conectado y la tarea tiene google_calendar_sync activado
       const updatedTask = data as Task
-      if (updatedTask.google_calendar_sync && updatedTask.google_event_id) {
+      if (updatedTask.google_calendar_sync && updatedTask.due_date) {
         // Sincronizar en segundo plano (no bloquear la UI)
+        // Esto sincronizará tanto tareas nuevas (sin google_event_id) como actualizaciones (con google_event_id)
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

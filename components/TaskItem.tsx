@@ -206,17 +206,32 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
   // Cambiar fecha
   const updateDate = async (newDate: Date | null) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
         .update({
           due_date: newDate ? toDateOnlyString(newDate) : null,
           updated_at: getLocalTimestamp(),
-          timezone_offset: getTimezoneOffset()
+          timezone_offset: getTimezoneOffset(),
+          // Activar sincronización automática con Google Calendar si tiene fecha
+          google_calendar_sync: newDate ? true : task.google_calendar_sync
         })
         .eq('id', task.id)
+        .select()
+        .single()
 
       if (error) throw error
+
+      // 🔄 Sincronizar inmediatamente con Google Calendar si tiene fecha
+      if (data && (data as any).google_calendar_sync && (data as any).due_date) {
+        fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds: [(data as any).id] }),
+        }).catch(err => {
+          console.error('Error syncing task date change with Google Calendar:', err)
+        })
+      }
 
       toast.success(newDate ? 'Fecha actualizada' : 'Fecha eliminada')
     } catch (error: any) {
@@ -341,12 +356,26 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
           priority: task.priority,
           user_id: task.user_id,
           created_at: getLocalTimestamp(),
-          updated_at: getLocalTimestamp()
+          updated_at: getLocalTimestamp(),
+          // Activar sincronización automática si tiene fecha
+          google_calendar_sync: task.due_date ? true : false
         } as any)
         .select()
         .single()
 
       if (error) throw error
+
+      // 🔄 Sincronizar inmediatamente con Google Calendar si tiene fecha
+      if (data && (data as any).google_calendar_sync && (data as any).due_date) {
+        fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds: [(data as any).id] }),
+        }).catch(err => {
+          console.error('Error syncing duplicated task with Google Calendar:', err)
+        })
+      }
+
       toast.success('Tarea duplicada')
     } catch (error) {
       toast.error('Error al duplicar tarea')
