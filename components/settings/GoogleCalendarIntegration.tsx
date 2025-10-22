@@ -17,10 +17,40 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
   const [importRange, setImportRange] = useState<'week' | 'month' | 'custom'>('week')
   const [customStartDate, setCustomStartDate] = useState('')
   const [customEndDate, setCustomEndDate] = useState('')
+  const [calendars, setCalendars] = useState<any[]>([])
+  const [selectedCalendarId, setSelectedCalendarId] = useState<string>('primary')
+  const [loadingCalendars, setLoadingCalendars] = useState(false)
 
   useEffect(() => {
     checkConnectionStatus()
   }, [])
+
+  useEffect(() => {
+    if (isConnected) {
+      loadCalendars()
+    }
+  }, [isConnected])
+
+  const loadCalendars = async () => {
+    setLoadingCalendars(true)
+    try {
+      const response = await fetch('/api/calendar/list')
+      const data = await response.json()
+
+      if (data.success) {
+        setCalendars(data.calendars)
+        // Set primary calendar as default
+        const primaryCal = data.calendars.find((cal: any) => cal.primary)
+        if (primaryCal) {
+          setSelectedCalendarId(primaryCal.id)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading calendars:', error)
+    } finally {
+      setLoadingCalendars(false)
+    }
+  }
 
   const checkConnectionStatus = async () => {
     try {
@@ -95,13 +125,21 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
 
       // Calculate date range based on selection
       if (importRange === 'week') {
+        // Last 7 days to next 7 days (14 days total)
         startDate = new Date(now)
-        startDate.setDate(now.getDate() - 7) // 1 week ago
+        startDate.setDate(startDate.getDate() - 7)
+        startDate.setHours(0, 0, 0, 0)
+
         endDate = new Date(now)
-        endDate.setDate(now.getDate() + 7) // 1 week ahead
+        endDate.setDate(endDate.getDate() + 7)
+        endDate.setHours(23, 59, 59, 999)
       } else if (importRange === 'month') {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1) // Start of current month
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0) // End of current month
+        // Entire current month
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        startDate.setHours(0, 0, 0, 0)
+
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        endDate.setHours(23, 59, 59, 999)
       } else {
         // custom
         if (!customStartDate || !customEndDate) {
@@ -126,6 +164,7 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         body: JSON.stringify({
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
+          calendarId: selectedCalendarId,
         }),
       })
 
@@ -250,6 +289,31 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Calendar selector */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-gray-600">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Calendario a importar
+            </p>
+
+            {loadingCalendars ? (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <select
+                value={selectedCalendarId}
+                onChange={(e) => setSelectedCalendarId(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {calendars.map((cal) => (
+                  <option key={cal.id} value={cal.id}>
+                    {cal.summary} {cal.primary ? '(Principal)' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Import range selector */}

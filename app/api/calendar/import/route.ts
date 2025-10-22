@@ -17,13 +17,14 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json().catch(() => ({}));
-    const { startDate, endDate } = body;
+    const { startDate, endDate, calendarId } = body;
 
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
+    const calendar = calendarId || 'primary';
 
     // Import events from Google Calendar
-    const result = await importCalendarEvents(user.id, start, end);
+    const result = await importCalendarEvents(user.id, start, end, calendar);
 
     if (!result.success) {
       return NextResponse.json(

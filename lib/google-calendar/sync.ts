@@ -218,7 +218,7 @@ export async function deleteCalendarEvent(userId: string, task: Task): Promise<S
 }
 
 // Import events from Google Calendar
-export async function importCalendarEvents(userId: string, startDate?: Date, endDate?: Date) {
+export async function importCalendarEvents(userId: string, startDate?: Date, endDate?: Date, calendarId: string = 'primary') {
   try {
     const auth = await getAuthenticatedClient(userId);
     const calendar = google.calendar({ version: 'v3', auth });
@@ -227,10 +227,11 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     const timeMax = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     console.log('Importing events from Google Calendar...');
+    console.log('Calendar ID:', calendarId);
     console.log('Date range:', { timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() });
 
     const response = await calendar.events.list({
-      calendarId: 'primary',
+      calendarId: calendarId,
       timeMin: timeMin.toISOString(),
       timeMax: timeMax.toISOString(),
       singleEvents: true,
@@ -238,7 +239,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     });
 
     const events = response.data.items || [];
-    console.log(`Found ${events.length} events in Google Calendar`);
+    console.log(`Found ${events.length} events in Google Calendar from calendar: ${calendarId}`);
     const supabase = await createServerSupabaseClient();
 
     const importedTasks: any[] = [];
