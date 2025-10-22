@@ -383,13 +383,22 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
 
 // Sync task with Google Calendar (create or update)
 export async function syncTaskToCalendar(userId: string, task: Task): Promise<SyncResult> {
+  console.log('=== SYNC TASK TO CALENDAR ===');
+  console.log('Task ID:', task.id);
+  console.log('Task title:', task.title);
+  console.log('google_calendar_sync:', task.google_calendar_sync);
+  console.log('google_event_id:', task.google_event_id);
+
   if (!task.google_calendar_sync) {
+    console.log('❌ Sync disabled for this task');
     return { success: true }; // Sync is disabled for this task
   }
 
   if (task.google_event_id) {
+    console.log('→ Task has event ID, updating...');
     return await updateCalendarEvent(userId, task);
   } else {
+    console.log('→ Task has NO event ID, creating...');
     return await createCalendarEvent(userId, task);
   }
 }
