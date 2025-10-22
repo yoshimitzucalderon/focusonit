@@ -199,9 +199,62 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
     setSyncing(true)
 
     try {
-      // This will be implemented when we add auto-sync functionality
-      // For now, we'll show a message
-      toast.success('Sincronización automática activada para nuevas tareas')
+      const now = new Date()
+      let startDate: Date
+      let endDate: Date
+
+      if (importRange === 'week') {
+        startDate = new Date(now)
+        startDate.setDate(startDate.getDate() - 7)
+        startDate.setHours(0, 0, 0, 0)
+
+        endDate = new Date(now)
+        endDate.setDate(endDate.getDate() + 7)
+        endDate.setHours(23, 59, 59, 999)
+      } else if (importRange === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        startDate.setHours(0, 0, 0, 0)
+
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        endDate.setHours(23, 59, 59, 999)
+      } else {
+        if (!customStartDate || !customEndDate) {
+          toast.error('Por favor selecciona ambas fechas')
+          setSyncing(false)
+          return
+        }
+        startDate = new Date(customStartDate)
+        endDate = new Date(customEndDate)
+      }
+
+      console.log('Syncing tasks with date range:', {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      })
+
+      const response = await fetch('/api/calendar/sync-period', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        console.log('Sync result:', data)
+        toast.success(`✓ ${data.successCount} tarea(s) sincronizada(s) con Google Calendar`)
+
+        if (data.failCount > 0) {
+          toast.error(`⚠️ ${data.failCount} tarea(s) fallaron al sincronizar`)
+        }
+      } else {
+        toast.error(data.error || 'Error al sincronizar tareas')
+      }
     } catch (error) {
       console.error('Error syncing tasks:', error)
       toast.error('Error al sincronizar tareas')
