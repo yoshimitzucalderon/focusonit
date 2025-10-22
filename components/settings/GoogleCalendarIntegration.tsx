@@ -452,41 +452,69 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              onClick={handleImport}
-              disabled={importing}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {importing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Importando...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Importar eventos
-                </>
-              )}
-            </button>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={handleImport}
+                disabled={importing}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Importar eventos
+                  </>
+                )}
+              </button>
 
+              <button
+                onClick={handleSyncAll}
+                disabled={syncing}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {syncing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Sincronizar tareas
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Temporary cleanup button */}
             <button
-              onClick={handleSyncAll}
-              disabled={syncing}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={async () => {
+                if (!confirm('¿Estás seguro de que quieres eliminar las tareas importadas con formato incorrecto? Esto solo eliminará tareas que tienen errores de formato.')) {
+                  return;
+                }
+                try {
+                  const response = await fetch('/api/calendar/cleanup-malformed', {
+                    method: 'POST',
+                  });
+                  const data = await response.json();
+                  if (data.success) {
+                    alert(`Limpieza completada: ${data.deletedCount} tareas eliminadas`);
+                  } else {
+                    alert(`Error: ${data.error}`);
+                  }
+                } catch (error) {
+                  console.error('Error cleaning up malformed tasks:', error);
+                  alert('Error al limpiar tareas');
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-yellow-500 dark:border-yellow-600 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors text-sm"
             >
-              {syncing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Sincronizando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  Sincronizar tareas
-                </>
-              )}
+              🔧 Limpiar tareas con formato incorrecto
             </button>
           </div>
 
