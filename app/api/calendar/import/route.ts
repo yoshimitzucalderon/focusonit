@@ -23,8 +23,19 @@ export async function POST(request: NextRequest) {
     const end = endDate ? new Date(endDate) : undefined;
     const calendar = calendarId || 'primary';
 
+    console.log('=== IMPORT ROUTE CALLED ===');
+    console.log('User ID:', user.id);
+    console.log('Calendar ID:', calendar);
+    console.log('Start Date:', start?.toISOString());
+    console.log('End Date:', end?.toISOString());
+
     // Import events from Google Calendar
     const result = await importCalendarEvents(user.id, start, end, calendar);
+
+    console.log('=== IMPORT RESULT ===');
+    console.log('Success:', result.success);
+    console.log('Count:', result.count);
+    console.log('Error:', result.error);
 
     if (!result.success) {
       return NextResponse.json(
