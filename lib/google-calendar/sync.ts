@@ -36,11 +36,18 @@ function taskToCalendarEvent(task: Task): calendar_v3.Schema$Event {
   // Handle all other cases as all-day events (safer than timed events at midnight)
   else if (task.due_date) {
     const dateOnly = task.due_date.split('T')[0]; // Extract YYYY-MM-DD
+
+    // For all-day events, end date must be the next day (exclusive)
+    const startDate = new Date(dateOnly);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    const endDateOnly = endDate.toISOString().split('T')[0];
+
     event.start = {
       date: dateOnly, // Format: YYYY-MM-DD
     };
     event.end = {
-      date: dateOnly,
+      date: endDateOnly, // Next day for all-day events
     };
   }
 
