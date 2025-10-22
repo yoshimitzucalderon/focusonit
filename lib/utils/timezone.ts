@@ -28,12 +28,22 @@ export function getLocalTimestamp(): string {
 }
 
 /**
- * Obtiene solo el offset del timezone del navegador (ej: "-07:00", "+00:00")
+ * Obtiene solo el offset del timezone del navegador en minutos
+ * @returns number - offset en minutos (ej: -420 para UTC-7, 0 para UTC)
+ */
+export function getTimezoneOffset(): number {
+  const now = new Date();
+  // getTimezoneOffset() devuelve minutos desde UTC (positivo = atrás de UTC)
+  // Invertimos el signo para que sea coherente (negativo = atrás de UTC)
+  return -now.getTimezoneOffset();
+}
+
+/**
+ * Obtiene el offset del timezone como string (ej: "-07:00", "+00:00")
  * @returns string con el offset en formato "+HH:MM" o "-HH:MM"
  */
-export function getTimezoneOffset(): string {
-  const now = new Date();
-  const offset = -now.getTimezoneOffset();
+export function getTimezoneOffsetString(): string {
+  const offset = getTimezoneOffset();
   const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
   const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
   const offsetSign = offset >= 0 ? '+' : '-';
