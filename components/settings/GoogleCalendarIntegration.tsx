@@ -113,6 +113,11 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         endDate = new Date(customEndDate)
       }
 
+      console.log('Importing events with date range:', {
+        start: startDate.toISOString(),
+        end: endDate.toISOString()
+      })
+
       const response = await fetch('/api/calendar/import', {
         method: 'POST',
         headers: {
