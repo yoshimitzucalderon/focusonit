@@ -226,7 +226,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     const timeMin = startDate || new Date();
     const timeMax = endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    console.log('Importing events from Google Calendar...');
+    console.log('=== SYNC.TS: Importing events from Google Calendar ===');
     console.log('Calendar ID:', calendarId);
     console.log('Date range:', { timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() });
 
@@ -239,7 +239,11 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     });
 
     const events = response.data.items || [];
-    console.log(`Found ${events.length} events in Google Calendar from calendar: ${calendarId}`);
+    console.log(`=== SYNC.TS: Found ${events.length} events in Google Calendar from calendar: ${calendarId} ===`);
+
+    if (events.length > 0) {
+      console.log('First event sample:', JSON.stringify(events[0], null, 2));
+    }
     const supabase = await createServerSupabaseClient();
 
     const importedTasks: any[] = [];

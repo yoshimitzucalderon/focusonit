@@ -37,12 +37,17 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
       const response = await fetch('/api/calendar/list')
       const data = await response.json()
 
+      console.log('=== CALENDARS LOADED ===')
+      console.log('All calendars:', JSON.stringify(data.calendars, null, 2))
+
       if (data.success) {
         setCalendars(data.calendars)
         // Set primary calendar as default
         const primaryCal = data.calendars.find((cal: any) => cal.primary)
+        console.log('Primary calendar:', primaryCal)
         if (primaryCal) {
           setSelectedCalendarId(primaryCal.id)
+          console.log('Selected calendar ID set to:', primaryCal.id)
         }
       }
     } catch (error) {
