@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteCalendarEvent } from '@/lib/google-calendar/sync';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/types/database.types';
+
+// Tipo explícito para las tareas desde la base de datos
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +41,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      taskToDelete = fetchedTask;
+      taskToDelete = fetchedTask as Task;
     }
 
     if (!taskToDelete) {
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await deleteCalendarEvent(user.id, taskToDelete);
+    const result = await deleteCalendarEvent(user.id, taskToDelete as Task);
 
     if (!result.success) {
       return NextResponse.json(

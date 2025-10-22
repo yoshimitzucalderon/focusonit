@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/types/database.types';
+
+// Tipo explícito para las tareas desde la base de datos
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +38,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!tasks || tasks.length === 0) {
+    // Tipo explícito para el array de tareas
+    const typedTasks: Task[] = tasks || [];
+
+    if (typedTasks.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'No imported tasks found',
@@ -42,11 +49,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log(`Found ${tasks.length} imported tasks to check`);
+    console.log(`Found ${typedTasks.length} imported tasks to check`);
 
     // Filter tasks with malformed time fields
     // Valid time format is "HH:MM:SS" (no date, no timezone)
-    const malformedTasks = tasks.filter((task) => {
+    const malformedTasks = typedTasks.filter((task) => {
       const hasDate = (timeStr: string | null) => {
         if (!timeStr) return false;
         // Check if time field contains date/timezone characters

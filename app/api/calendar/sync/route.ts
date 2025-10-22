@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncTaskToCalendar, batchSyncTasks } from '@/lib/google-calendar/sync';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/types/database.types';
+
+// Tipo explícito para las tareas desde la base de datos
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,10 +61,10 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        taskToSync = fetchedTask;
+        taskToSync = fetchedTask as Task;
       }
 
-      const result = await syncTaskToCalendar(user.id, taskToSync);
+      const result = await syncTaskToCalendar(user.id, taskToSync as Task);
 
       if (!result.success) {
         return NextResponse.json(
