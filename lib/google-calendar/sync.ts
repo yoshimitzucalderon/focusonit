@@ -279,6 +279,7 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
     const supabase = await createServerSupabaseClient();
 
     const importedTasks: any[] = [];
+    let skippedCount = 0;
 
     for (const event of events) {
       console.log('Processing event:', event.summary, 'ID:', event.id);
@@ -292,9 +293,12 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
         .single();
 
       if (existingTask) {
-        console.log('Event already imported, skipping:', event.summary);
+        console.log('✓ Event already imported, skipping:', event.summary);
+        skippedCount++;
         continue;
       }
+
+      console.log('→ NEW EVENT - will import:', event.summary);
 
       // Convert event to task
       const task = {
@@ -318,15 +322,28 @@ export async function importCalendarEvents(userId: string, startDate?: Date, end
         .select()
         .single();
 
-      if (!error && newTask) {
+      if (error) {
+        console.error(`❌ Failed to insert task for event "${event.summary}":`, error);
+        console.error('Task data:', JSON.stringify(task, null, 2));
+      } else if (newTask) {
+        console.log(`✅ Successfully imported: ${event.summary}`);
         importedTasks.push(newTask);
+      } else {
+        console.warn(`⚠️  No error but no task created for: ${event.summary}`);
       }
     }
+
+    console.log(`=== IMPORT SUMMARY ===`);
+    console.log(`Total events found: ${events.length}`);
+    console.log(`Already imported (skipped): ${skippedCount}`);
+    console.log(`New events imported: ${importedTasks.length}`);
 
     return {
       success: true,
       count: importedTasks.length,
       tasks: importedTasks,
+      totalEvents: events.length,
+      skippedCount: skippedCount,
     };
   } catch (error: any) {
     console.error('Error importing calendar events:', error);
