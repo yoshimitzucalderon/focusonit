@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
             google_event_id: null,
             synced_with_calendar: false,
             last_synced_at: new Date().toISOString(),
-          })
+          } as any)
           .eq('id', task.id);
 
         console.log(`✅ Successfully deleted: ${task.title}`);
