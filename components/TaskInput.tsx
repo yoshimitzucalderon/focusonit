@@ -61,16 +61,31 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      const { error } = await supabase.from('tasks').insert({
+      const taskData = {
         user_id: userId,
         title: title.trim(),
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         created_at: getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      } as any)
+        // Activar sincronización automática si tiene fecha
+        google_calendar_sync: parsedDate ? true : false,
+      } as any
+
+      const { data: newTask, error } = await supabase.from('tasks').insert(taskData).select().single()
 
       if (error) throw error
+
+      // 🔄 Sincronizar inmediatamente con Google Calendar
+      if (newTask && newTask.google_calendar_sync && newTask.due_date) {
+        fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds: [newTask.id] }),
+        }).catch(err => {
+          console.error('Error syncing quick task with Google Calendar:', err)
+        })
+      }
 
       setTitle('')
       setNaturalDateSuggestion(null)
@@ -103,7 +118,7 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       const nextPosition = (lastTask?.position ?? -1) + 1
 
-      const { error } = await supabase.from('tasks').insert({
+      const taskData = {
         user_id: userId,
         title: title.trim(),
         description: description.trim() || null,
@@ -116,9 +131,24 @@ export default function TaskInput({ userId }: TaskInputProps) {
         created_at: voiceCreatedAt || getLocalTimestamp(),
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
-      } as any)
+        // Activar sincronización automática con Google Calendar si tiene fecha
+        google_calendar_sync: dueDate ? true : false,
+      } as any
+
+      const { data: newTask, error } = await supabase.from('tasks').insert(taskData).select().single()
 
       if (error) throw error
+
+      // 🔄 Sincronizar inmediatamente con Google Calendar si está activado
+      if (newTask && newTask.google_calendar_sync && newTask.due_date) {
+        fetch('/api/calendar/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskIds: [newTask.id] }),
+        }).catch(err => {
+          console.error('Error syncing task with Google Calendar:', err)
+        })
+      }
 
       setTitle('')
       setDescription('')
