@@ -86,14 +86,18 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
     setImporting(true)
 
     try {
+      const now = new Date()
+      const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1) // 1 mes atrás
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 6, 0) // 6 meses adelante
+
       const response = await fetch('/api/calendar/import', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
         }),
       })
 
@@ -262,16 +266,31 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
 
       {/* Setup Instructions */}
       {!isConnected && (
-        <div className="mt-4 p-4 rounded-lg bg-gray-50 dark:bg-slate-700/50">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            <strong>¿Qué puedes hacer con esta integración?</strong>
-          </p>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
-            <li>Crear eventos en Google Calendar automáticamente al agregar tareas</li>
-            <li>Actualizar eventos cuando modificas tus tareas</li>
-            <li>Importar eventos existentes de tu calendario como tareas</li>
-            <li>Mantener sincronizadas tus tareas y eventos en tiempo real</li>
-          </ul>
+        <div className="mt-4 space-y-4">
+          <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-900 dark:text-blue-100">
+                <p className="font-medium mb-1">💡 Puedes usar cualquier cuenta de Google</p>
+                <p className="text-blue-700 dark:text-blue-300">
+                  No necesitas iniciar sesión con Google en FocusOnIt. Puedes conectar tu Google Calendar
+                  desde cualquier cuenta de Gmail, incluso si iniciaste sesión con un correo diferente.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-700/50">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <strong>¿Qué puedes hacer con esta integración?</strong>
+            </p>
+            <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
+              <li>Crear eventos en Google Calendar automáticamente al agregar tareas</li>
+              <li>Actualizar eventos cuando modificas tus tareas</li>
+              <li>Importar eventos existentes de tu calendario como tareas</li>
+              <li>Mantener sincronizadas tus tareas y eventos en tiempo real</li>
+            </ul>
+          </div>
         </div>
       )}
     </div>
