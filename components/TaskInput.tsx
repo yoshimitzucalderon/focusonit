@@ -72,16 +72,17 @@ export default function TaskInput({ userId }: TaskInputProps) {
         google_calendar_sync: parsedDate ? true : false,
       } as any
 
+      // @ts-ignore - Bypass Supabase type inference issue
       const { data: newTask, error } = await supabase.from('tasks').insert(taskData).select().single()
 
       if (error) throw error
 
       // 🔄 Sincronizar inmediatamente con Google Calendar
-      if (newTask && newTask.google_calendar_sync && newTask.due_date) {
+      if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskIds: [newTask.id] }),
+          body: JSON.stringify({ taskIds: [(newTask as any).id] }),
         }).catch(err => {
           console.error('Error syncing quick task with Google Calendar:', err)
         })
@@ -135,16 +136,17 @@ export default function TaskInput({ userId }: TaskInputProps) {
         google_calendar_sync: dueDate ? true : false,
       } as any
 
+      // @ts-ignore - Bypass Supabase type inference issue
       const { data: newTask, error } = await supabase.from('tasks').insert(taskData).select().single()
 
       if (error) throw error
 
       // 🔄 Sincronizar inmediatamente con Google Calendar si está activado
-      if (newTask && newTask.google_calendar_sync && newTask.due_date) {
+      if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskIds: [newTask.id] }),
+          body: JSON.stringify({ taskIds: [(newTask as any).id] }),
         }).catch(err => {
           console.error('Error syncing task with Google Calendar:', err)
         })
