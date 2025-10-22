@@ -48,6 +48,14 @@ export async function POST(request: NextRequest) {
       success: true,
       count: result.count,
       message: `Successfully imported ${result.count} event(s) from Google Calendar`,
+      debug: {
+        calendarId: calendar,
+        dateRange: {
+          start: start?.toISOString(),
+          end: end?.toISOString(),
+        },
+        resultDetails: result,
+      },
     });
   } catch (error: any) {
     console.error('Error importing calendar events:', error);
