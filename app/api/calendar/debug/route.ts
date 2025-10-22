@@ -19,18 +19,18 @@ export async function GET(request: NextRequest) {
     const calendarsResponse = await calendar.calendarList.list();
     const calendars = calendarsResponse.data.items || [];
 
-    // Try to get events from each calendar
+    // Try to get events from each calendar - focus on October 2025
     const results = [];
 
     for (const cal of calendars) {
       try {
         const eventsResponse = await calendar.events.list({
           calendarId: cal.id!,
-          maxResults: 10,
+          maxResults: 50,
           singleEvents: true,
           orderBy: 'startTime',
-          timeMin: new Date('2025-01-01').toISOString(),
-          timeMax: new Date('2025-12-31').toISOString(),
+          timeMin: new Date('2025-10-15').toISOString(),
+          timeMax: new Date('2025-10-31').toISOString(),
         });
 
         results.push({
@@ -38,11 +38,12 @@ export async function GET(request: NextRequest) {
           calendarName: cal.summary,
           isPrimary: cal.primary || false,
           eventCount: eventsResponse.data.items?.length || 0,
-          events: eventsResponse.data.items?.slice(0, 3).map(e => ({
+          events: eventsResponse.data.items?.map(e => ({
             id: e.id,
             summary: e.summary,
             start: e.start?.dateTime || e.start?.date,
             end: e.end?.dateTime || e.end?.date,
+            isAllDay: !!e.start?.date,
           })) || [],
         });
       } catch (error: any) {
