@@ -418,25 +418,6 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
               )}
             </button>
 
-            {/* Botón de debug temporal */}
-            <button
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/calendar/test-events')
-                  const data = await response.json()
-                  console.log('=== TEST EVENTS RESPONSE ===')
-                  console.log(JSON.stringify(data, null, 2))
-                  toast.success(`Found ${data.eventsFound || 0} events. Check console!`)
-                } catch (error) {
-                  console.error('Test error:', error)
-                  toast.error('Error - check console')
-                }
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors font-medium text-sm"
-            >
-              🔍 Debug: Test Calendar API
-            </button>
-
             <button
               onClick={handleSyncAll}
               disabled={syncing}
