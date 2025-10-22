@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { syncTaskToCalendar } from '@/lib/google-calendar/sync';
+import { Database } from '@/types/database.types';
+
+// Tipo explícito para las tareas desde la base de datos
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,17 +50,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tasksToSync = tasks || [];
+    const tasksToSync: Task[] = tasks || [];
     console.log(`Found ${tasksToSync.length} tasks to sync in period`);
 
-    const results = [];
+    const results: Array<{
+      taskId: string;
+      title: string;
+      success: boolean;
+      error?: string;
+    }> = [];
     let successCount = 0;
     let failCount = 0;
 
     for (const task of tasksToSync) {
       try {
         console.log(`Syncing task: ${task.title}`);
-        const result = await syncTaskToCalendar(user.id, task as any);
+        const result = await syncTaskToCalendar(user.id, task);
 
         if (result.success) {
           console.log(`✅ Successfully synced: ${task.title}`);

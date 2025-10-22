@@ -1,23 +1,10 @@
 import { google, calendar_v3 } from 'googleapis';
 import { getAuthenticatedClient } from './oauth';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { Database } from '@/types/database.types';
 
-interface Task {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string | null;
-  due_date?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  is_all_day?: boolean;
-  completed: boolean;
-  google_event_id?: string | null;
-  synced_with_calendar?: boolean;
-  google_calendar_sync?: boolean;
-  reminder_enabled?: boolean;
-  reminder_at?: string | null;
-}
+// Usar el tipo de la base de datos en lugar de una interfaz local
+type Task = Database['public']['Tables']['tasks']['Row'];
 
 interface SyncResult {
   success: boolean;
