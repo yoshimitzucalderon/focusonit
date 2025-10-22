@@ -156,6 +156,8 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         end: endDate.toISOString()
       })
 
+      console.log('Selected Calendar ID:', selectedCalendarId)
+
       const response = await fetch('/api/calendar/import', {
         method: 'POST',
         headers: {
@@ -168,11 +170,16 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
         }),
       })
 
+      console.log('API Response status:', response.status)
+
       const data = await response.json()
+      console.log('API Response data:', JSON.stringify(data, null, 2))
 
       if (data.success) {
+        console.log(`SUCCESS: Imported ${data.count} events`)
         toast.success(`✓ ${data.count} evento(s) importado(s) exitosamente`)
       } else {
+        console.log('ERROR:', data.error)
         toast.error(data.error || 'Error al importar eventos')
       }
     } catch (error) {
