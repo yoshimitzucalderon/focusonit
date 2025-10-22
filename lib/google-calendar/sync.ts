@@ -26,11 +26,11 @@ function taskToCalendarEvent(task: Task): calendar_v3.Schema$Event {
 
     event.start = {
       dateTime: `${dateOnly}T${task.start_time}`,
-      timeZone: 'America/Mexico_City',
+      timeZone: 'America/Tijuana',
     };
     event.end = {
       dateTime: `${dateOnly}T${task.end_time}`,
-      timeZone: 'America/Mexico_City',
+      timeZone: 'America/Tijuana',
     };
   }
   // Handle all other cases as all-day events (safer than timed events at midnight)
