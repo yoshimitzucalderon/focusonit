@@ -78,10 +78,24 @@ export async function createCalendarEvent(userId: string, task: Task): Promise<S
 
     const event = taskToCalendarEvent(task);
 
+    console.log('=== CREATING CALENDAR EVENT ===');
+    console.log('Task:', {
+      id: task.id,
+      title: task.title,
+      due_date: task.due_date,
+      start_time: task.start_time,
+      end_time: task.end_time,
+      is_all_day: task.is_all_day
+    });
+    console.log('Event to create:', JSON.stringify(event, null, 2));
+
     const response = await calendar.events.insert({
       calendarId: 'primary',
       requestBody: event,
     });
+
+    console.log('✅ Event created successfully:', response.data.id);
+    console.log('Event link:', response.data.htmlLink);
 
     // Update task with Google event ID
     const supabase = await createServerSupabaseClient();
