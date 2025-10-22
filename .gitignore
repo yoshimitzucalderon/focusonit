@@ -36,6 +36,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Documentation with sensitive data
+# Documentation with sensitive data (contains real credentials/keys)
 SETUP_GOOGLE_OAUTH_YCM360.md
 *_YCM360.md
+CONFIGURE_GOOGLE_OAUTH_SELFHOSTED.md
+GOOGLE_SIGN_IN_SELFHOSTED.md
+QUICKSTART.md
+GITHUB_SETUP.md
+START_HERE.md
+README.md
