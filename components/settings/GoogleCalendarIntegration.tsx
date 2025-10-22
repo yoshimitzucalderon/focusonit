@@ -14,6 +14,9 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
   const [connecting, setConnecting] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [importRange, setImportRange] = useState<'week' | 'month' | 'custom'>('week')
+  const [customStartDate, setCustomStartDate] = useState('')
+  const [customEndDate, setCustomEndDate] = useState('')
 
   useEffect(() => {
     checkConnectionStatus()
@@ -87,8 +90,28 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
 
     try {
       const now = new Date()
-      const startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1) // 1 mes atrás
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 6, 0) // 6 meses adelante
+      let startDate: Date
+      let endDate: Date
+
+      // Calculate date range based on selection
+      if (importRange === 'week') {
+        startDate = new Date(now)
+        startDate.setDate(now.getDate() - 7) // 1 week ago
+        endDate = new Date(now)
+        endDate.setDate(now.getDate() + 7) // 1 week ahead
+      } else if (importRange === 'month') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1) // Start of current month
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0) // End of current month
+      } else {
+        // custom
+        if (!customStartDate || !customEndDate) {
+          toast.error('Por favor selecciona ambas fechas')
+          setImporting(false)
+          return
+        }
+        startDate = new Date(customStartDate)
+        endDate = new Date(customEndDate)
+      }
 
       const response = await fetch('/api/calendar/import', {
         method: 'POST',
@@ -224,11 +247,82 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
             </div>
           </div>
 
+          {/* Import range selector */}
+          <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-gray-600">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              Período a importar
+            </p>
+
+            <div className="space-y-3">
+              {/* Range options */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setImportRange('week')}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    importRange === 'week'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-500'
+                  }`}
+                >
+                  Esta semana
+                </button>
+                <button
+                  onClick={() => setImportRange('month')}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    importRange === 'month'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-500'
+                  }`}
+                >
+                  Este mes
+                </button>
+                <button
+                  onClick={() => setImportRange('custom')}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    importRange === 'custom'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white dark:bg-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-500'
+                  }`}
+                >
+                  Personalizado
+                </button>
+              </div>
+
+              {/* Custom date inputs */}
+              {importRange === 'custom' && (
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Desde
+                    </label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Hasta
+                    </label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={handleImport}
               disabled={importing}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               {importing ? (
                 <>
