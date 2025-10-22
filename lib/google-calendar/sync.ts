@@ -32,38 +32,28 @@ function taskToCalendarEvent(task: Task): calendar_v3.Schema$Event {
     description: task.description || '',
   };
 
-  // Handle all-day events
-  if (task.is_all_day && task.due_date) {
-    event.start = {
-      date: task.due_date.split('T')[0], // Format: YYYY-MM-DD
-    };
-    event.end = {
-      date: task.due_date.split('T')[0],
-    };
-  }
-  // Handle timed events
-  else if (task.start_time && task.end_time) {
-    event.start = {
-      dateTime: task.start_time,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    };
-    event.end = {
-      dateTime: task.end_time,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    };
-  }
-  // Handle due date only
-  else if (task.due_date) {
-    const dueDate = new Date(task.due_date);
-    const endDate = new Date(dueDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+  // Handle timed events (must have both start_time AND end_time)
+  if (task.start_time && task.end_time && task.due_date) {
+    // Combine due_date with start_time and end_time
+    const dateOnly = task.due_date.split('T')[0]; // Extract YYYY-MM-DD
 
     event.start = {
-      dateTime: dueDate.toISOString(),
+      dateTime: `${dateOnly}T${task.start_time}`,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
     event.end = {
-      dateTime: endDate.toISOString(),
+      dateTime: `${dateOnly}T${task.end_time}`,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+  }
+  // Handle all other cases as all-day events (safer than timed events at midnight)
+  else if (task.due_date) {
+    const dateOnly = task.due_date.split('T')[0]; // Extract YYYY-MM-DD
+    event.start = {
+      date: dateOnly, // Format: YYYY-MM-DD
+    };
+    event.end = {
+      date: dateOnly,
     };
   }
 

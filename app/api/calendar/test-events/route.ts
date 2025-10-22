@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
     const calendarsResponse = await calendar.calendarList.list();
     const calendars = calendarsResponse.data.items || [];
 
-    // Test 2: Try to get events from primary calendar with very wide date range
+    // Test 2: Try to get events from primary calendar - focus on October 23
     const eventsResponse = await calendar.events.list({
-      calendarId: 'yoshimitzu.calderon@gmail.com',
-      timeMin: new Date('2025-01-01').toISOString(),
-      timeMax: new Date('2025-12-31').toISOString(),
+      calendarId: 'primary',
+      timeMin: new Date('2025-10-22T00:00:00').toISOString(),
+      timeMax: new Date('2025-10-24T23:59:59').toISOString(),
       maxResults: 250,
       singleEvents: true,
       orderBy: 'startTime',
@@ -31,7 +31,16 @@ export async function GET(request: NextRequest) {
 
     const events = eventsResponse.data.items || [];
 
-    // Test 3: Get raw response data
+    // Test 3: Get tasks from database for Oct 23
+    const { data: dbTasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('due_date', '2025-10-23')
+      .lte('due_date', '2025-10-23')
+      .not('google_event_id', 'is', null);
+
+    // Test 4: Get raw response data
     return NextResponse.json({
       success: true,
       userId: user.id,
@@ -42,17 +51,18 @@ export async function GET(request: NextRequest) {
         accessRole: c.accessRole,
       })),
       eventsFound: events.length,
-      eventsSample: events.slice(0, 5).map(e => ({
+      allEvents: events.map(e => ({
         id: e.id,
         summary: e.summary,
         start: e.start,
         end: e.end,
         status: e.status,
       })),
+      tasksInDB: dbTasks || [],
       rawRequestParams: {
-        calendarId: 'yoshimitzu.calderon@gmail.com',
-        timeMin: new Date('2025-01-01').toISOString(),
-        timeMax: new Date('2025-12-31').toISOString(),
+        calendarId: 'primary',
+        timeMin: new Date('2025-10-22T00:00:00').toISOString(),
+        timeMax: new Date('2025-10-24T23:59:59').toISOString(),
       },
     });
   } catch (error: any) {

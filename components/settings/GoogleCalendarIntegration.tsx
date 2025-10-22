@@ -489,6 +489,93 @@ export function GoogleCalendarIntegration({ userId }: GoogleCalendarIntegrationP
               )}
             </button>
           </div>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/calendar/test-events')
+                  const data = await response.json()
+                  console.log('=== TEST EVENTS DEBUG ===')
+                  console.log('Events found in Google Calendar:', data.eventsFound)
+                  console.log('All events:', data.allEvents)
+                  console.log('Tasks in DB with google_event_id (Oct 23):', data.tasksInDB)
+                  toast.success(`Found ${data.eventsFound} events in calendar. Check console for details.`)
+                } catch (error) {
+                  console.error('Error testing events:', error)
+                  toast.error('Error testing events')
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors text-sm"
+            >
+              Debug: Ver eventos del 23
+            </button>
+
+            <button
+              onClick={async () => {
+                if (!confirm('Esto borrará todos los eventos sincronizados del periodo seleccionado de Google Calendar. ¿Continuar?')) {
+                  return;
+                }
+
+                try {
+                  const now = new Date()
+                  let startDate: Date
+                  let endDate: Date
+
+                  if (importRange === 'week') {
+                    startDate = new Date(now)
+                    startDate.setDate(startDate.getDate() - 7)
+                    startDate.setHours(0, 0, 0, 0)
+
+                    endDate = new Date(now)
+                    endDate.setDate(endDate.getDate() + 7)
+                    endDate.setHours(23, 59, 59, 999)
+                  } else if (importRange === 'month') {
+                    startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+                    startDate.setHours(0, 0, 0, 0)
+
+                    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+                    endDate.setHours(23, 59, 59, 999)
+                  } else {
+                    if (!customStartDate || !customEndDate) {
+                      toast.error('Por favor selecciona ambas fechas')
+                      return
+                    }
+                    startDate = new Date(customStartDate)
+                    endDate = new Date(customEndDate)
+                  }
+
+                  const response = await fetch('/api/calendar/cleanup-synced', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      startDate: startDate.toISOString().split('T')[0],
+                      endDate: endDate.toISOString().split('T')[0],
+                    }),
+                  })
+
+                  const data = await response.json()
+
+                  if (data.success) {
+                    toast.success(`✓ ${data.successCount} evento(s) eliminado(s) de Google Calendar`)
+                    if (data.failCount > 0) {
+                      toast.error(`⚠️ ${data.failCount} evento(s) fallaron al eliminar`)
+                    }
+                  } else {
+                    toast.error(data.error || 'Error al limpiar eventos')
+                  }
+                } catch (error) {
+                  console.error('Error cleaning up events:', error)
+                  toast.error('Error al limpiar eventos')
+                }
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm"
+            >
+              Limpiar eventos sincronizados
+            </button>
+          </div>
         </div>
       )}
 
