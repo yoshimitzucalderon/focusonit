@@ -86,14 +86,32 @@ function TodayPageContent() {
 
     setMovingAll(true)
     const today = new Date()
+    const todayDateString = toDateOnlyString(today)
+    const tasksToMove = [...overdueTasks] // Copiar el array antes de la actualización
+
+    // ✅ Actualización optimista: actualizar el estado local inmediatamente
+    setTasks(prevTasks =>
+      prevTasks.map(task => {
+        const shouldMove = tasksToMove.some(t => t.id === task.id)
+        if (shouldMove) {
+          return {
+            ...task,
+            due_date: todayDateString,
+            updated_at: getLocalTimestamp(),
+            timezone_offset: getTimezoneOffset()
+          }
+        }
+        return task
+      })
+    )
 
     try {
-      const updates = overdueTasks.map((task) =>
+      const updates = tasksToMove.map((task) =>
         supabase
           .from('tasks')
           // @ts-ignore - Temporary bypass due to type inference issue with @supabase/ssr
           .update({
-            due_date: toDateOnlyString(today),
+            due_date: todayDateString,
             updated_at: getLocalTimestamp(),
             timezone_offset: getTimezoneOffset()
           })
@@ -102,10 +120,12 @@ function TodayPageContent() {
 
       await Promise.all(updates)
 
-      toast.success(`${overdueTasks.length} tareas movidas a hoy`)
+      toast.success(`${tasksToMove.length} tareas movidas a hoy`)
     } catch (error) {
       toast.error('Error al mover tareas')
       console.error(error)
+      // En caso de error, recargar para restaurar el estado correcto
+      window.location.reload()
     } finally {
       setMovingAll(false)
     }
