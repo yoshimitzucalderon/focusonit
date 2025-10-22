@@ -64,13 +64,14 @@ export async function POST(request: NextRequest) {
         });
 
         // Clear google_event_id from database
+        // @ts-ignore - Supabase types issue with google_event_id field
         await supabase
           .from('tasks')
           .update({
             google_event_id: null,
             synced_with_calendar: false,
             last_synced_at: new Date().toISOString(),
-          } as any)
+          })
           .eq('id', task.id);
 
         console.log(`✅ Successfully deleted: ${task.title}`);
