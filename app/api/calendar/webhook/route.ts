@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
+    // Use service role client for all webhook operations to bypass RLS
+    const supabase = createServiceRoleClient();
 
     // Buscar el userId basándose en el google_event_id
     const { data: taskWithEvent, error: searchError } = await supabase
