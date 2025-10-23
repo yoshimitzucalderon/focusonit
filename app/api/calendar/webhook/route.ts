@@ -167,7 +167,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Now we have a userId, fetch the event from Google Calendar
-    const auth = await getAuthenticatedClient(userId);
+    // Use service role to bypass RLS when getting tokens
+    const auth = await getAuthenticatedClient(userId, true);
     const calendar = google.calendar({ version: 'v3', auth });
 
     try {

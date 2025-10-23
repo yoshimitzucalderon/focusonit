@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 // Initialize OAuth2 client
 export function getOAuth2Client() {
@@ -70,8 +70,10 @@ export async function storeTokens(userId: string, tokens: any) {
 }
 
 // Retrieve tokens from Supabase
-export async function getStoredTokens(userId: string) {
-  const supabase = await createServerSupabaseClient();
+export async function getStoredTokens(userId: string, useServiceRole: boolean = false) {
+  const supabase = useServiceRole
+    ? createServiceRoleClient()
+    : await createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from('google_calendar_tokens')
@@ -87,8 +89,8 @@ export async function getStoredTokens(userId: string) {
 }
 
 // Get authenticated OAuth2 client for a user
-export async function getAuthenticatedClient(userId: string) {
-  const tokens = await getStoredTokens(userId);
+export async function getAuthenticatedClient(userId: string, useServiceRole: boolean = false) {
+  const tokens = await getStoredTokens(userId, useServiceRole);
 
   if (!tokens) {
     throw new Error('No tokens found for user');
