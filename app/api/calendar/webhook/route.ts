@@ -239,6 +239,17 @@ export async function POST(request: NextRequest) {
         // This is a new event created in Google Calendar - CREATE A NEW TASK
         console.log('✨ Creating new task from Google Calendar event:', event.summary);
 
+        // Get next available position for the task
+        const { data: maxPositionTask } = await supabase
+          .from('tasks')
+          .select('position')
+          .eq('user_id', userId)
+          .order('position', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const nextPosition = maxPositionTask ? ((maxPositionTask as any).position + 1) : 0;
+
         // Prepare task data from Google Calendar event
         const taskData: Database['public']['Tables']['tasks']['Insert'] = {
           user_id: userId,
@@ -249,6 +260,7 @@ export async function POST(request: NextRequest) {
           synced_with_calendar: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          position: nextPosition,
         };
 
         // Handle date and time
