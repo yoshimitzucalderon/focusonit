@@ -115,6 +115,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         due_date: parsedDate ? toDateOnlyString(parsedDate) : null,
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
+        google_calendar_sync: parsedDate ? true : false,
       } as any)
 
       if (error) throw error
@@ -168,6 +169,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
         due_date: dueDate ? toDateOnlyString(dueDate) : null,
         timezone_offset: getTimezoneOffset(),
         position: nextPosition,
+        google_calendar_sync: dueDate ? true : false,
       } as any)
 
       if (error) throw error

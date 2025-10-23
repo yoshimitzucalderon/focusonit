@@ -209,7 +209,8 @@ export default function AddTaskModal({ isOpen, onClose, userId, mode = 'text', o
         completed: false,
         created_at: getLocalTimestamp(),
         updated_at: getLocalTimestamp(),
-        position: nextPosition
+        position: nextPosition,
+        google_calendar_sync: dueDate ? true : false,
       }
 
       // Add optional fields only if they have values
