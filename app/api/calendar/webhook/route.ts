@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createServerSupabaseClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getAuthenticatedClient } from '@/lib/google-calendar/oauth';
 import { google } from 'googleapis';
 import { Database } from '@/types/database.types';
@@ -102,29 +102,58 @@ export async function POST(request: NextRequest) {
     // For updated/created events, we need to fetch the event details from Google Calendar
     // If we don't have a userId yet, we need to find the user by the calendarId
     if (!userId) {
-      // Find user by matching the calendarId (their Google email)
-      const { data: googleTokens } = await supabase
+      // Use service role client to bypass RLS when looking up users
+      const serviceSupabase = createServiceRoleClient();
+
+      console.log(`Looking for user with calendarId: ${calendarId || 'primary'}`);
+
+      // Strategy 1: Try to find user by exact calendarId match (email or 'primary')
+      let { data: googleTokens, error: tokenError } = await serviceSupabase
         .from('google_calendar_tokens')
-        .select('user_id')
+        .select('user_id, calendar_id')
         .eq('calendar_id', calendarId || 'primary')
         .maybeSingle();
 
+      if (tokenError) {
+        console.error('Error querying google_calendar_tokens:', tokenError);
+      }
+
+      // Strategy 2: If calendarId is an email and we didn't find it, try 'primary'
+      // (because we store 'primary' but n8n sends the actual email)
+      if (!googleTokens && calendarId && calendarId.includes('@')) {
+        console.log('CalendarId is an email, trying to find user with calendar_id = "primary"...');
+        const result = await serviceSupabase
+          .from('google_calendar_tokens')
+          .select('user_id, calendar_id')
+          .eq('calendar_id', 'primary')
+          .maybeSingle();
+
+        googleTokens = result.data;
+        if (result.error) {
+          console.error('Error querying for primary calendar:', result.error);
+        }
+      }
+
       if (!googleTokens) {
-        // If we can't find a user by calendarId, try to find any user with Google Calendar connected
-        // This is a fallback for when calendarId might be 'primary'
+        // Strategy 3: Last resort - find any user with Google Calendar connected
         console.log('Could not find user by calendarId, searching for any connected user...');
 
-        // Get all users with Google Calendar tokens
-        const { data: allTokens } = await supabase
+        const { data: allTokens, error: allTokensError } = await serviceSupabase
           .from('google_calendar_tokens')
-          .select('user_id')
+          .select('user_id, calendar_id')
           .limit(1);
+
+        if (allTokensError) {
+          console.error('Error querying all google_calendar_tokens:', allTokensError);
+        }
+
+        console.log(`Found ${allTokens?.length || 0} users with Google Calendar connected`);
 
         if (allTokens && allTokens.length > 0) {
           userId = (allTokens[0] as any).user_id;
-          console.log(`Using fallback user: ${userId}`);
+          console.log(`✅ Using fallback user: ${userId} with calendar_id: ${(allTokens[0] as any).calendar_id}`);
         } else {
-          console.log('No users with Google Calendar connected');
+          console.log('❌ No users with Google Calendar connected');
           return NextResponse.json({
             success: true,
             action: 'ignored',
@@ -133,6 +162,7 @@ export async function POST(request: NextRequest) {
         }
       } else {
         userId = (googleTokens as any).user_id;
+        console.log(`✅ Found user: ${userId} for calendar: ${(googleTokens as any).calendar_id}`);
       }
     }
 
