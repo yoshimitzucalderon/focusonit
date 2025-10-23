@@ -79,7 +79,8 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       // 🔄 Sincronizar inmediatamente con Google Calendar
       if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
-        console.log('🔄 Attempting to sync quick task:', (newTask as any).id)
+        console.log('🔄 [SYNC] Attempting to sync quick task:', (newTask as any).id)
+        console.log('🔄 [SYNC] Task data:', { id: (newTask as any).id, title: (newTask as any).title, due_date: (newTask as any).due_date })
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -162,7 +163,8 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       // 🔄 Sincronizar inmediatamente con Google Calendar si está activado
       if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
-        console.log('🔄 Attempting to sync full task:', (newTask as any).id)
+        console.log('🔄 [SYNC] Attempting to sync full task:', (newTask as any).id)
+        console.log('🔄 [SYNC] Task data:', { id: (newTask as any).id, title: (newTask as any).title, due_date: (newTask as any).due_date })
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
