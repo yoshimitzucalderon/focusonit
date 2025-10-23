@@ -361,6 +361,7 @@ export default function TaskList({
               key={task.id}
               task={task}
               onDoubleClick={() => onEditTask?.(task)}
+              onToggleComplete={() => handleComplete(task)}
             />
           )
 

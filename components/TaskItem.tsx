@@ -18,6 +18,7 @@ import { useSwipeable } from 'react-swipeable'
 interface TaskItemProps {
   task: Task
   onDoubleClick?: () => void
+  onToggleComplete?: () => void
 }
 
 interface VoiceTaskChanges {
@@ -28,7 +29,7 @@ interface VoiceTaskChanges {
   tags?: string[]
 }
 
-export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
+export default function TaskItem({ task, onDoubleClick, onToggleComplete }: TaskItemProps) {
   const { selectedIds, toggleSelection } = useSelection()
   const isSelected = selectedIds.has(task.id)
   const [editing, setEditing] = useState(false)
@@ -114,6 +115,13 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
 
   // Toggle completar tarea con actualización optimista
   const toggleComplete = async () => {
+    // If parent provides optimistic handler, use it
+    if (onToggleComplete) {
+      onToggleComplete()
+      return
+    }
+
+    // Otherwise fall back to current implementation
     const toastId = toast.loading('Actualizando...')
 
     try {

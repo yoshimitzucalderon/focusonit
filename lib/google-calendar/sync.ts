@@ -191,17 +191,7 @@ export async function deleteCalendarEvent(userId: string, task: Task): Promise<S
       eventId: task.google_event_id,
     });
 
-    // Clear Google event ID from task
-    const deleteUpdates: TaskUpdate = {
-      google_event_id: null,
-      synced_with_calendar: false,
-      last_synced_at: new Date().toISOString(),
-    };
-
-    const supabase = await createServerSupabaseClient();
-    await updateTasksQuery(supabase, deleteUpdates)
-      .eq('id', task.id);
-
+    // Task will be deleted by the caller - don't update here to avoid race condition
     return {
       success: true,
     };
