@@ -388,6 +388,27 @@ export default function TaskItem({ task, onDoubleClick }: TaskItemProps) {
     if (!confirm('¿Eliminar esta tarea?')) return
 
     try {
+      // Si la tarea está sincronizada con Google Calendar, eliminar el evento primero
+      if (task.google_event_id && task.google_calendar_sync) {
+        console.log('🗑️  Deleting Google Calendar event:', task.google_event_id)
+
+        // Llamar a la API para eliminar el evento de Google Calendar
+        const deleteEventResponse = await fetch('/api/calendar/delete-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId: task.google_event_id
+          }),
+        })
+
+        if (!deleteEventResponse.ok) {
+          console.warn('Failed to delete Google Calendar event, but continuing with task deletion')
+        } else {
+          console.log('✅ Google Calendar event deleted')
+        }
+      }
+
+      // Eliminar la tarea de Supabase
       const { error } = await supabase
         .from('tasks')
         .delete()

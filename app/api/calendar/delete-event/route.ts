@@ -23,7 +23,24 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { taskId, task } = body;
+    const { taskId, task, eventId } = body;
+
+    // If eventId is provided directly, delete by event ID
+    if (eventId) {
+      const result = await deleteCalendarEvent(user.id, { google_event_id: eventId } as Task);
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to delete calendar event' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Calendar event deleted successfully',
+      });
+    }
 
     let taskToDelete = task;
 
@@ -48,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     if (!taskToDelete) {
       return NextResponse.json(
-        { error: 'Missing required parameter: taskId or task' },
+        { error: 'Missing required parameter: taskId, task, or eventId' },
         { status: 400 }
       );
     }

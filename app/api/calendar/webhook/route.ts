@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
 
     // Handle different actions
     if (action === 'deleted') {
-      // Event was deleted from Google Calendar
-      console.log(`Event ${eventId} was deleted`);
+      // Event was deleted from Google Calendar - DELETE THE TASK
+      console.log(`🗑️  Event ${eventId} was deleted - deleting associated task`);
 
       // If we don't have a userId (new event that was immediately deleted), ignore it
       if (!userId) {
@@ -78,25 +78,24 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      const deleteUpdates: TaskUpdate = {
-        google_event_id: null,
-        synced_with_calendar: false,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await updateTasksQuery(supabase, deleteUpdates)
+      // Delete the task completely
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
         .eq('google_event_id', eventId)
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Error updating task:', error);
-        return NextResponse.json({ error: 'Failed to update task' }, { status: 500 });
+        console.error('Error deleting task:', error);
+        return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 });
       }
+
+      console.log(`✅ Task deleted successfully for event: ${eventId}`);
 
       return NextResponse.json({
         success: true,
         action: 'deleted',
-        message: 'Task unlinked from Google Calendar',
+        message: 'Task deleted from FocusOnIt',
       });
     }
 
