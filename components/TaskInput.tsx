@@ -79,12 +79,31 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       // 🔄 Sincronizar inmediatamente con Google Calendar
       if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
+        console.log('🔄 Attempting to sync quick task:', (newTask as any).id)
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskIds: [(newTask as any).id] }),
-        }).catch(err => {
-          console.error('Error syncing quick task with Google Calendar:', err)
+        })
+          .then(res => res.json())
+          .then(data => {
+            console.log('✅ Sync response:', data)
+            if (!data.success) {
+              toast.error('Error al sincronizar con Google Calendar')
+              console.error('Sync error:', data.error)
+            } else {
+              toast.success('Tarea sincronizada con Google Calendar')
+            }
+          })
+          .catch(err => {
+            console.error('Error syncing quick task with Google Calendar:', err)
+            toast.error('Error al sincronizar con Google Calendar')
+          })
+      } else {
+        console.log('⏭️  Skipping sync:', {
+          hasTask: !!newTask,
+          syncEnabled: (newTask as any)?.google_calendar_sync,
+          hasDate: (newTask as any)?.due_date
         })
       }
 
@@ -143,12 +162,31 @@ export default function TaskInput({ userId }: TaskInputProps) {
 
       // 🔄 Sincronizar inmediatamente con Google Calendar si está activado
       if (newTask && (newTask as any).google_calendar_sync && (newTask as any).due_date) {
+        console.log('🔄 Attempting to sync full task:', (newTask as any).id)
         fetch('/api/calendar/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskIds: [(newTask as any).id] }),
-        }).catch(err => {
-          console.error('Error syncing task with Google Calendar:', err)
+        })
+          .then(res => res.json())
+          .then(data => {
+            console.log('✅ Sync response:', data)
+            if (!data.success) {
+              toast.error('Error al sincronizar con Google Calendar')
+              console.error('Sync error:', data.error)
+            } else {
+              toast.success('Tarea sincronizada con Google Calendar')
+            }
+          })
+          .catch(err => {
+            console.error('Error syncing task with Google Calendar:', err)
+            toast.error('Error al sincronizar con Google Calendar')
+          })
+      } else {
+        console.log('⏭️  Skipping sync for full task:', {
+          hasTask: !!newTask,
+          syncEnabled: (newTask as any)?.google_calendar_sync,
+          hasDate: (newTask as any)?.due_date
         })
       }
 

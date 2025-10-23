@@ -9,24 +9,30 @@ type Task = Database['public']['Tables']['tasks']['Row'];
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  console.log('📥 Received sync request');
   try {
     // Verify user is authenticated
     const supabase = await createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('❌ Auth error:', authError);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    console.log('✅ User authenticated:', user.id);
+
     // Parse request body
     const body = await request.json();
     const { taskId, taskIds, task } = body;
+    console.log('📦 Request body:', { taskId, taskIds: taskIds?.length, hasTask: !!task });
 
     // Handle batch sync
     if (taskIds && Array.isArray(taskIds)) {
+      console.log('🔄 Batch syncing', taskIds.length, 'tasks');
       const result = await batchSyncTasks(user.id, taskIds);
 
       if (!result.success) {
