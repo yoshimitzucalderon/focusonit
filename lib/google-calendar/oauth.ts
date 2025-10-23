@@ -57,7 +57,9 @@ export async function storeTokens(userId: string, tokens: any) {
       token_expiry: new Date(tokens.expiry_date || Date.now() + 3600000).toISOString(),
       scope: tokens.scope || 'https://www.googleapis.com/auth/calendar.events',
       calendar_id: 'primary',
-    } as any)
+    } as any, {
+      onConflict: 'user_id'
+    })
     .select()
     .single();
 
