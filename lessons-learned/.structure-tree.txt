@@ -1,0 +1,28 @@
+lessons-learned/
+├── README.md                           (270 lineas) Guia completa del sistema
+├── TEMPLATE.md                         (390 lineas) Template detallado para nuevas lecciones
+├── index.md                            (130 lineas) Indice maestro navegable
+├── IMPLEMENTACION_COMPLETADA.md        (470 lineas) Resumen de implementacion
+│
+├── by-category/                        (5 archivos de categoria)
+│   ├── supabase.md                     (120 lineas) 1 leccion documentada
+│   ├── google-calendar.md              (153 lineas) 2 lecciones documentadas
+│   ├── docker.md                       (100 lineas) Listo para usar
+│   ├── kong.md                         (120 lineas) Listo para usar
+│   └── n8n.md                          (150 lineas) Listo para usar
+│
+└── by-date/                            (3 lecciones existentes integradas)
+    ├── 2025-10-22-calendar-sync-config-debugging.md
+    ├── 2025-10-22-token-refresh-duplicate-key.md
+    └── 2025-10-23-deletion-sync-ui-update.md
+
+../scripts/
+├── README.md                           (100+ lineas) Documentacion de scripts
+└── add-lesson.js                       (400+ lineas) Script automatizado para agregar lecciones
+
+TOTALES:
+- 12 archivos Markdown
+- 1 script JavaScript
+- 1,000+ lineas de documentacion
+- 400+ lineas de codigo
+- Sistema completo y funcional

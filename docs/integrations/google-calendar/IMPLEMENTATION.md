@@ -1,10 +1,10 @@
-# Integración de Google Calendar - Documentación Técnica
+# Integracion de Google Calendar - Documentacion Tecnica
 
-## 📖 Resumen
+## Resumen
 
-Esta documentación describe la implementación completa de la integración bidireccional entre FocusOnIt y Google Calendar.
+Esta documentacion describe la implementacion completa de la integracion bidireccional entre FocusOnIt y Google Calendar, incluyendo la autenticacion con Google OAuth.
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 ### Componentes Principales
 
@@ -14,18 +14,19 @@ task-manager/
 │   ├── connect/route.ts           # Iniciar OAuth
 │   ├── oauth/callback/route.ts    # OAuth callback
 │   ├── disconnect/route.ts        # Desconectar
-│   ├── status/route.ts            # Estado de conexión
+│   ├── status/route.ts            # Estado de conexion
 │   ├── sync/route.ts              # Sincronizar tareas
 │   ├── import/route.ts            # Importar eventos
 │   └── delete-event/route.ts      # Eliminar evento
+├── app/auth/callback/route.ts     # OAuth callback para Sign in
 ├── lib/
 │   ├── google-calendar/
 │   │   ├── oauth.ts               # Utilidades OAuth
-│   │   └── sync.ts                # Servicios de sincronización
+│   │   └── sync.ts                # Servicios de sincronizacion
 │   ├── hooks/
 │   │   └── useGoogleCalendarSync.ts  # Hook React
 │   └── utils/
-│       └── calendarSync.ts        # Helpers de sincronización
+│       └── calendarSync.ts        # Helpers de sincronizacion
 ├── components/
 │   ├── settings/
 │   │   └── GoogleCalendarIntegration.tsx  # UI principal
@@ -34,39 +35,69 @@ task-manager/
     └── create_google_calendar_tokens.sql  # Schema DB
 ```
 
-## 🔄 Flujos de Trabajo
+## Flujos de Trabajo
 
-### 1. Autenticación OAuth
+### 1. Autenticacion OAuth (Sign in with Google)
+
+Este flujo permite a los usuarios iniciar sesion con Google sin crear una cuenta manualmente:
+
+```
+Usuario → Clic en "Sign in with Google"
+       → Google OAuth Popup
+       → Seleccionar cuenta
+       → Aceptar permisos basicos (email, nombre, foto)
+       → Supabase Auth crea/actualiza usuario automaticamente
+       → Usuario autenticado → Dashboard
+```
+
+**Ventajas:**
+
+- Sin configuracion tecnica para el usuario
+- Login en 5 segundos
+- No recordar contrasenas
+- Foto de perfil automatica
+- Sincronizacion opcional con 1 clic
+
+### 2. Autenticacion OAuth (Google Calendar)
+
+Flujo separado para solicitar permisos de Google Calendar:
 
 ```mermaid
 graph LR
-    A[Usuario] --> B[Clic en Conectar]
+    A[Usuario] --> B[Clic en Conectar Calendar]
     B --> C[GET /api/calendar/connect]
     C --> D[Generar Auth URL]
     D --> E[Redirigir a Google]
-    E --> F[Usuario autoriza]
+    E --> F[Usuario autoriza Calendar]
     F --> G[GET /api/calendar/oauth/callback]
-    G --> H[Intercambiar código por tokens]
+    G --> H[Intercambiar codigo por tokens]
     H --> I[Guardar tokens en DB]
     I --> J[Redirigir a Settings]
 ```
 
-### 2. Sincronización de Tarea
+**Permisos Incrementales (Recomendado):**
+
+1. **Sign In**: Solo permisos basicos (openid, email, profile)
+2. **Despues en Settings**: Permisos de Calendar por separado
+
+Esto mejora la UX porque el usuario entiende por que necesitas cada permiso.
+
+### 3. Sincronizacion de Tarea
 
 ```mermaid
 graph TD
-    A[Usuario crea/edita tarea] --> B{¿google_calendar_sync?}
+    A[Usuario crea/edita tarea] --> B{google_calendar_sync?}
     B -->|No| C[Solo guardar en DB]
-    B -->|Sí| D[Guardar en DB]
-    D --> E{¿Tiene google_event_id?}
+    B -->|Si| D[Guardar en DB]
+    D --> E{Tiene google_event_id?}
     E -->|No| F[Crear evento en Calendar]
-    E -->|Sí| G[Actualizar evento en Calendar]
+    E -->|Si| G[Actualizar evento en Calendar]
     F --> H[Guardar event_id en tarea]
     G --> I[Actualizar last_synced_at]
     H --> I
 ```
 
-### 3. Importación de Eventos
+### 4. Importacion de Eventos
 
 ```mermaid
 graph LR
@@ -74,15 +105,15 @@ graph LR
     B --> C[POST /api/calendar/import]
     C --> D[Listar eventos de Calendar]
     D --> E{Por cada evento}
-    E --> F{¿Ya existe?}
+    E --> F{Ya existe?}
     F -->|No| G[Crear tarea en DB]
-    F -->|Sí| E
+    F -->|Si| E
     G --> H[Guardar google_event_id]
     H --> E
     E --> I[Retornar conteo]
 ```
 
-## 🗄️ Modelo de Datos
+## Modelo de Datos
 
 ### Tabla: google_calendar_tokens
 
@@ -106,20 +137,21 @@ CREATE TABLE google_calendar_tokens (
 ```sql
 -- Campos existentes en la tabla tasks
 google_event_id TEXT,              -- ID del evento en Google Calendar
-synced_with_calendar BOOLEAN,      -- Estado de sincronización
+synced_with_calendar BOOLEAN,      -- Estado de sincronizacion
 google_calendar_sync BOOLEAN,      -- Habilitar/deshabilitar sync
-last_synced_at TIMESTAMPTZ,        -- Timestamp de última sincronización
+last_synced_at TIMESTAMPTZ,        -- Timestamp de ultima sincronizacion
 ```
 
-## 🔌 API Endpoints
+## API Endpoints
 
-### Autenticación
+### Autenticacion
 
 #### GET /api/calendar/connect
 
-Genera la URL de autorización OAuth de Google.
+Genera la URL de autorizacion OAuth de Google.
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -129,10 +161,11 @@ Genera la URL de autorización OAuth de Google.
 
 #### GET /api/calendar/oauth/callback
 
-Callback de OAuth. Intercambia el código de autorización por tokens.
+Callback de OAuth. Intercambia el codigo de autorizacion por tokens.
 
 **Query Parameters**:
-- `code`: Código de autorización de Google
+
+- `code`: Codigo de autorizacion de Google
 - `state`: Estado de seguridad (user_id)
 
 **Redirect**: `/settings?calendar_connected=true`
@@ -142,6 +175,7 @@ Callback de OAuth. Intercambia el código de autorización por tokens.
 Desconecta Google Calendar del usuario.
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -154,6 +188,7 @@ Desconecta Google Calendar del usuario.
 Verifica si el usuario tiene Google Calendar conectado.
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -161,13 +196,14 @@ Verifica si el usuario tiene Google Calendar conectado.
 }
 ```
 
-### Sincronización
+### Sincronizacion
 
 #### POST /api/calendar/sync
 
-Sincroniza una o más tareas con Google Calendar.
+Sincroniza una o mas tareas con Google Calendar.
 
 **Request Body (tarea individual)**:
+
 ```json
 {
   "task": {
@@ -180,6 +216,7 @@ Sincroniza una o más tareas con Google Calendar.
 ```
 
 **Request Body (batch)**:
+
 ```json
 {
   "taskIds": ["uuid1", "uuid2", "uuid3"]
@@ -187,6 +224,7 @@ Sincroniza una o más tareas con Google Calendar.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -200,6 +238,7 @@ Sincroniza una o más tareas con Google Calendar.
 Importa eventos de Google Calendar como tareas.
 
 **Request Body**:
+
 ```json
 {
   "startDate": "2025-10-21T00:00:00Z",
@@ -208,6 +247,7 @@ Importa eventos de Google Calendar como tareas.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -221,6 +261,7 @@ Importa eventos de Google Calendar como tareas.
 Elimina un evento de Google Calendar.
 
 **Request Body**:
+
 ```json
 {
   "task": {
@@ -231,6 +272,7 @@ Elimina un evento de Google Calendar.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -238,13 +280,14 @@ Elimina un evento de Google Calendar.
 }
 ```
 
-## 🎨 Componentes React
+## Componentes React
 
 ### GoogleCalendarIntegration
 
-Componente principal para gestionar la conexión en la página de Settings.
+Componente principal para gestionar la conexion en la pagina de Settings.
 
 **Uso**:
+
 ```tsx
 import { GoogleCalendarIntegration } from '@/components/settings/GoogleCalendarIntegration'
 
@@ -252,16 +295,18 @@ import { GoogleCalendarIntegration } from '@/components/settings/GoogleCalendarI
 ```
 
 **Funcionalidades**:
-- Mostrar estado de conexión
-- Botón para conectar/desconectar
+
+- Mostrar estado de conexion
+- Boton para conectar/desconectar
 - Importar eventos
 - Sincronizar tareas pendientes
 
 ### CalendarSyncIndicator
 
-Indicador visual del estado de sincronización en cada tarea.
+Indicador visual del estado de sincronizacion en cada tarea.
 
 **Uso**:
+
 ```tsx
 import { CalendarSyncIndicator } from '@/components/CalendarSyncIndicator'
 
@@ -274,13 +319,14 @@ import { CalendarSyncIndicator } from '@/components/CalendarSyncIndicator'
 />
 ```
 
-## 🪝 Hooks Personalizados
+## Hooks Personalizados
 
 ### useGoogleCalendarSync
 
-Hook para manejar sincronización desde componentes React.
+Hook para manejar sincronizacion desde componentes React.
 
 **Uso**:
+
 ```tsx
 import { useGoogleCalendarSync } from '@/lib/hooks/useGoogleCalendarSync'
 
@@ -309,20 +355,20 @@ function MyComponent() {
 }
 ```
 
-## 🛠️ Utilidades
+## Utilidades
 
-### Funciones de Sincronización
+### Funciones de Sincronizacion
 
 ```typescript
 import { syncTaskToCalendar, deleteTaskFromCalendar } from '@/lib/utils/calendarSync'
 
-// Sincronizar después de crear/actualizar (fire-and-forget)
+// Sincronizar despues de crear/actualizar (fire-and-forget)
 await syncTaskToCalendar(task)
 
-// Eliminar después de borrar (fire-and-forget)
+// Eliminar despues de borrar (fire-and-forget)
 await deleteTaskFromCalendar(task)
 
-// Verificar conexión
+// Verificar conexion
 const connected = await isCalendarConnected()
 ```
 
@@ -338,26 +384,26 @@ import {
   isGoogleCalendarConnected
 } from '@/lib/google-calendar/oauth'
 
-// Generar URL de autorización
+// Generar URL de autorizacion
 const authUrl = generateAuthUrl(userId)
 
-// Intercambiar código por tokens
+// Intercambiar codigo por tokens
 const tokens = await exchangeCodeForTokens(code)
 
 // Almacenar tokens
 await storeTokens(userId, tokens)
 
-// Obtener cliente autenticado (con renovación automática)
+// Obtener cliente autenticado (con renovacion automatica)
 const oauth2Client = await getAuthenticatedClient(userId)
 
 // Eliminar tokens
 await deleteTokens(userId)
 
-// Verificar conexión
+// Verificar conexion
 const connected = await isGoogleCalendarConnected(userId)
 ```
 
-### Funciones de Sincronización
+### Funciones de Sincronizacion
 
 ```typescript
 import {
@@ -381,26 +427,26 @@ const result = await deleteCalendarEvent(userId, task)
 // Importar eventos
 const result = await importCalendarEvents(userId, startDate, endDate)
 
-// Sincronizar tarea (crea o actualiza según google_event_id)
+// Sincronizar tarea (crea o actualiza segun google_event_id)
 const result = await syncTaskToCalendar(userId, task)
 
-// Sincronización por lotes
+// Sincronizacion por lotes
 const result = await batchSyncTasks(userId, taskIds)
 ```
 
-## 🔐 Seguridad
+## Seguridad
 
 ### OAuth 2.0 Flow
 
-1. **Authorization Code Flow**: Flujo estándar OAuth 2.0
-2. **State Parameter**: Validación de seguridad contra CSRF
+1. **Authorization Code Flow**: Flujo estandar OAuth 2.0
+2. **State Parameter**: Validacion de seguridad contra CSRF
 3. **HTTPS Only**: Todas las comunicaciones encriptadas
 4. **Token Expiration**: Tokens de acceso con tiempo de vida limitado
-5. **Refresh Tokens**: Renovación automática sin re-autorización
+5. **Refresh Tokens**: Renovacion automatica sin re-autorizacion
 
 ### Row Level Security (RLS)
 
-Políticas de Supabase para `google_calendar_tokens`:
+Politicas de Supabase para `google_calendar_tokens`:
 
 ```sql
 -- Solo el usuario puede ver sus propios tokens
@@ -424,9 +470,9 @@ CREATE POLICY "Users can delete their own tokens"
   USING (auth.uid() = user_id);
 ```
 
-### Protección de Endpoints
+### Proteccion de Endpoints
 
-Todos los endpoints de API verifican autenticación:
+Todos los endpoints de API verifican autenticacion:
 
 ```typescript
 const supabase = await createClient()
@@ -437,11 +483,11 @@ if (authError || !user) {
 }
 ```
 
-## 📊 Manejo de Errores
+## Manejo de Errores
 
 ### Estrategia de Reintentos
 
-La sincronización es **fire-and-forget** por defecto para no bloquear la UI:
+La sincronizacion es **fire-and-forget** por defecto para no bloquear la UI:
 
 ```typescript
 export async function syncTaskToCalendar(task: Task): Promise<void> {
@@ -463,7 +509,7 @@ export async function syncTaskToCalendar(task: Task): Promise<void> {
 }
 ```
 
-### Renovación Automática de Tokens
+### Renovacion Automatica de Tokens
 
 ```typescript
 export async function getAuthenticatedClient(userId: string) {
@@ -476,7 +522,7 @@ export async function getAuthenticatedClient(userId: string) {
     expiry_date: new Date(tokens.token_expiry).getTime(),
   })
 
-  // Renovar si está expirado
+  // Renovar si esta expirado
   const now = Date.now()
   const expiryTime = new Date(tokens.token_expiry).getTime()
 
@@ -490,87 +536,45 @@ export async function getAuthenticatedClient(userId: string) {
 }
 ```
 
-### Estados de Sincronización
+### Estados de Sincronizacion
 
 ```typescript
 interface Task {
   google_event_id?: string | null        // null = no sincronizado, string = sincronizado
   synced_with_calendar?: boolean         // true = sincronizado exitosamente
-  google_calendar_sync?: boolean         // true = habilitar sincronización
-  last_synced_at?: string | null         // timestamp de última sincronización
+  google_calendar_sync?: boolean         // true = habilitar sincronizacion
+  last_synced_at?: string | null         // timestamp de ultima sincronizacion
 }
 ```
 
 Estados posibles:
+
 - **No configurado**: `google_calendar_sync = false`
 - **Pendiente**: `google_calendar_sync = true, synced_with_calendar = false`
 - **Sincronizado**: `google_calendar_sync = true, synced_with_calendar = true, google_event_id != null`
 - **Error**: `google_calendar_sync = true, synced_with_calendar = false, google_event_id != null`
 
-## 🧪 Testing
-
-### Pruebas Manuales
-
-1. **Conectar Google Calendar**
-   - [ ] Hacer clic en "Conectar con Google"
-   - [ ] Autorizar en Google OAuth
-   - [ ] Verificar redirección exitosa
-   - [ ] Confirmar estado "Conectado"
-
-2. **Crear Tarea con Sincronización**
-   - [ ] Crear tarea con fecha
-   - [ ] Verificar evento en Google Calendar
-   - [ ] Confirmar google_event_id guardado
-
-3. **Editar Tarea Sincronizada**
-   - [ ] Editar título de tarea
-   - [ ] Verificar actualización en Google Calendar
-   - [ ] Editar fecha de tarea
-   - [ ] Verificar actualización en Google Calendar
-
-4. **Eliminar Tarea Sincronizada**
-   - [ ] Eliminar tarea
-   - [ ] Verificar eliminación en Google Calendar
-
-5. **Importar Eventos**
-   - [ ] Crear eventos en Google Calendar
-   - [ ] Hacer clic en "Importar eventos"
-   - [ ] Verificar creación de tareas en FocusOnIt
-
-6. **Desconectar Google Calendar**
-   - [ ] Hacer clic en "Desconectar"
-   - [ ] Confirmar desconexión
-   - [ ] Verificar que tareas no se eliminen
-
-### Pruebas de Edge Cases
-
-- [ ] Token expirado (esperar 1 hora)
-- [ ] Sin conexión a internet
-- [ ] Tarea sin fecha
-- [ ] Evento todo el día
-- [ ] Múltiples tareas simultáneas
-- [ ] Importar eventos duplicados
-
-## 📈 Performance
+## Performance
 
 ### Optimizaciones
 
-1. **Batch Operations**: Sincronizar múltiples tareas en una sola llamada
-2. **Fire-and-Forget**: Sincronización asíncrona no bloquea UI
-3. **Token Caching**: Cliente OAuth reutilizado durante sesión
-4. **Lazy Loading**: Componente de integración solo en Settings
+1. **Batch Operations**: Sincronizar multiples tareas en una sola llamada
+2. **Fire-and-Forget**: Sincronizacion asincrona no bloquea UI
+3. **Token Caching**: Cliente OAuth reutilizado durante sesion
+4. **Lazy Loading**: Componente de integracion solo en Settings
 
-### Límites de API
+### Limites de API
 
-- Google Calendar API: 1,000,000 queries/día
+- Google Calendar API: 1,000,000 queries/dia
 - 100 queries/usuario/segundo
 - Implementar rate limiting si es necesario
 
-## 🚀 Deployment
+## Deployment
 
 ### Variables de Entorno
 
 **Development**:
+
 ```bash
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxx
@@ -579,6 +583,7 @@ NEXTAUTH_SECRET=xxx
 ```
 
 **Production**:
+
 ```bash
 GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=xxx
@@ -590,13 +595,13 @@ NEXTAUTH_SECRET=xxx
 
 - [ ] Credenciales OAuth en Google Cloud Console
 - [ ] Variables de entorno configuradas
-- [ ] Migración de DB ejecutada
-- [ ] URI de redirección actualizada para producción
-- [ ] Verificación de aplicación en Google (si es necesario)
+- [ ] Migracion de DB ejecutada
+- [ ] URI de redireccion actualizada para produccion
+- [ ] Verificacion de aplicacion en Google (si es necesario)
 
-## 📝 Próximas Mejoras
+## Proximas Mejoras
 
-### Sincronización Bidireccional Completa
+### Sincronizacion Bidireccional Completa
 
 Implementar webhooks de Google Calendar para detectar cambios:
 
@@ -605,17 +610,17 @@ Implementar webhooks de Google Calendar para detectar cambios:
 3. Verificar firma de webhook
 4. Actualizar tareas cuando cambien eventos
 
-### Sincronización Selectiva por Calendario
+### Sincronizacion Selectiva por Calendario
 
-Permitir seleccionar qué calendario de Google usar:
+Permitir seleccionar que calendario de Google usar:
 
 ```typescript
 interface GoogleCalendarTokens {
-  calendar_id: string  // 'primary' o ID específico
+  calendar_id: string  // 'primary' o ID especifico
 }
 ```
 
-### Sincronización de Recordatorios
+### Sincronizacion de Recordatorios
 
 Mapear recordatorios de FocusOnIt a Google Calendar:
 
@@ -628,23 +633,17 @@ event.reminders = {
 }
 ```
 
-### Queue de Sincronización
+## Contribuciones
 
-Para manejar fallos y reintentos:
+Para contribuir a esta integracion:
 
-1. Tabla `sync_queue` en Supabase
-2. Worker que procese cola periódicamente
-3. Estados: pending, processing, completed, failed
-
-## 🤝 Contribuciones
-
-Para contribuir a esta integración:
-
-1. Familiarízate con el código existente
-2. Sigue las convenciones de código del proyecto
-3. Añade tests para nuevas funcionalidades
-4. Actualiza documentación según sea necesario
+1. Familiarizate con el codigo existente
+2. Sigue las convenciones de codigo del proyecto
+3. Anade tests para nuevas funcionalidades
+4. Actualiza documentacion segun sea necesario
 
 ---
 
-**Documentación completa disponible en**: [GOOGLE_CALENDAR_SETUP.md](./GOOGLE_CALENDAR_SETUP.md)
+Para configuracion detallada, consulta [SETUP.md](./SETUP.md).
+
+Para configuracion especifica de produccion YCM360, consulta [YCM360.md](./YCM360.md).
