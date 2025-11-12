@@ -9,6 +9,9 @@ import { Mail, Lock, Eye, EyeOff, Zap, Loader2, AlertCircle } from 'lucide-react
 import { motion } from 'framer-motion'
 import { FcGoogle } from 'react-icons/fc'
 
+// Force dynamic rendering to avoid build-time env var issues
+export const dynamic = 'force-dynamic'
+
 export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
