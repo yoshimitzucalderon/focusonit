@@ -14,12 +14,12 @@ Indice maestro de todas las lecciones aprendidas del proyecto FocusOnIt, organiz
 
 ## Estadisticas Generales
 
-- **Total de lecciones:** 3
-- **Criticas:** 1
+- **Total de lecciones:** 4
+- **Criticas:** 2
 - **Altas:** 2
 - **Medias:** 0
 - **Bajas:** 0
-- **Horas estimadas ahorradas:** 20+
+- **Horas estimadas ahorradas:** 22+
 
 Actualiza estas estadisticas al agregar nuevas lecciones.
 
@@ -29,6 +29,7 @@ Actualiza estas estadisticas al agregar nuevas lecciones.
 
 | Fecha | Titulo | Keywords | Severidad | Tiempo Resolucion |
 |-------|--------|----------|-----------|-------------------|
+| 2025-11-11 | [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) | vercel, nextjs, edge-runtime, middleware, environment-variables, deployment, production-issue | critical | 2 horas |
 | 2025-10-23 | [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) | supabase, real-time, sync, deletion, UI, race-condition, optimistic-update | high | 3-4 horas |
 | 2025-10-22 | [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) | google-calendar, oauth, token-refresh, supabase, duplicate-key, upsert | critical | 2-3 horas |
 | 2025-10-22 | [Google Calendar sync configuration and debugging](./by-date/2025-10-22-calendar-sync-config-debugging.md) | google-calendar, sync, configuration, debugging, feature-flag, due_date, logging | high | 4-5 horas |
@@ -63,6 +64,16 @@ Actualiza estas estadisticas al agregar nuevas lecciones.
 
 - *Aun no hay lecciones documentadas*
 
+### Vercel
+[Ver todas las lecciones de Vercel](./by-category/vercel.md)
+
+- [Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Produccion caida por variables encriptadas
+
+### Next.js
+[Ver todas las lecciones de Next.js](./by-category/nextjs.md)
+
+- [Middleware Edge Runtime Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Middleware no puede acceder a variables encriptadas
+
 ---
 
 ## Keywords Mas Comunes
@@ -78,6 +89,7 @@ _Actualizar manualmente conforme crezca la base de conocimiento_
 ### Criticas
 Problemas que causaron downtime o impacto severo en produccion.
 
+- [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Produccion completamente caida, 500 errors en todas las rutas
 - [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Interrumpia completamente la sincronizacion con Google Calendar
 
 ### Altas
@@ -102,9 +114,10 @@ Problemas menores pero instructivos para el equipo.
 
 Basado en impacto y utilidad para el equipo (actualizar periodicamente).
 
-1. [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Critico para OAuth y operaciones upsert
-2. [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) - Patron importante para race conditions
-3. [Google Calendar sync configuration](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Debugging de integraciones complejas
+1. [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - CRITICO para deployments en Vercel con middleware
+2. [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Critico para OAuth y operaciones upsert
+3. [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) - Patron importante para race conditions
+4. [Google Calendar sync configuration](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Debugging de integraciones complejas
 
 ---
 

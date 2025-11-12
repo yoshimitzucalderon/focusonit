@@ -6,14 +6,21 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Get env vars with fallback for Edge Runtime
+  // Get env vars - MUST be configured as Plaintext in Vercel for Edge Runtime
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // If env vars not available (Edge Runtime issue), return response without auth check
+  // Fail fast if env vars not available
+  // This indicates misconfiguration in Vercel (vars must be Plaintext, not Encrypted)
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase env vars not available in middleware - skipping auth check')
-    return supabaseResponse
+    console.error('CRITICAL: Supabase env vars not available in Edge Runtime')
+    console.error('Required: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    console.error('Solution: Configure these variables as PLAINTEXT (not encrypted) in Vercel')
+    console.error('See: docs/deployment/VERCEL_ENV_VARS.md')
+    return new Response(
+      'Server configuration error. Please check environment variables.',
+      { status: 500 }
+    )
   }
 
   const supabase = createServerClient(

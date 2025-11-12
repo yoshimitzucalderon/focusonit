@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "verify": "node verify-setup.js",
+    "verify:env": "node scripts/verify-env-vars.js",
+    "predeploy": "npm run verify:env && npm run lint && npm run type-check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .gitignore",
     "type-check": "tsc --noEmit",
