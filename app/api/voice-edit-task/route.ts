@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    // 🔒 AUTHENTICATION CHECK - Prevent unauthorized access
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'No autorizado. Debes iniciar sesión.' },
+        { status: 401 }
+      )
+    }
+
     const { transcript, currentTask } = await request.json()
 
     if (!transcript || !currentTask) {
