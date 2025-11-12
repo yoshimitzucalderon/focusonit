@@ -1,4 +1,11 @@
-const { withSentryConfig } = require('@sentry/nextjs');
+// Try to load Sentry, but make it optional
+let withSentryConfig;
+try {
+  withSentryConfig = require('@sentry/nextjs').withSentryConfig;
+} catch (e) {
+  // Sentry not available - that's OK, we'll export nextConfig directly
+  console.log('Sentry not available, skipping Sentry integration');
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -99,7 +106,7 @@ const sentryWebpackPluginOptions = {
   disableLogger: true,
 };
 
-// Only wrap with Sentry in production or when explicitly enabled
-module.exports = process.env.NODE_ENV === 'production' || process.env.SENTRY_ENABLED === 'true'
+// Only wrap with Sentry in production or when explicitly enabled (and if Sentry is available)
+module.exports = withSentryConfig && (process.env.NODE_ENV === 'production' || process.env.SENTRY_ENABLED === 'true')
   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
   : nextConfig;
