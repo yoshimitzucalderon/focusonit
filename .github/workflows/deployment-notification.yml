@@ -1,0 +1,45 @@
+name: Deployment Notification
+
+on:
+  deployment_status:
+
+jobs:
+  notify:
+    name: Send Deployment Notification
+    runs-on: ubuntu-latest
+    if: github.event.deployment_status.state == 'success' || github.event.deployment_status.state == 'failure'
+
+    steps:
+      - name: Send success notification
+        if: github.event.deployment_status.state == 'success' && secrets.TELEGRAM_BOT_TOKEN != ''
+        run: |
+          COMMIT_MSG=$(echo "${{ github.event.deployment.payload.commit_message }}" | head -n 1)
+          MESSAGE="✅ Deployment successful
+
+          Environment: ${{ github.event.deployment.environment }}
+          URL: ${{ github.event.deployment_status.target_url }}
+          Commit: ${COMMIT_MSG}
+          Author: ${{ github.actor }}"
+
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d text="${MESSAGE}"
+
+      - name: Send failure notification
+        if: github.event.deployment_status.state == 'failure' && secrets.TELEGRAM_BOT_TOKEN != ''
+        run: |
+          MESSAGE="❌ Deployment failed
+
+          Environment: ${{ github.event.deployment.environment }}
+          Check logs: ${{ github.event.deployment_status.log_url }}
+          Author: ${{ github.actor }}"
+
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d text="${MESSAGE}"
+
+      - name: Log deployment status
+        run: |
+          echo "Deployment status: ${{ github.event.deployment_status.state }}"
+          echo "Environment: ${{ github.event.deployment.environment }}"
+          echo "URL: ${{ github.event.deployment_status.target_url }}"

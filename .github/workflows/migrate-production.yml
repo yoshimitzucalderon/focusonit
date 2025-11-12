@@ -1,0 +1,51 @@
+name: Production Migration
+
+on:
+  workflow_dispatch: # Manual trigger only
+    inputs:
+      confirm:
+        description: 'Type "migrate-production" to confirm'
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    name: Apply Migrations to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "migrate-production" ]; then
+            echo "❌ Confirmation failed. You must type 'migrate-production' to proceed."
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Apply migrations
+        run: |
+          echo "🚀 Applying migrations to production database..."
+          supabase db push --db-url "${{ secrets.PRODUCTION_DB_URL }}" --password "${{ secrets.PRODUCTION_DB_PASSWORD }}"
+
+      - name: Verify migration success
+        run: |
+          echo "✅ Migrations applied successfully"
+          echo "⚠️  Run smoke tests to verify production database"
+          echo "📊 Check Supabase dashboard for schema changes"
+
+      - name: Send notification
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" == "success" ]; then
+            echo "✅ Migration successful"
+          else
+            echo "❌ Migration failed - check logs immediately"
+          fi
