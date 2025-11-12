@@ -6,9 +6,19 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Get env vars with fallback for Edge Runtime
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // If env vars not available (Edge Runtime issue), return response without auth check
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase env vars not available in middleware - skipping auth check')
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
