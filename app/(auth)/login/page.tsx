@@ -1,18 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
 import { Mail, Lock, Eye, EyeOff, Zap, Loader2, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { FcGoogle } from 'react-icons/fc'
 
-// Force dynamic rendering to avoid build-time env var issues
-export const dynamic = 'force-dynamic'
-
 export default function LoginPage() {
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -20,7 +19,23 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const router = useRouter()
-  const supabase = createClient()
+
+  // Initialize Supabase client after component mounts (fixes Vercel build pre-rendering issue)
+  useEffect(() => {
+    setSupabase(createClient())
+  }, [])
+
+  // Show loading state while Supabase client initializes
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900/20 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" size={48} />
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
