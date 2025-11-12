@@ -99,22 +99,40 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## Documentacion Detallada
 
+### Para Nuevos Desarrolladores
+- **[NEXT_SESSION_START_HERE.md](NEXT_SESSION_START_HERE.md)** - Inicio rapido para retomar el proyecto
+- **[SESSION_2025-11-11_CLOSURE_AND_NEXT_STEPS.md](SESSION_2025-11-11_CLOSURE_AND_NEXT_STEPS.md)** - Context completo de ultima sesion
 - [GETTING_STARTED.md](GETTING_STARTED.md) - Guia de inicio paso a paso
+- [CLAUDE.md](CLAUDE.md) - Manual completo para desarrolladores con Claude
+
+### Documentacion Tecnica
 - [docs/](docs/) - Documentacion completa organizada por temas
   - [Setup detallado](docs/setup/DETAILED_SETUP.md)
   - [Integracion Google Calendar](docs/integrations/google-calendar/)
   - [Arquitectura tecnica](docs/technical/)
-- [CLAUDE.md](CLAUDE.md) - Contexto para desarrolladores con Claude
+  - [Deployments](docs/deployments/) - Historial de deployments y cambios
+- [lessons-learned/](lessons-learned/) - Lecciones aprendidas y problemas resueltos
+- [docs/roadmap/](docs/roadmap/) - Roadmap de desarrollo post-deployment
 
 ## Estado del Proyecto
 
-**Fase actual:** MVP Funcional + Google Calendar Integration
+**Fase actual:** MVP Funcional + Google Calendar Integration ✅
+**Produccion:** https://focusonit.ycm360.com (ESTABLE)
+**Ultimo deployment:** 2025-11-11
 
-- MVP completo
-- Autenticacion con Google OAuth
-- Google Calendar sync bidireccional
-- Voice-to-task funcional
-- Real-time updates activos
+**Completado:**
+- ✅ MVP completo y funcional
+- ✅ Autenticacion con Google OAuth
+- ✅ Google Calendar sync bidireccional
+- ✅ Real-time updates activos
+- ✅ Security headers y API protection
+- ✅ Produccion estable y monitoreada
+
+**En Progreso:**
+- 🔄 Fase 1: Monitoring & Error Tracking (Sentry + Vercel Analytics)
+- 📋 Voice-to-task integration (n8n workflows)
+
+**Proximo:** Ver [roadmap completo](docs/roadmap/POST_DEPLOYMENT_ROADMAP.md) para proximas 7 fases
 
 ## Estructura del Proyecto
 
