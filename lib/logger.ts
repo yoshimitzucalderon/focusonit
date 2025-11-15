@@ -302,10 +302,6 @@ class Logger {
 // Export singleton instance
 export const logger = new Logger();
 
-// Export helper types
-export type { LogContext, LogEntry };
-export { LogLevel };
-
 // Export convenience functions for common use cases
 
 /**
