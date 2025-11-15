@@ -35,6 +35,7 @@ Creado para mejorar la productividad con una integracion completa entre tareas, 
 
 - **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind CSS
 - **Backend/DB:** Supabase (PostgreSQL + Auth + Realtime)
+- **Monitoring:** Sentry (Error Tracking) + Vercel Analytics (Performance)
 - **Automatizacion:** n8n (self-hosted)
 - **Integraciones:** Google Calendar API
 - **Icons:** Lucide React
@@ -76,8 +77,13 @@ SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key-aqui
 # Google Calendar OAuth
 GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=tu-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/calendar/oauth/callback
-NEXTAUTH_SECRET=genera-un-secret-aleatorio-aqui
+
+# Sentry Error Tracking (requerido para produccion)
+NEXT_PUBLIC_SENTRY_DSN=https://xxxxx@oxxxxx.ingest.sentry.io/xxxxx
+NEXT_PUBLIC_SENTRY_ENVIRONMENT=development
+SENTRY_ORG=your-sentry-org
+SENTRY_PROJECT=focusonit-production
+SENTRY_AUTH_TOKEN=sntrys_your_auth_token_here
 
 # n8n (opcional)
 N8N_VOICE_TASK_WEBHOOK_URL=https://n8n.tudominio.com/webhook/voice-task
@@ -109,6 +115,7 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 - [docs/](docs/) - Documentacion completa organizada por temas
   - [Setup detallado](docs/setup/DETAILED_SETUP.md)
   - [Integracion Google Calendar](docs/integrations/google-calendar/)
+  - [Monitoring & Observability](docs/monitoring/) - Sentry, Vercel Analytics, Logging
   - [Arquitectura tecnica](docs/technical/)
   - [Deployments](docs/deployments/) - Historial de deployments y cambios
 - [lessons-learned/](lessons-learned/) - Lecciones aprendidas y problemas resueltos
@@ -127,10 +134,11 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 - ✅ Real-time updates activos
 - ✅ Security headers y API protection
 - ✅ Produccion estable y monitoreada
+- ✅ Monitoring completo: Sentry + Vercel Analytics + Centralized Logging
 
 **En Progreso:**
-- 🔄 Fase 1: Monitoring & Error Tracking (Sentry + Vercel Analytics)
 - 📋 Voice-to-task integration (n8n workflows)
+- 🔍 Advanced analytics & insights
 
 **Proximo:** Ver [roadmap completo](docs/roadmap/POST_DEPLOYMENT_ROADMAP.md) para proximas 7 fases
 
@@ -216,12 +224,31 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-supabase-url.com
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 
+# Sentry Monitoring (Edge-compatible, Plaintext)
+NEXT_PUBLIC_SENTRY_DSN=https://xxxxx@oxxxxx.ingest.sentry.io/xxxxx
+NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
+NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0.1
+
 # Node.js Runtime (Should be Encrypted)
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-client-secret
-GOOGLE_REDIRECT_URI=https://your-domain.com/api/calendar/oauth/callback
+
+# Sentry Source Maps Upload (Build-time only, Encrypted)
+SENTRY_ORG=your-sentry-org
+SENTRY_PROJECT=focusonit-production
+SENTRY_AUTH_TOKEN=sntrys_your_auth_token_here
 ```
+
+**Configuracion de Monitoring:**
+
+Ver guia completa: [docs/monitoring/SENTRY_SETUP.md](docs/monitoring/SENTRY_SETUP.md)
+
+1. **Crear cuenta Sentry:** https://sentry.io/signup/
+2. **Crear proyecto Next.js** en Sentry Dashboard
+3. **Copiar DSN** y configurar variables de entorno
+4. **Habilitar Vercel Analytics** en Vercel Dashboard → Analytics
+5. **Verificar:** Deploy y visitar `/api/test-sentry`
 
 ### Opcion 2: Docker Self-Hosted
 

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { BottomNavigation } from '@/components/BottomNavigation'
 import { DashboardSidebar } from '@/components/DashboardSidebar'
 import { DashboardHeader } from '@/components/DashboardHeader'
+import { SentryTestButton } from '@/components/SentryTestButton'
 
 export default async function DashboardLayout({
   children,
@@ -39,6 +40,9 @@ export default async function DashboardLayout({
 
       {/* Bottom Navigation */}
       <BottomNavigation />
+
+      {/* Sentry Test Button - DELETE AFTER TESTING */}
+      <SentryTestButton />
     </div>
   )
 }

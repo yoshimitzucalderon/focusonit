@@ -65,11 +65,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://va.vercel-scripts.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://va.vercel-scripts.com https://browser.sentry-cdn.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ycm360.com wss://api.ycm360.com https://accounts.google.com https://www.googleapis.com https://va.vercel-scripts.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.ycm360.com wss://api.ycm360.com https://accounts.google.com https://www.googleapis.com https://va.vercel-scripts.com https://*.ingest.sentry.io",
               "frame-src 'self' https://accounts.google.com",
               "object-src 'none'",
               "base-uri 'self'",

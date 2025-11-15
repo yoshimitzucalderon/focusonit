@@ -85,6 +85,49 @@ La filosofia del proyecto es: **"Si no es facil de usar, no se usara"**.
 
 ---
 
+### 📸 Carpeta de Screenshots para Referencia
+
+**Ubicacion:** `FocusOnIt/project-docs/screenshots/`
+
+**Proposito:** Almacenar capturas de pantalla de referencia cuando el usuario tiene dudas o necesita mostrar el estado actual de configuraciones, dashboards, o interfaces externas.
+
+**Estructura:**
+```
+FocusOnIt/
+└── project-docs/
+    └── screenshots/
+        ├── sentry/           # Screenshots de Sentry dashboard
+        ├── vercel/           # Screenshots de Vercel dashboard
+        ├── google-console/   # Screenshots de Google Cloud Console
+        ├── supabase/         # Screenshots de Supabase dashboard
+        └── [servicio]/       # Otros servicios según necesidad
+```
+
+**Reglas:**
+- ✅ Usar para mostrar configuraciones actuales de servicios externos
+- ✅ Organizar por servicio/plataforma (sentry, vercel, etc)
+- ✅ Nombres descriptivos: `sentry1.JPG`, `vercel-env-vars.png`, etc
+- ✅ Formatos aceptados: JPG, PNG, JPEG
+- ❌ NO commitear al repositorio Git (agregar a .gitignore si es necesario)
+- ❌ NO incluir información sensible (passwords, tokens, API keys)
+
+**Uso con Claude:**
+Cuando el usuario tenga dudas sobre configuración de servicios externos, puede tomar screenshots y colocarlos en la carpeta correspondiente. Claude puede leer estos screenshots para:
+- Guiar paso a paso en configuraciones
+- Diagnosticar problemas visualmente
+- Verificar que la configuración sea correcta
+- Documentar el estado actual del proyecto
+
+**Ejemplo de uso:**
+```
+Usuario: "Tengo una duda sobre Sentry"
+Usuario: *Toma screenshot y lo guarda en project-docs/screenshots/sentry/sentry1.JPG*
+Usuario: "Mira este screenshot"
+Claude: *Lee la imagen y proporciona guía específica basada en lo que ve*
+```
+
+---
+
 ### Documento Maestro de Organización
 
 **📖 VER:** [docs/ORGANIZATION_RULES.md](docs/ORGANIZATION_RULES.md)
