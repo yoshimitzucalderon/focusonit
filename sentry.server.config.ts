@@ -18,10 +18,9 @@ Sentry.init({
 
   // Integrations for server-side
   integrations: [
-    // Add profiling (optional)
-    Sentry.httpIntegration({
-      tracing: true,
-    }),
+    // HTTP integration for automatic instrumentation of HTTP requests
+    // No additional options needed - tracing is controlled by tracesSampleRate
+    Sentry.httpIntegration(),
   ],
 
   // Filter out sensitive data before sending to Sentry
