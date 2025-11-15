@@ -6,6 +6,22 @@ Lecciones aprendidas relacionadas con Next.js, App Router, middleware, y runtime
 
 ## Indice de Lecciones
 
+### 2025-11-11: CSP Headers Blocking Supabase Self-Hosted Connections
+
+**Archivo:** [2025-11-11-csp-supabase-blocking.md](../by-date/2025-11-11-csp-supabase-blocking.md)
+
+**Problema:** Content Security Policy bloqueaba conexiones a Supabase self-hosted porque CSP solo permitia *.supabase.co.
+
+**Solucion:** Actualizar CSP connect-src para incluir https://api.ycm360.com y wss://api.ycm360.com.
+
+**Keywords:** csp, content-security-policy, security, supabase, self-hosted
+
+**Severidad:** HIGH
+
+**Aprendizaje clave:** CSP connect-src controla networking. Self-hosted Supabase requiere configuracion diferente a Cloud. Incluir ambos protocolos (https, wss).
+
+---
+
 ### 2025-11-11: Middleware Edge Runtime Environment Variables
 
 **Archivo:** [2025-11-11-vercel-edge-runtime-env-vars.md](../by-date/2025-11-11-vercel-edge-runtime-env-vars.md)

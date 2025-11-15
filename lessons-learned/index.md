@@ -14,12 +14,12 @@ Indice maestro de todas las lecciones aprendidas del proyecto FocusOnIt, organiz
 
 ## Estadisticas Generales
 
-- **Total de lecciones:** 4
-- **Criticas:** 2
-- **Altas:** 2
-- **Medias:** 0
+- **Total de lecciones:** 7
+- **Criticas:** 3
+- **Altas:** 3
+- **Medias:** 1
 - **Bajas:** 0
-- **Horas estimadas ahorradas:** 22+
+- **Horas estimadas ahorradas:** 28+
 
 Actualiza estas estadisticas al agregar nuevas lecciones.
 
@@ -29,10 +29,12 @@ Actualiza estas estadisticas al agregar nuevas lecciones.
 
 | Fecha | Titulo | Keywords | Severidad | Tiempo Resolucion |
 |-------|--------|----------|-----------|-------------------|
+| 2025-11-11 | [P0 Security Vulnerabilities: Missing Authentication](./by-date/2025-11-11-security-vulnerabilities-auth.md) | security, auth, api, vulnerability, p0, critical, supabase | critical | 3 horas |
+| 2025-11-11 | [CSP Headers Blocking Supabase Self-Hosted](./by-date/2025-11-11-csp-supabase-blocking.md) | nextjs, security, csp, supabase, self-hosted, headers | high | 1 hora |
 | 2025-11-11 | [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) | vercel, nextjs, edge-runtime, middleware, environment-variables, deployment, production-issue | critical | 2 horas |
 | 2025-10-23 | [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) | supabase, real-time, sync, deletion, UI, race-condition, optimistic-update | high | 3-4 horas |
 | 2025-10-22 | [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) | google-calendar, oauth, token-refresh, supabase, duplicate-key, upsert | critical | 2-3 horas |
-| 2025-10-22 | [Google Calendar sync configuration and debugging](./by-date/2025-10-22-calendar-sync-config-debugging.md) | google-calendar, sync, configuration, debugging, feature-flag, due_date, logging | high | 4-5 horas |
+| 2025-10-22 | [Google Calendar sync configuration and debugging](./by-date/2025-10-22-calendar-sync-config-debugging.md) | google-calendar, sync, configuration, debugging, feature-flag, due_date, logging | medium | 4-5 horas |
 
 ---
 
@@ -69,9 +71,16 @@ Actualiza estas estadisticas al agregar nuevas lecciones.
 
 - [Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Produccion caida por variables encriptadas
 
+### Security
+[Ver todas las lecciones de Security](./by-category/security.md)
+
+- [P0 Security Vulnerabilities: Missing Authentication](./by-date/2025-11-11-security-vulnerabilities-auth.md) - API endpoints sin auth (CVSS 9.1)
+- [CSP Headers Blocking Supabase Self-Hosted](./by-date/2025-11-11-csp-supabase-blocking.md) - CSP bloqueando conexiones
+
 ### Next.js
 [Ver todas las lecciones de Next.js](./by-category/nextjs.md)
 
+- [CSP Headers Blocking Supabase](./by-date/2025-11-11-csp-supabase-blocking.md) - Content Security Policy misconfiguration
 - [Middleware Edge Runtime Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Middleware no puede acceder a variables encriptadas
 
 ---
@@ -89,19 +98,20 @@ _Actualizar manualmente conforme crezca la base de conocimiento_
 ### Criticas
 Problemas que causaron downtime o impacto severo en produccion.
 
+- [P0 Security Vulnerabilities: Missing Authentication](./by-date/2025-11-11-security-vulnerabilities-auth.md) - API sin auth, CVSS 9.1, acceso no autorizado
 - [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - Produccion completamente caida, 500 errors en todas las rutas
 - [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Interrumpia completamente la sincronizacion con Google Calendar
 
 ### Altas
 Problemas complejos que tomaron tiempo significativo resolver.
 
+- [CSP Headers Blocking Supabase Self-Hosted](./by-date/2025-11-11-csp-supabase-blocking.md) - CSP bloqueando todas las conexiones a backend
 - [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) - Race condition y problemas de actualizacion de UI
-- [Google Calendar sync configuration and debugging](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Tareas no se sincronizaban automaticamente
 
 ### Medias
 Problemas no triviales pero con solucion relativamente rapida.
 
-- *Aun no hay lecciones de media severidad documentadas*
+- [Google Calendar sync configuration and debugging](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Tareas no se sincronizaban automaticamente
 
 ### Bajas
 Problemas menores pero instructivos para el equipo.
@@ -114,10 +124,12 @@ Problemas menores pero instructivos para el equipo.
 
 Basado en impacto y utilidad para el equipo (actualizar periodicamente).
 
-1. [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - CRITICO para deployments en Vercel con middleware
-2. [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Critico para OAuth y operaciones upsert
-3. [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) - Patron importante para race conditions
-4. [Google Calendar sync configuration](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Debugging de integraciones complejas
+1. [P0 Security Vulnerabilities: Missing Authentication](./by-date/2025-11-11-security-vulnerabilities-auth.md) - CRITICO para API security, previene vulnerabilidades CVSS 9.1
+2. [Vercel Edge Runtime Cannot Access Encrypted Environment Variables](./by-date/2025-11-11-vercel-edge-runtime-env-vars.md) - CRITICO para deployments en Vercel con middleware
+3. [CSP Headers Blocking Supabase Self-Hosted](./by-date/2025-11-11-csp-supabase-blocking.md) - CRITICO para self-hosted Supabase con CSP
+4. [Google Calendar token refresh duplicate key error](./by-date/2025-10-22-token-refresh-duplicate-key.md) - Critico para OAuth y operaciones upsert
+5. [Deletion sync and UI update issues](./by-date/2025-10-23-deletion-sync-ui-update.md) - Patron importante para race conditions
+6. [Google Calendar sync configuration](./by-date/2025-10-22-calendar-sync-config-debugging.md) - Debugging de integraciones complejas
 
 ---
 

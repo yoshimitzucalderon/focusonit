@@ -24,7 +24,35 @@ supabase, postgresql, postgres, rls, row-level-security, auth, authentication, r
 
 ## Lecciones Documentadas
 
-### Total: 1
+### Total: 3
+
+### [CSP Headers Blocking Supabase Self-Hosted Connections](../by-date/2025-11-11-csp-supabase-blocking.md)
+
+**Fecha:** 2025-11-11
+**Severidad:** alta
+**Keywords:** nextjs, security, csp, content-security-policy, supabase, self-hosted, headers, networking
+
+**Problema:** Content Security Policy bloqueaba todas las conexiones a Supabase self-hosted porque CSP solo permitia *.supabase.co pero nuestra instancia esta en api.ycm360.com.
+
+**Solucion:** Actualizar CSP connect-src directive para incluir dominio self-hosted con protocolos especificos (https://api.ycm360.com y wss://api.ycm360.com).
+
+**Aprendizaje clave:** CSP connect-src controla networking. Self-hosted Supabase requiere configuracion CSP diferente a Cloud. WebSocket requiere wss:// protocol.
+
+---
+
+### [P0 Security Vulnerabilities: Missing Authentication in API Endpoints](../by-date/2025-11-11-security-vulnerabilities-auth.md)
+
+**Fecha:** 2025-11-11
+**Severidad:** critica
+**Keywords:** security, auth, authentication, api, vulnerability, supabase, p0, critical, voice-to-task
+
+**Problema:** API endpoints carecian de autenticacion, permitiendo acceso no autorizado usando Supabase sin verificar session.
+
+**Solucion:** Agregar supabase.auth.getUser() en endpoints, usar user_id de session autenticada, verificar ownership de recursos.
+
+**Aprendizaje clave:** Auth debe ser primer paso en endpoint. Never trust user input, especialmente user_id. Implementar auth checks en application layer + RLS en database layer.
+
+---
 
 ### [Deletion sync and UI update issues](../by-date/2025-10-23-deletion-sync-ui-update.md)
 
@@ -115,5 +143,5 @@ Conforme documentemos lecciones, extraeremos patrones exitosos aqui:
 ---
 
 **Ultima actualizacion:** 2025-11-11
-**Lecciones documentadas:** 1
+**Lecciones documentadas:** 3
 **Proxima revision:** 2025-12-11

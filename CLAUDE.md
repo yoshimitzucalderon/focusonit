@@ -2,7 +2,7 @@
 
 **Proyecto:** FocusOnIt Task Manager
 **Version:** MVP v0.1.0 + Google Calendar Integration
-**Ultima actualizacion:** 11 de noviembre de 2025
+**Ultima actualizacion:** 15 de noviembre de 2025
 **Proposito:** Manual de referencia para Claude, desarrolladores y mantenedores del proyecto
 
 ---
@@ -67,63 +67,66 @@ La filosofia del proyecto es: **"Si no es facil de usar, no se usara"**.
 
 ## 2. REGLAS DE ORGANIZACION
 
-### Estructura de Carpetas (Propuesta en Implementacion)
+### 🎯 PRINCIPIO FUNDAMENTAL: Dos Carpetas Principales
+
+**IMPORTANTE:** Este proyecto tiene **DOS carpetas principales** que deben mantenerse organizadas:
+
+1. **`FocusOnIt/`** - Carpeta padre del proyecto
+   - Contiene `task-manager/` + documentación de gestión
+   - Contiene historial de workflows n8n
+   - Solo 1 archivo `.md` permitido: `ESTRUCTURA_PROYECTO.md`
+
+2. **`task-manager/`** - Proyecto principal (repositorio Git)
+   - Aplicación Next.js
+   - Toda la documentación técnica
+   - Solo 3 archivos `.md` permitidos en raíz
+
+**Ambas carpetas forman parte de las reglas de organización del proyecto.**
+
+---
+
+### Documento Maestro de Organización
+
+**📖 VER:** [docs/ORGANIZATION_RULES.md](docs/ORGANIZATION_RULES.md)
+
+El documento `ORGANIZATION_RULES.md` contiene las reglas completas y detalladas sobre:
+- Estructura de ambas carpetas principales (FocusOnIt/ y task-manager/)
+- Ubicación exacta por tipo de contenido
+- Convenciones de nombres estrictas
+- Proceso de organización paso a paso
+- Checklists de organización (pre-commit y weekly)
+
+**Resumen de reglas críticas:**
+
+### Solo 3 Archivos MD en Raíz
 
 ```
 task-manager/
-├── README.md                    # Documentacion tecnica principal
-├── GETTING_STARTED.md           # Guia de inicio rapido (futuro)
-├── CLAUDE.md                    # Este archivo
-├── CHANGELOG.md                 # Historial de cambios (futuro)
-│
-├── docs/                        # Toda la documentacion (nueva estructura)
-│   ├── README.md                # Indice maestro
-│   ├── setup/                   # Guias de configuracion
-│   ├── features/                # Documentacion de features
-│   ├── integrations/            # Integraciones externas
-│   │   ├── google-calendar/     # Google Calendar sync
-│   │   ├── google-oauth/        # Google OAuth setup
-│   │   └── n8n/                 # n8n workflows
-│   ├── api/                     # Documentacion de API endpoints
-│   ├── technical/               # Arquitectura y documentacion tecnica
-│   ├── troubleshooting/         # Solucion de problemas
-│   └── guides/                  # Guias de desarrollo
-│
-├── lessons-learned/             # Sistema de lecciones aprendidas (nuevo)
-│   ├── README.md                # Introduccion al sistema
-│   ├── TEMPLATE.md              # Template para nuevas lecciones
-│   ├── INDEX.md                 # Indice maestro
-│   ├── by-category/             # Organizadas por tecnologia
-│   └── by-date/                 # Organizadas cronologicamente
-│
-├── scripts/                     # Scripts utiles (futuro)
-│   ├── verify-setup.js          # Verificacion de configuracion
-│   └── utils/                   # Utilidades varias
-│
-├── app/                         # Next.js app (App Router)
-│   ├── (auth)/                  # Rutas de autenticacion
-│   ├── (dashboard)/             # Dashboard principal
-│   ├── api/                     # API routes
-│   └── layout.tsx               # Layout principal
-│
-├── components/                  # React components
-│   ├── auth/                    # Componentes de autenticacion
-│   ├── tasks/                   # Componentes de tareas
-│   ├── calendar/                # Componentes de calendario
-│   ├── ui/                      # Componentes UI reutilizables
-│   └── pomodoro/                # Timer Pomodoro
-│
-├── lib/                         # Utilidades y funciones
-│   ├── supabase/                # Clientes Supabase
-│   ├── google-calendar/         # API de Google Calendar
-│   └── utils/                   # Funciones utiles
-│
-├── hooks/                       # Custom React hooks
-├── context/                     # React Context providers
-├── types/                       # TypeScript types
-├── public/                      # Assets estaticos
-└── supabase/                    # Configuracion Supabase
-    └── migrations/              # Migraciones de BD
+├── README.md                    # Documentación principal del proyecto
+├── GETTING_STARTED.md           # Guía de inicio rápido
+└── CLAUDE.md                    # Este archivo (manual para Claude)
+```
+
+**IMPORTANTE:** NUNCA crear otros archivos `.md` en la raíz. TODO va en `docs/`.
+
+### Estructura de Documentación
+
+```
+docs/
+├── README.md                    # Índice maestro
+├── ORGANIZATION_RULES.md        # Reglas completas de organización
+├── security/                    # Auditorías y seguridad
+├── deployments/                 # Deployment y CI/CD
+├── sessions/                    # Sesiones y deliverables
+├── features/                    # Documentación de features
+├── api/                         # API endpoints
+├── technical/                   # Arquitectura técnica
+├── integrations/                # Integraciones externas
+│   ├── google-calendar/
+│   └── n8n/
+├── setup/                       # Guías de configuración
+├── guides/                      # Guías de desarrollo
+└── meta/                        # Docs sobre documentación
 ```
 
 ### Convenciones de Nombres
@@ -152,21 +155,17 @@ task-manager/
 |-------------------|-----------|---------|
 | **Feature nueva** | `docs/features/FEATURE_NAME.md` | Timer Pomodoro → `docs/features/POMODORO_TIMER.md` |
 | **API endpoint nuevo** | `docs/api/ENDPOINT_NAME.md` | POST /api/voice-to-task → `docs/api/VOICE_TO_TASK.md` |
-| **Integracion externa** | `docs/integrations/nombre/` | Google Calendar → `docs/integrations/google-calendar/` |
-| **Configuracion/Setup** | `docs/setup/TOPIC.md` | Deployment → `docs/setup/DEPLOYMENT.md` |
+| **Integración externa** | `docs/integrations/nombre/` | Google Calendar → `docs/integrations/google-calendar/` |
+| **Configuración/Setup** | `docs/setup/TOPIC.md` | Deployment → `docs/setup/DEPLOYMENT.md` |
 | **Problema resuelto** | `lessons-learned/by-date/YYYY-MM-DD-titulo.md` | Bug timezone → `lessons-learned/by-date/2025-10-05-timezone-bug.md` |
-| **Guia de desarrollo** | `docs/guides/TOPIC.md` | Testing → `docs/guides/TESTING.md` |
+| **Guía de desarrollo** | `docs/guides/TOPIC.md` | Testing → `docs/guides/TESTING.md` |
+| **Seguridad** | `docs/security/SECURITY_*.md` | Audit → `docs/security/SECURITY_AUDIT_REPORT.md` |
+| **Deployment** | `docs/deployments/PLATFORM_*.md` | Vercel → `docs/deployments/VERCEL_DEPLOYMENT.md` |
+| **Sesión de trabajo** | `docs/sessions/SESSION_YYYY-MM-DD_*.md` | Sesión Nov → `docs/sessions/SESSION_2025-11-11.md` |
 
-**Regla de oro:** Si una feature requiere mas de 5 minutos de explicacion, merece su propio documento.
+**Regla de oro:** Si una feature requiere más de 5 minutos de explicación, merece su propio documento.
 
-### Nueva Estructura Propuesta (En Transicion)
-
-Ver documento `PLAN_REORGANIZACION_PROYECTO.md` para detalles completos de la reorganizacion en curso. La estructura actual esta en transicion hacia una organizacion mas escalable con carpetas tematicas.
-
-**Referencias:**
-- Auditoria completa: `AUDITORIA_DOCUMENTACION.md`
-- Plan de reorganizacion: `PLAN_REORGANIZACION_PROYECTO.md`
-- Matriz de contenido: `MATRIZ_CONTENIDO_DOCS.md`
+**Para detalles completos:** Ver [docs/ORGANIZATION_RULES.md](docs/ORGANIZATION_RULES.md)
 
 ---
 
@@ -647,7 +646,108 @@ Ver directorio `lessons-learned/` para catalogo completo de problemas resueltos,
 
 ### Issues Comunes (Basados en Commits Recientes)
 
-#### 1. Deletion Sync and UI Update Issues
+#### 1. P0 Security Vulnerabilities: Missing Authentication (2025-11-11)
+
+**Commit relacionado:**
+- `ba1c258` - fix(security): resolve P0 critical vulnerabilities
+
+**Problema:**
+API endpoints (`/api/voice-to-task`, `/api/voice-edit-task`) carecian completamente de autenticacion. Cualquiera podia crear/editar/eliminar tareas de cualquier usuario.
+
+**Severidad:** CRITICAL (CVSS 9.1, CWE-306)
+
+**Causa:**
+- Endpoints no verificaban session de Supabase
+- Confiaban en user_id del request body
+- "Agregar auth despues" nunca paso
+
+**Solucion:**
+```typescript
+export async function POST(request: Request) {
+  // ✅ Verificar autenticacion primero
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // ✅ Usar user.id de session, no del request
+  const { title } = await request.json()
+  await supabase.from('tasks').insert({ user_id: user.id, title })
+}
+```
+
+**Leccion:** Auth debe ser el primer paso en cada endpoint. Never trust user input, especialmente user_id.
+
+**Referencia:** [lessons-learned/by-date/2025-11-11-security-vulnerabilities-auth.md](lessons-learned/by-date/2025-11-11-security-vulnerabilities-auth.md)
+
+---
+
+#### 2. Vercel Edge Runtime Cannot Access Encrypted Environment Variables (2025-11-11)
+
+**Commits relacionados:**
+- `47a6243` - fix(middleware): handle missing env vars gracefully in Edge Runtime
+- `bb8d3b7` - fix(deployment): resolve Vercel Edge Runtime env vars issue
+
+**Problema:**
+Produccion completamente caida con 500 errors. Middleware no podia acceder a variables de entorno porque estaban configuradas como "Encrypted" en Vercel. Edge Runtime no puede desencriptar variables.
+
+**Causa:**
+- Middleware corre en Edge Runtime (no Node.js)
+- Edge Runtime no puede acceder a variables encriptadas
+- Variables `NEXT_PUBLIC_*` estaban marcadas como "Sensitive"
+
+**Solucion:**
+1. Cambiar variables en Vercel Dashboard de "Encrypted" a "Plaintext":
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+2. Agregar validacion defensiva:
+```typescript
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!url || !key) {
+  throw new Error('Supabase credentials not available in Edge Runtime')
+}
+```
+
+**Leccion:** Variables usadas en middleware (Edge Runtime) deben estar en Plaintext en Vercel, incluso si tienen prefijo `NEXT_PUBLIC_`.
+
+**Referencia:** [lessons-learned/by-date/2025-11-11-edge-runtime-environment-variables.md](lessons-learned/by-date/2025-11-11-edge-runtime-environment-variables.md)
+
+---
+
+#### 3. CSP Headers Blocking Supabase Self-Hosted Connections (2025-11-11)
+
+**Commit relacionado:**
+- `84fd5d7` - fix(security): add Supabase URL to CSP connect-src directive
+
+**Problema:**
+Despues de resolver Edge Runtime issue, app cargaba pero no habia datos. Content Security Policy bloqueaba todas las conexiones a Supabase self-hosted (api.ycm360.com).
+
+**Causa:**
+- CSP `connect-src` solo permitia `*.supabase.co`
+- Nuestra instancia self-hosted esta en `api.ycm360.com`
+- Pattern no coincidia, browser bloqueaba requests
+
+**Solucion:**
+```javascript
+// next.config.js
+const ContentSecurityPolicy = `
+  connect-src 'self'
+    https://api.ycm360.com
+    wss://api.ycm360.com
+    *.google-analytics.com;
+`
+```
+
+**Leccion:** Self-hosted Supabase requiere configuracion CSP diferente a Cloud. Incluir ambos protocolos (https, wss) para REST API y WebSocket.
+
+**Referencia:** [lessons-learned/by-date/2025-11-11-csp-supabase-blocking.md](lessons-learned/by-date/2025-11-11-csp-supabase-blocking.md)
+
+---
+
+#### 4. Deletion Sync and UI Update Issues
 
 **Commits relacionados:**
 - `7ebb9a6` - fix: resolve deletion sync and UI update issues
@@ -661,9 +761,11 @@ Eliminar tarea en la app no eliminaba evento en Google Calendar, o viceversa. UI
 - Usar service role client para operaciones de BD desde webhook
 - Actualizar UI con revalidatePath() o Real-time subscription
 
-**Referencia:** Ver `lessons-learned/by-date/2025-11-11-calendar-sync-deletion.md` (cuando se cree)
+**Referencia:** [lessons-learned/by-date/2025-10-23-deletion-sync-ui-update.md](lessons-learned/by-date/2025-10-23-deletion-sync-ui-update.md)
 
-#### 2. Google Calendar Token Refresh Duplicate Key Error
+---
+
+#### 5. Google Calendar Token Refresh Duplicate Key Error
 
 **Commit relacionado:**
 - `bdd30db` - fix: resolve Google Calendar token refresh duplicate key error
@@ -690,9 +792,11 @@ DO UPDATE SET
 
 **Leccion:** Siempre usar UPSERT cuando el registro puede existir.
 
-**Referencia:** `lessons-learned/by-category/supabase.md`
+**Referencia:** [lessons-learned/by-date/2025-10-22-token-refresh-duplicate-key.md](lessons-learned/by-date/2025-10-22-token-refresh-duplicate-key.md)
 
-#### 3. Google Calendar Sync Configuration
+---
+
+#### 6. Google Calendar Sync Configuration
 
 **Commits relacionados:**
 - `55e2e7b` - fix: set google_calendar_sync=true when creating tasks with dates
@@ -717,7 +821,11 @@ const task = {
 
 **Leccion:** Si una tarea tiene fecha, probablemente debe sincronizarse con calendario.
 
-#### 4. Timezone Bug (Historico - Resuelto)
+**Referencia:** [lessons-learned/by-date/2025-10-22-calendar-sync-config-debugging.md](lessons-learned/by-date/2025-10-22-calendar-sync-config-debugging.md)
+
+---
+
+#### 7. Timezone Bug (Historico - Resuelto)
 
 **Problema:**
 Fechas aparecian un dia antes debido a conversion de timezone.
@@ -740,14 +848,17 @@ export function toDateOnlyString(date: Date): string
 
 | Problema | Solucion Rapida |
 |----------|-----------------|
+| **500 errors en produccion (Vercel)** | Verificar que vars de middleware estan en Plaintext, no Encrypted |
+| **API retorna datos pero sin auth** | Agregar `supabase.auth.getUser()` al inicio del endpoint |
+| **CSP blocking Supabase** | Agregar dominio a CSP `connect-src` (https:// y wss://) |
 | **Error: Supabase URL no configurada** | Verificar `.env.local` con credenciales correctas |
-| **Error: Cannot connect to Supabase** | Verificar que proyecto Supabase esta activo |
+| **Error: Cannot connect to Supabase** | Verificar que proyecto Supabase esta activo, revisar CSP headers |
 | **Tareas no aparecen** | Verificar RLS policies en Supabase, verificar autenticacion |
-| **Real-time no funciona** | Verificar que Realtime esta habilitado en Supabase |
+| **Real-time no funciona** | Verificar CSP permite wss://, verificar Realtime habilitado |
 | **Google Calendar no sincroniza** | Verificar tokens en `user_google_tokens`, refrescar OAuth |
 | **Fechas desfasadas** | Usar `parseDateString()` y `toDateOnlyString()` |
 | **Build falla** | Ejecutar `npm run lint` y corregir errores TypeScript |
-| **Puerto 3000 ocupado** | Matar proceso (`lsof -ti:3000 | xargs kill`) o usar otro puerto |
+| **Puerto 3000 ocupado** | Matar proceso (`lsof -ti:3000 \| xargs kill`) o usar otro puerto |
 
 ---
 
@@ -1152,11 +1263,12 @@ task-manager/
 | Fecha | Version | Cambios |
 |-------|---------|---------|
 | 2025-11-11 | 1.0.0 | Creacion inicial del documento CLAUDE.md |
+| 2025-11-15 | 1.1.0 | Reorganizacion completa del proyecto - Reglas de organizacion definitivas |
 
 ---
 
 **Mantenido por:** Documentation Specialist
-**Ultima revision:** 11 de noviembre de 2025
+**Ultima revision:** 15 de noviembre de 2025
 **Feedback:** Sugerir mejoras via issue o PR
 
 ---
